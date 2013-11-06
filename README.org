@@ -16,12 +16,12 @@
      - [X] parse instructions
      - [X] parse defasm form
      - [X] parse defextern form
-     - [ ] visit symbols
-     - [ ] visit plain numbers
-     - [ ] visit general purpose registers
-     - [ ] visit instructions
-     - [ ] visit defasm form
-     - [ ] visit defextern form
+     - [X] visit symbols
+     - [X] visit plain numbers
+     - [X] visit general purpose registers
+     - [X] visit instructions
+     - [X] visit defasm form
+     - [X] visit defextern form
      - [ ] analyze symbols
        - [ ] check undefined symbol references
        - [ ] check symbol format
