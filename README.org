@@ -1,0 +1,237 @@
+#+STARTUP: hidestars showall
+* Sybilant
+** Introduction
+   Sybilant is a "full stack" Lisp programming language for the x86-64
+   architecture.  It is designed for writing high-level functional programs
+   while maintaining complete control over machine instructions (when needed).
+   
+   It is still a work in progress, so details will be fleshed out as its
+   implementation proceeds.
+** Roadmap
+   - [ ] version 0.1
+     - [ ] parse symbols
+     - [ ] parse plain numbers
+     - [ ] parse x86 general purpose registers (%rax, %rbx, %rcx, %rdx, %rsi,
+       %rdi, %rbp, %rsp, %r8, %r9, %r10, %r11, %r12, %r13, %r14, %r15)
+     - [ ] parse instructions
+     - [ ] parse defasm form
+     - [ ] parse defextern form
+     - [ ] visit symbols
+     - [ ] visit plain numbers
+     - [ ] visit general purpose registers
+     - [ ] visit instructions
+     - [ ] visit defasm form
+     - [ ] visit defextern form
+     - [ ] analyze symbols
+       - [ ] check undefined symbol references
+       - [ ] check symbol format
+     - [ ] analyze defasm form
+       - [ ] check doubly defined symbols
+     - [ ] analyze defextern form
+       - [ ] check doubly defined symbols
+     - [ ] emit symbols
+     - [ ] emit plain numbers
+     - [ ] emit registers
+     - [ ] emit instructions
+     - [ ] emit defasm form
+     - [ ] emit defextern form
+     - [ ] build scripts
+     - [ ] test scripts
+   - [ ] version 0.2
+     - [ ] read signed and unsigned integers (8-bit, 16-bit, 32-bit, 64-bit)
+     - [ ] parse signed and unsigned integers (8-bit, 16-bit, 32-bit, 64-bit)
+     - [ ] parse memory references (8-bit, 16-bit, 32-bit, 64-bit)
+     - [ ] parse %label form
+     - [ ] visit integers
+     - [ ] visit memory references
+     - [ ] visit %label form
+     - [ ] analyze %label form
+       - [ ] check doubly defined symbols (including re-defining a defasm name)
+     - [ ] emit integers
+     - [ ] emit memory references
+     - [ ] emit %label form
+     - [ ] munging of symbols
+   - [ ] version 0.3
+     - [ ] parse defconst form (integers or symbol)
+     - [ ] visit defconst form
+     - [ ] analyze defconst form
+       - [ ] check doubly defined symbols
+       - [ ] check that a symbol value for a constant is itself a constant
+     - [ ] emit constant reference by replacing it with its value (fixed point)
+   - [ ] version 0.4
+     - [ ] parse defdata form
+     - [ ] visit defdata form
+     - [ ] emit defdata form in a separate data section
+   - [ ] version 0.5
+     - [ ] analyze instructions
+       - [ ] check syntax for x86 instructions (%adc, %add, %and, %bsf, %bsr,
+         %bswap, %bt, %btc, %btr, %bts, %call, %cbw, %cdq, %cdqe, %cmova, %cmovae,
+         %cmovb, %cmovbe, %cmovc, %cmove, %cmovg, %cmovge, %cmovl, %cmovle,
+         %cmovna, %cmovnae, %cmovnb, %cmovnbe, %cmovnc, %cmovne, %cmovng,
+         %cmovnge, %cmovnl, %cmovnle, %cmovno, %cmovnp, %cmovns, %cmovnz, %cmovo,
+         %cmovp, %cmovpe, %cmovpo, %cmovs, %cmovz, %cmp, %cmpxchg, %cqo, %crc32,
+         %cwd, %cwde, %dec, %div, %idiv, %imul, %inc, %ja, %jae, %jb, %jbe, %jc,
+         %jcxz, %je, %jecxz, %jg, %jge, %jl, %jle, %jmp, %jna, %jnae, %jnb, %jnbe,
+         %jnc, %jne, %jng, %jnge, %jnl, %jnle, %jno, %jnp, %jns, %jnz, %jo, %jp,
+         %jpe, %jpo, %jrcxz, %js, %jz, %loop, %loope, %loopne, %mov, %movsx,
+         %movsxd, %movzx, %mul, %neg, %nop, %not, %or, %pop, %popcnt, %push, %rcl,
+         %rcr, %ret, %rol, %ror, %sal, %sar, %sbb, %seta, %setae, %setb, %setbe,
+         %setc, %sete, %setg, %setge, %setl, %setle, %setna, %setnae, %setnb,
+         %setnbe, %setnc, %setne, %setng, %setnge, %setnl, %setnle, %setno,
+         %setnp, %setns, %setnz, %seto, %setp, %setpe, %setpo, %sets, %setz, %shl,
+         %shld, %shr, %shrd, %sub, %test, %xadd, %xchg, %xor)
+   - [ ] version 0.6
+     - [ ] parse primitive tags
+     - [ ] parse label tag
+     - [ ] analyze defasm form
+       - [ ] parse defasm into basic blocks
+       - [ ] check tag for tagged basic blocks
+       - [ ] check tag for local untagged basic blocks
+       - [ ] check back referencing jump instructions have tags
+       - [ ] check for an disallow uses of memory references
+       - [ ] check tag for x86 instructions (%adc, %add, %and, %bsf, %bsr, %bt,
+         %btc, %btr, %bts, %call, %cbw, %cdq, %cdqe, %cmp, %cmpxchg, %cqo,
+         %crc32, %cwd, %cwde, %dec, %div, %idiv, %imul, %inc, %ja, %jae, %jb,
+         %jbe, %jc, %jcxz, %je, %jecxz, %jg, %jge, %jl, %jle, %jmp, %jna, %jnae,
+         %jnb, %jnbe, %jnc, %jne, %jng, %jnge, %jnl, %jnle, %jno, %jnp, %jns,
+         %jnz, %jo, %jp, %jpe, %jpo, %jrcxz, %js, %jz, %loop, %loope, %loopne,
+         %mov, %movsx, %movsxd, %movzx, %mul, %neg, %not, %or, %popcnt, %rcl,
+         %rcr, %rdtsc, %ret, %rol, %ror, %sal, %sar, %sbb, %shl, %shld, %shr,
+         %shrd, %sub, %test, %xadd, %xchg, %xor)
+   - [ ] version 0.7
+     - [ ] parse tuple types
+     - [ ] parse defdata type (must be a tuple type)
+     - [ ] parse %malloc pseudo-instruction
+     - [ ] parse %mget pseudo-instruction
+     - [ ] parse %mset pseudo-instruction
+     - [ ] visit %malloc
+     - [ ] visit %mget
+     - [ ] visit %mset
+     - [ ] analyze instructions
+       - [ ] check memory pseudo-instructions (%malloc, %mget, %mset)
+     - [ ] emit %malloc
+     - [ ] emit %mget
+     - [ ] emit %mset
+   - [ ] version 0.8
+     - [ ] parse stack tag
+     - [ ] parse %salloc pseudo-instruction
+     - [ ] parse %sget pseudo-instruction
+     - [ ] parse %sset pseudo-instruction
+     - [ ] visit %salloc
+     - [ ] visit %sget
+     - [ ] visit %sset
+     - [ ] analyze instructions
+       - [ ] check stack for x86 stack instructions (%pop, %push)
+       - [ ] check stack for stack pseudo-instructions (%salloc, %sget, %sset)
+     - [ ] emit %salloc
+     - [ ] emit %sget
+     - [ ] emit %sset
+     - [ ] require %rsp and %rbp to only have stack types?
+       - I think they can contain other types, but if you're trying to execute a
+         stack operation that explicitly or implicitly references one of them,
+         then they would have to have a stack type.
+   - [ ] version 0.9
+     - [ ] check syntax for flag instructions (%clc, %cmc, %stc)
+     - [ ] check flags for x86 arithmetic instructions (%adc, %add, %dec, %div,
+       %idiv, %imul, %inc, %mul, %neg, %sbb, %sub, %xadd)
+     - [ ] check flags for x86 logical instructions (%and, %not, %or, %test,
+       %xor)
+     - [ ] check flags for x86 bit instructions (%bsf, %bsr, %bt, %btc, %btr,
+       %bts, %popcnt, %rcl, %rcr, %rol, %ror, %sal, %sar, %shl, %shld, %shr,
+       %shrd)
+     - [ ] check flags for x86 miscellaneous instructions (%cmp, %cmpxchg)
+     - [ ] check flags for x86 jump instructions (%ja, %jae, %jb, %jbe, %jc,
+       %je, %jg, %jge, %jl, %jle, %jna, %jnae, %jnb, %jnbe, %jnc, %jne, %jng,
+       %jnge, %jnl, %jnle, %jno, %jnp, %jns, %jnz, %jo, %jp, %jpe, %jpo, %js,
+       %jz, %loope, %loopne)
+   - [ ] future version
+     - [ ] instruction prefixes
+     - [ ] floating point
+     - [ ] mmx etc.
+     - [ ] BCD
+     - [ ] array types
+   - Future Tasks
+     - CMOVcc instructions :: They could be expanded into a conditional jump
+          instruction and an unconditional move instruction. For example,
+          : (%cmovl %rax #int32 15)
+          could be expanded into
+          : (%jge lbl1)
+          : (mov %rax #int32 15)
+          : (%label lbl1)
+          This would allow the type checker to reason about instructions using
+          just basic blocks and jump instructions, but that will result in some
+          programs that will not type.  For example,
+          : (%cmp %rax %rbx)
+          : (%cmovl %rax #int32 15)
+          : (%cmovge %rax #int32 1)
+          : (%add %rax #int8 5)
+          If %rax and %rbx contain non-integer types (say floats) during the
+          comparison, the compiler would not be able to infer that %rax contains
+          an int32 at the add instruction, even though it surely would because
+          less-than and greater-than-or-equal-to are complimentary operations.
+
+          It seems possible (though complicated) to have multiple conditional
+          types for a register and perhaps collapse these types into an
+          unconditional type when appropriate complementary conditional move
+          instructions have been executed.
+
+          I'm not prepared to commit to anything, so I'm punting for now.
+     - SETcc instructions :: These instructions are a little easier to reason
+          about than the CMOVcc instructions however there is one hitch.  We do
+          not know whether the value that is placed in a register is signed or
+          unsigned.  I would propose adding new ISETcc instructions that are
+          signed, and SETcc instructions would be unsigned.
+
+          This seems to resolve the issue, but I'm going to put off a decision.
+     - RDRAND instruction :: We do not know whether the value that is placed in
+          a register is signed or unsigned.  I would propose adding new IRDRAND
+          instruction that is signed, and the RDRAND instruction would be
+          unsigned.
+     - MOVBE, BSWAP instructions :: It would be possible to introduce tags for
+          big-endian integers, then this instruction could produce those values,
+          and any big-endian values it produced could not be used with integer
+          instructions.  Not sure it warrants that complexity, maybe this
+          instructions would just be one of the "untypeable" instructions.
+
+          Another possibility would be--just like the bit rotate
+          instructions--any byte swapping instructions would not change the type
+          of the operand.
+     - Jcc, LOOP, LOOPE, LOOPNE instructions :: These instructions don't take a
+          64-bit offset.  The LOOP instructions take an 8-bit offset.  It would
+          be nice to verify these statically.  It might be possible by
+          guestimating, or exactly calculating the size of assembled
+          instructions and finding how far away the target instructions are.
+     - Segmented memory? :: 64-bit mode uses a flat memory structure, but it
+          seems that there are still uses for some of the segment registers?
+          How can/should these be integrated into the syntax and semantics?
+     - Shift instructions :: Some shift instructions will set the overflow flag
+          based on whether the shift amount is 1 or not.  In trivial cases with
+          immediate operands I can detect whether the amount is 1, but in other
+          cases it is impossible to know whether the shift amount is 1 or not.
+          The type system could have some kind of "maybe" value for the overflow
+          flag, and just provide a warning?
+     - More flexible integer immediates :: It should be possible to allow any
+          integer to fill in any spot that expects an integer immediate value,
+          as long as it is in the right range.  For example, if an instruction
+          is expecting a 8-bit integer, then it should also be able to accept a
+          64-bit integer in the range -128 to 127.  Similarly, a positive,
+          signed 8-bit integer should be able to fill the spot of an unsigned
+          8-bit integer.
+
+          The only difficulty may be that the emitting code is emitting prefixes
+          for integers, and either the syntax checker would have to change the
+          type of the immediate, or somehow the emitter would have to emit the
+          right prefix.
+
+          Another possibility would be to have a form of integers that are not
+          explicitly typed, but can take on a type in the context they are used
+          (perhaps with some kind of syntax directed parsing).
+** License
+  : Copyright © 2013 Paul Stadig. All rights reserved.
+  : 
+  : This Source Code Form is subject to the terms of the Mozilla Public License,
+  : v. 2.0. If a copy of the MPL was not distributed with this file, You can
+  : obtain one at http://mozilla.org/MPL/2.0/.
+  : 
+  : This Source Code Form is "Incompatible With Secondary Licenses", as defined
+  : by the Mozilla Public License, v. 2.0.
