@@ -11,15 +11,7 @@
   (:require [clojure.core :as clj]
             [clojure.java.io :as io]
             [slingshot.slingshot :refer [throw+]]
-            [sybilant.compile :refer [die]]))
-
-(defn form [obj]
-  (if (string? obj)
-    obj
-    (pr-str (or (:form (meta obj)) (:form obj) obj))))
-
-(defn error [& msg]
-  (apply die 2 (map form msg)))
+            [sybilant.util :refer [error]]))
 
 (defn typed-map? [exp t]
   (and (map? exp) (= t (:type exp))))

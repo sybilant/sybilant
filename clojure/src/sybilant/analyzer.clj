@@ -9,7 +9,8 @@
 (ns sybilant.analyzer
   (:refer-clojure :exclude [number? symbol?])
   (:require [sybilant.visitor :refer [visit]]
-            [sybilant.parser :refer :all]))
+            [sybilant.parser :refer :all]
+            [sybilant.util :refer [error]]))
 
 (def ^:dynamic *symbol-table* (atom {}))
 

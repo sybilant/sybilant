@@ -9,13 +9,10 @@
 (ns sybilant.compile
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
-            [slingshot.slingshot :refer [try+ throw+]])
+            [slingshot.slingshot :refer [try+]]
+            [sybilant.util :refer [die]])
   (:import (clojure.lang LineNumberingPushbackReader))
   (:gen-class))
-
-(defn die [exit-code & message]
-  (throw+ {:message (str/join " " (map str message))
-           :exit-code exit-code}))
 
 (def usage
   (str
