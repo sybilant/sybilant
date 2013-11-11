@@ -42,12 +42,12 @@
      - [X] parse signed and unsigned integers (8-bit, 16-bit, 32-bit, 64-bit)
      - [ ] parse memory references (8-bit, 16-bit, 32-bit, 64-bit)
      - [ ] parse %label form
-     - [ ] visit integers
+     - [X] visit integers
      - [ ] visit memory references
      - [ ] visit %label form
      - [ ] analyze %label form
        - [ ] check doubly defined symbols (including re-defining a defasm name)
-     - [ ] emit integers
+     - [X] emit integers
      - [ ] emit memory references
      - [ ] emit %label form
      - [ ] munging of symbols

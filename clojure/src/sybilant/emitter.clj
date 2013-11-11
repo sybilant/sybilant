@@ -13,6 +13,18 @@
   (.write out (str (:form exp))))
 (defmethod emit :number [exp out]
   (.write out (str (:form exp))))
+(defn emit-width-prefix [exp out]
+  (.write out (case (:width exp)
+                8 "byte "
+                16 "word "
+                32 "dword "
+                64 "qword ")))
+(defmethod emit :int [exp out]
+  (emit-width-prefix exp out)
+  (.write out (str (:form exp))))
+(defmethod emit :uint [exp out]
+  (emit-width-prefix exp out)
+  (.write out (str (:form exp))))
 (defmethod emit :register [exp out]
   (.write out (subs (str (:form (meta exp))) 1)))
 (defmethod emit :operator [exp out]

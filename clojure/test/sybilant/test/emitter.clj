@@ -24,6 +24,18 @@
 (deftest test-emit-number
   (is (= "1" (emit* (parse-number 1)))))
 
+(deftest test-emit-signed-integers
+  (is (= "byte 1" (emit* (parse-int8 (byte 1)))))
+  (is (= "word 1" (emit* (parse-int16 (short 1)))))
+  (is (= "dword 1" (emit* (parse-int32 (int 1)))))
+  (is (= "qword 1" (emit* (parse-int64 (->Int64 1))))))
+
+(deftest test-emit-unsigned-integers
+  (is (= "byte 1" (emit* (parse-uint8 (->Uint8 1)))))
+  (is (= "word 1" (emit* (parse-uint16 (->Uint16 1)))))
+  (is (= "dword 1" (emit* (parse-uint32 (->Uint32 1)))))
+  (is (= "qword 1" (emit* (parse-uint64 (->Uint64 1))))))
+
 (deftest test-emit-register
   (is (= "rax" (emit* (parse-register '%rax)))))
 
