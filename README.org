@@ -22,13 +22,13 @@
      - [X] visit instructions
      - [X] visit defasm form
      - [X] visit defextern form
-     - [ ] analyze symbols
-       - [ ] check undefined symbol references
-       - [ ] check symbol format
-     - [ ] analyze defasm form
-       - [ ] check doubly defined symbols
-     - [ ] analyze defextern form
-       - [ ] check doubly defined symbols
+     - [X] analyze symbols
+       - [X] check undefined symbol references
+       - [X] check symbol format
+     - [X] analyze defasm form
+       - [X] check doubly defined symbols
+     - [X] analyze defextern form
+       - [X] check doubly defined symbols
      - [ ] emit symbols
      - [ ] emit plain numbers
      - [ ] emit registers

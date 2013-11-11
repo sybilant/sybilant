@@ -156,11 +156,13 @@
 (defn make-defasm
   ([name statements]
      {:pre [(symbol? name) (every? instruction? statements)]}
-     {:type :defasm :name name :statements statements})
+     (with-meta {:type :defasm :name name :statements statements}
+       {:definition? true}))
   ([name statements form]
      {:pre [(defasm-form? form)]}
-     (with-meta (make-defasm name statements)
-       (assoc (meta form) :form (with-meta form {})))))
+     (-> (make-defasm name statements)
+         (vary-meta merge (meta form))
+         (vary-meta assoc :form (with-meta form {})))))
 
 (defn parse-defasm [form]
   (when-not (defasm-form? form)
@@ -185,11 +187,13 @@
 (defn make-defextern
   ([name]
      {:pre [(symbol? name)]}
-     {:type :defextern :name name})
+     (with-meta {:type :defextern :name name}
+       {:definition? true}))
   ([name form]
      {:pre [(defextern-form? form)]}
-     (with-meta (make-defextern name)
-       (assoc (meta form) :form (with-meta form {})))))
+     (-> (make-defextern name)
+         (vary-meta merge (meta form))
+         (vary-meta assoc :form (with-meta form {})))))
 
 (defn parse-defextern [form]
   (when-not (defextern-form? form)
