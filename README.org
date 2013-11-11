@@ -29,12 +29,12 @@
        - [X] check doubly defined symbols
      - [X] analyze defextern form
        - [X] check doubly defined symbols
-     - [ ] emit symbols
-     - [ ] emit plain numbers
-     - [ ] emit registers
-     - [ ] emit instructions
-     - [ ] emit defasm form
-     - [ ] emit defextern form
+     - [X] emit symbols
+     - [X] emit plain numbers
+     - [X] emit registers
+     - [X] emit instructions
+     - [X] emit defasm form
+     - [X] emit defextern form
      - [ ] build scripts
      - [ ] test scripts
    - [ ] version 0.2
