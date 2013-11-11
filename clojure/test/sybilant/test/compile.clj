@@ -71,7 +71,7 @@
 (deftest test-main-will-default-to-standard-in
   (is (= ["" ""]
          (with-in-str output (with-output-strs (-main "-o" outpath)))))
-  (is (= output (slurp outfile)))
+  (is (= (str "bits 64\ndefault rel\n" output) (slurp outfile)))
   (is (= 0 @exit-code)))
 
 (deftest test-main-will-default-to-standard-out
@@ -91,7 +91,7 @@
   (.createNewFile outfile)
   (is (= ["" ""]
          (with-output-strs (-main "-f" "-o" outpath inpath))))
-  (is (= output (slurp outfile)))
+  (is (= (str "bits 64\ndefault rel\n" output) (slurp outfile)))
   (is (= 0 @exit-code)))
 
 (deftest test-main-cleans-up-output-file-on-exception

@@ -105,6 +105,8 @@
               (die 1 "output file" outfile "exists"))
             (try
               (with-open [out (io/writer outfile :encoding "utf-8")]
+                (.write out "bits 64\n")
+                (.write out "default rel\n")
                 (compile-files (assoc (dissoc options :outfile) :out out)))
               (catch Throwable t
                 (when-not debug?

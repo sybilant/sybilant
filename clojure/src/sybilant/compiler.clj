@@ -7,6 +7,12 @@
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.compiler
-  (:refer-clojure :exclude [compile]))
+  (:refer-clojure :exclude [compile])
+  (:require [sybilant.analyzer :refer [analyze]]
+            [sybilant.emitter :refer [emit]]
+            [sybilant.parser :refer [parse-top-level]]))
 
-(defn compile [in out])
+(defn compile [in out]
+  (doseq [exp (take-while (partial not= ::eof)
+                          (repeatedly #(read in false ::eof)))]
+    (emit (analyze (parse-top-level exp)) out)))

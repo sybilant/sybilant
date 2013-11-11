@@ -205,3 +205,16 @@
     (when-not (symbol-form? name)
       (error "defextern expect a symbol for name, but got" name))
     (make-defextern (parse-symbol name) form)))
+
+(defn top-level? [exp]
+  (or (defasm? exp) (defextern? exp)))
+
+(defn top-level-form? [form]
+  (or (defasm-form? form) (defextern-form? form)))
+
+(defn parse-top-level [form]
+  (when-not (top-level-form? form)
+    (error "expected top level form, but was" form))
+  (cond
+   (defasm-form? form) (parse-defasm form)
+   (defextern-form? form) (parse-defextern form)))

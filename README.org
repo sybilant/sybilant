@@ -8,7 +8,7 @@
    It is still a work in progress, so details will be fleshed out as its
    implementation proceeds.
 ** Roadmap
-   - [-] version 0.1
+   - [X] version 0.1
      - [X] parse symbols
      - [X] parse plain numbers
      - [X] parse x86 general purpose registers (%rax, %rbx, %rcx, %rdx, %rsi,
@@ -35,8 +35,8 @@
      - [X] emit instructions
      - [X] emit defasm form
      - [X] emit defextern form
-     - [ ] build scripts
-     - [ ] test scripts
+     - [X] build scripts
+     - [X] test scripts
    - [ ] version 0.2
      - [ ] read signed and unsigned integers (8-bit, 16-bit, 32-bit, 64-bit)
      - [ ] parse signed and unsigned integers (8-bit, 16-bit, 32-bit, 64-bit)

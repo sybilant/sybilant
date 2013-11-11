@@ -1,0 +1,8 @@
+#!/bin/bash
+lein compile
+bin_file=$(dirname $1)/sybilant
+asm_file=$bin_file.asm
+object_file=$bin_file.o
+lein trampoline run -m sybilant.compile -o $asm_file $@ &&
+yasm -g dwarf2 -f elf64 -o $object_file $asm_file &&
+ld -dynamic-linker /lib64/ld-linux-x86-64.so.2 -lc -o $bin_file $object_file
