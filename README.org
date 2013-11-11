@@ -37,9 +37,9 @@
      - [X] emit defextern form
      - [X] build scripts
      - [X] test scripts
-   - [ ] version 0.2
-     - [ ] read signed and unsigned integers (8-bit, 16-bit, 32-bit, 64-bit)
-     - [ ] parse signed and unsigned integers (8-bit, 16-bit, 32-bit, 64-bit)
+   - [-] version 0.2
+     - [X] read signed and unsigned integers (8-bit, 16-bit, 32-bit, 64-bit)
+     - [X] parse signed and unsigned integers (8-bit, 16-bit, 32-bit, 64-bit)
      - [ ] parse memory references (8-bit, 16-bit, 32-bit, 64-bit)
      - [ ] parse %label form
      - [ ] visit integers
