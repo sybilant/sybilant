@@ -43,7 +43,7 @@
      - [X] parse memory references (8-bit, 16-bit, 32-bit, 64-bit)
      - [ ] parse %label form
      - [X] visit integers
-     - [ ] visit memory references
+     - [X] visit memory references
      - [ ] visit %label form
      - [ ] analyze %label form
        - [ ] check doubly defined symbols (including re-defining a defasm name)

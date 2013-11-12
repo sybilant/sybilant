@@ -15,6 +15,14 @@
 (defn visitor [n]
   (assoc n :visited? true))
 
+(deftest test-visit-mem
+  (let [visited (visit (parse-mem '(%mem8 %rax %rbx 4 17)) visitor)]
+    (is (get-in visited [:visited?]))
+    (is (get-in visited [:base :visited?]))
+    (is (get-in visited [:index :visited?]))
+    (is (get-in visited [:scale :visited?]))
+    (is (get-in visited [:disp :visited?]))))
+
 (deftest test-visit-instruction
   (let [visited (visit (parse-instruction '(%add %rax 1)) visitor)]
     (is (get-in visited [:visited?]))
