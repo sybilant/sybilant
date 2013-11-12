@@ -21,3 +21,6 @@
 
 (defn error [& msg]
   (apply die 2 (map form msg)))
+
+(defn maybe [pred]
+  (fn [x] (or (nil? x) (pred x))))

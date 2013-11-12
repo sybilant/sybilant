@@ -64,6 +64,64 @@
   (is (register? (parse-register '%rax)))
   (is (= {:form '%rax} (meta (parse-register '%rax)))))
 
+(deftest test-parse-mem8
+  (is (mem8-form? '(%mem8 1)))
+  (is (= {:type :mem :width 8 :disp (parse-number 1)}
+         (parse-mem8 '(%mem8 1))))
+  (is (mem8? (parse-mem8 '(%mem8 1))))
+  (is (= '(%mem8 1) (:form (meta (parse-mem8 '(%mem8 1)))))))
+
+(deftest test-parse-mem16
+  (is (mem16-form? '(%mem16 1)))
+  (is (= {:type :mem :width 16 :disp (parse-number 1)}
+         (parse-mem16 '(%mem16 1))))
+  (is (mem16? (parse-mem16 '(%mem16 1))))
+  (is (= '(%mem16 1) (:form (meta (parse-mem16 '(%mem16 1)))))))
+
+(deftest test-parse-mem32
+  (is (mem32-form? '(%mem32 1)))
+  (is (= {:type :mem :width 32 :disp (parse-number 1)}
+         (parse-mem32 '(%mem32 1))))
+  (is (mem32? (parse-mem32 '(%mem32 1))))
+  (is (= '(%mem32 1) (:form (meta (parse-mem32 '(%mem32 1)))))))
+
+(deftest test-parse-mem64
+  (is (mem64-form? '(%mem64 1)))
+  (is (= {:type :mem :width 64 :disp (parse-number 1)}
+         (parse-mem64 '(%mem64 1))))
+  (is (mem64? (parse-mem64 '(%mem64 1))))
+  (is (= '(%mem64 1) (:form (meta (parse-mem64 '(%mem64 1)))))))
+
+(deftest test-parse-mem
+  (is (= {:type :mem :width 64 :disp (parse-number 1)}
+         (parse-mem '(%mem64 1))))
+  (is (= {:type :mem :width 64 :base (parse-register '%rax)}
+         (parse-mem '(%mem64 %rax))))
+  (is (= {:type :mem :width 64
+          :base (parse-register '%rax)
+          :disp (parse-number 1)}
+         (parse-mem '(%mem64 %rax 1))))
+  (is (= {:type :mem :width 64
+          :index (parse-register '%rax)
+          :scale (parse-number 2)
+          :disp (parse-number 1)}
+         (parse-mem '(%mem64 %rax 2 1))))
+  (is (= {:type :mem :width 64
+          :base (parse-register '%rax)
+          :index (parse-register '%rbx)
+          :disp (parse-number 1)}
+         (parse-mem '(%mem64 %rax %rbx 1))))
+  (is (= {:type :mem :width 64
+          :base (parse-register '%rax)
+          :index (parse-register '%rbx)
+          :scale (parse-number 2)
+          :disp (parse-number 1)}
+         (parse-mem '(%mem64 %rax %rbx 2 1))))
+  (is (thrown? Exception (parse-mem '(%mem64))))
+  (is (thrown? Exception (parse-mem '(%mem64 %rax %rbx %rcx %rdx %rsi))))
+  (is (thrown? Exception (parse-mem '(%mem64 %rax %rbx %rcx))))
+  (is (thrown? Exception (parse-mem '(%mem64 %rax 7 1)))))
+
 (deftest test-parse-operator
   (is (operator-form? '%add))
   (is (= {:type :operator :form '%add} (parse-operator '%add)))
@@ -92,7 +150,12 @@
   (testing "symbol"
     (is (operand-form? 'foo))
     (is (= (parse-symbol 'foo) (parse-operand 'foo)))
-    (is (operand? (parse-operand 'foo)))))
+    (is (operand? (parse-operand 'foo))))
+  (testing "mem"
+    (doseq [m '[(%mem8 1) (%mem16 1) (%mem32 1) (%mem64 1)]]
+      (is (operand-form? m))
+      (is (= (parse-mem m) (parse-operand m)))
+      (is (operand? (parse-operand m))))))
 
 (deftest test-parse-instruction
   (let [form '(%add %rax 1)]

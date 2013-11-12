@@ -11,7 +11,7 @@
   (:require [clojure.core :as clj]
             [clojure.java.io :as io]
             [slingshot.slingshot :refer [throw+]]
-            [sybilant.util :refer [error]]))
+            [sybilant.util :refer [error maybe]]))
 
 (defn read-int8 [form]
   (unchecked-byte form))
@@ -289,6 +289,148 @@
     (error "expected register, but was" form))
   (make-register form))
 
+(defn mem? [exp]
+  (typed-map? exp :mem))
+
+(def mem-width '{%mem8 8 %mem16 16 %mem32 32 %mem64 64})
+
+(defn mem-base? [exp]
+  (register? exp))
+
+(defn mem-index? [exp]
+  (register? exp))
+
+(defn mem-scale-form? [form]
+  (and (number-form? form) (contains? #{2 4 8} form)))
+
+(defn mem-scale? [exp]
+  (and (number? exp) (mem-scale-form? (:form exp))))
+
+(defn mem-disp-form? [form]
+  (and (number-form? form) (<= Integer/MIN_VALUE form Integer/MAX_VALUE)))
+
+(defn mem-disp? [exp]
+  (and (number? exp) (mem-disp-form? (:form exp))))
+
+(declare mem-form?)
+
+(defn make-mem
+  ([name base index scale disp]
+     {:pre [(contains? mem-width name)
+            ((maybe mem-base?) base)
+            ((maybe mem-index?) index)
+            ((maybe mem-scale?) scale)
+            ((maybe mem-disp?) disp)]}
+     (merge {:type :mem :width (mem-width name)}
+            (when base
+              {:base base})
+            (when index
+              {:index index})
+            (when scale
+              {:scale scale})
+            (when disp
+              {:disp disp})))
+  ([name base index scale disp form]
+     {:pre [(mem-form? form)]}
+     (-> (make-mem name base index scale disp)
+         (vary-meta merge (meta form))
+         (vary-meta assoc :form (with-meta form {})))))
+
+(defn mem-args? [& args]
+  (let [preds (drop-last args)
+        args (last args)]
+    (and (= (count preds) (count args))
+         (every? (fn [[pred arg]] (pred arg)) (map vector preds args)))))
+
+(defn parse-mem-args [[a b c d :as args]]
+  (cond
+   (mem-args? mem-disp-form? args)
+   [nil nil nil a]
+   (mem-args? register-form? args)
+   [a nil nil nil]
+   (mem-args? register-form? number-form? args)
+   [a nil nil b]
+   (mem-args? register-form? mem-scale-form? mem-disp-form? args)
+   [nil a b c]
+   (mem-args? register-form? register-form? mem-disp-form? args)
+   [a b nil c]
+   (mem-args? register-form? register-form? mem-scale-form? mem-disp-form? args)
+   [a b c d]))
+
+(defn parse-mem [form]
+  (when-not (mem-form? form)
+    (error "expected %mem, but was" form))
+  (let [arg-count (dec (count form))]
+    (when-not (< 0 arg-count)
+      (error (first form) "expects at least 1 argument, but got" arg-count))
+    (when-not (< arg-count 5)
+      (error (first form) "expects at most 4 argument, but got" arg-count))
+    (let [[name & args] form
+          [base index scale disp :as args] (parse-mem-args args)]
+      (if (seq args)
+        (make-mem name
+                  (when base
+                    (parse-register base))
+                  (when index
+                    (parse-register index))
+                  (when scale
+                    (parse-number scale))
+                  (when disp
+                    (parse-number disp))
+                  form)
+        (error "invalid arguments for" form)))))
+
+(defn tagged-list? [form t]
+  (and (list? form) (= t (first form))))
+
+(defn mem8? [exp]
+  (and (mem? exp) (= 8 (:width exp))))
+
+(defn mem8-form? [form]
+  (tagged-list? form '%mem8))
+
+(defn parse-mem8 [form]
+  (when-not (mem8-form? form)
+    (error "expected %mem8, but was" form))
+  (parse-mem form))
+
+(defn mem16? [exp]
+  (and (mem? exp) (= 16 (:width exp))))
+
+(defn mem16-form? [form]
+  (tagged-list? form '%mem16))
+
+(defn parse-mem16 [form]
+  (when-not (mem16-form? form)
+    (error "expected %mem16, but was" form))
+  (parse-mem form))
+
+(defn mem32? [exp]
+  (and (mem? exp) (= 32 (:width exp))))
+
+(defn mem32-form? [form]
+  (tagged-list? form '%mem32))
+
+(defn parse-mem32 [form]
+  (when-not (mem32-form? form)
+    (error "expected %mem32, but was" form))
+  (parse-mem form))
+
+(defn mem64? [exp]
+  (and (mem? exp) (= 64 (:width exp))))
+
+(defn mem64-form? [form]
+  (tagged-list? form '%mem64))
+
+(defn parse-mem64 [form]
+  (when-not (mem64-form? form)
+    (error "expected %mem64, but was" form))
+  (parse-mem form))
+
+(defn mem-form? [form]
+  (or (mem8-form? form) (mem16-form? form) (mem32-form? form)
+      (mem64-form? form)))
+
 (def operators
   (-> "sybilant/operators.clj"
       io/resource
@@ -315,11 +457,12 @@
   (make-operator form))
 
 (defn operand? [exp]
-  (or (number? exp) (int? exp) (uint? exp) (register? exp) (symbol? exp)))
+  (or (number? exp) (int? exp) (uint? exp) (register? exp) (symbol? exp)
+      (mem? exp)))
 
 (defn operand-form? [form]
   (or (number-form? form) (int-form? form) (uint-form? form)
-      (register-form? form) (symbol-form? form)))
+      (register-form? form) (symbol-form? form) (mem-form? form)))
 
 (defn parse-operand [form]
   (when-not (operand-form? form)
@@ -329,7 +472,8 @@
    (int-form? form) (parse-int form)
    (uint-form? form) (parse-uint form)
    (register-form? form) (parse-register form)
-   (symbol-form? form) (parse-symbol form)))
+   (symbol-form? form) (parse-symbol form)
+   (mem-form? form) (parse-mem form)))
 
 (defn instruction? [exp]
   (typed-map? exp :instruction))
@@ -357,9 +501,6 @@
                       (map parse-operand operands)
                       form)))
 
-(defn tagged-list? [form t]
-  (and (list? form) (= t (first form))))
-
 (defn defasm? [exp]
   (typed-map? exp :defasm))
 
@@ -380,9 +521,9 @@
 (defn parse-defasm [form]
   (when-not (defasm-form? form)
     (error "expected defasm, but was" form))
-  (let [form-count (dec (count form))]
-    (when (< form-count 2)
-      (error "defasm expects at least 2 arguments, but got" form-count)))
+  (let [arg-count (dec (count form))]
+    (when (< arg-count 2)
+      (error "defasm expects at least 2 arguments, but got" arg-count)))
   (let [[_ name & statements] form]
     (when-not (symbol-form? name)
       (error "defasm expects a symbol for name, but got" name))
@@ -411,9 +552,9 @@
 (defn parse-defextern [form]
   (when-not (defextern-form? form)
     (error "expected defextern, but was" form))
-  (let [form-count (dec (count form))]
-    (when (not= form-count 1)
-      (error "defextern expects exactly 1 argument, but got" form-count)))
+  (let [arg-count (dec (count form))]
+    (when (not= arg-count 1)
+      (error "defextern expects exactly 1 argument, but got" arg-count)))
   (let [name (second form)]
     (when-not (symbol-form? name)
       (error "defextern expect a symbol for name, but got" name))
