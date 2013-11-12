@@ -41,7 +41,7 @@
      - [X] read signed and unsigned integers (8-bit, 16-bit, 32-bit, 64-bit)
      - [X] parse signed and unsigned integers (8-bit, 16-bit, 32-bit, 64-bit)
      - [X] parse memory references (8-bit, 16-bit, 32-bit, 64-bit)
-     - [ ] parse %label form
+     - [X] parse %label form
      - [X] visit integers
      - [X] visit memory references
      - [ ] visit %label form

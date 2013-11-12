@@ -65,32 +65,52 @@
   (is (= {:form '%rax} (meta (parse-register '%rax)))))
 
 (deftest test-parse-mem8
-  (is (mem8-form? '(%mem8 1)))
-  (is (= {:type :mem :width 8 :disp (parse-number 1)}
-         (parse-mem8 '(%mem8 1))))
-  (is (mem8? (parse-mem8 '(%mem8 1))))
-  (is (= '(%mem8 1) (:form (meta (parse-mem8 '(%mem8 1)))))))
+  (let [form '(%mem8 1)]
+    (is (mem8-form? form))
+    (let [mem (parse-mem8 form)
+          meta (meta mem)]
+      (is (= {:type :mem :width 8 :disp (parse-number 1)}
+             (parse-mem8 form)))
+      (is (mem8? (parse-mem8 form)))
+      (is (= form (:form meta)))
+      (is (:line meta))
+      (is (:column meta)))))
 
 (deftest test-parse-mem16
-  (is (mem16-form? '(%mem16 1)))
-  (is (= {:type :mem :width 16 :disp (parse-number 1)}
-         (parse-mem16 '(%mem16 1))))
-  (is (mem16? (parse-mem16 '(%mem16 1))))
-  (is (= '(%mem16 1) (:form (meta (parse-mem16 '(%mem16 1)))))))
+  (let [form '(%mem16 1)]
+    (is (mem16-form? form))
+    (let [mem (parse-mem16 form)
+          meta (meta mem)]
+      (is (= {:type :mem :width 16 :disp (parse-number 1)}
+             (parse-mem16 form)))
+      (is (mem16? (parse-mem16 form)))
+      (is (= form (:form meta)))
+      (is (:line meta))
+      (is (:column meta)))))
 
 (deftest test-parse-mem32
-  (is (mem32-form? '(%mem32 1)))
-  (is (= {:type :mem :width 32 :disp (parse-number 1)}
-         (parse-mem32 '(%mem32 1))))
-  (is (mem32? (parse-mem32 '(%mem32 1))))
-  (is (= '(%mem32 1) (:form (meta (parse-mem32 '(%mem32 1)))))))
+  (let [form '(%mem32 1)]
+    (is (mem32-form? form))
+    (let [mem (parse-mem32 form)
+          meta (meta mem)]
+      (is (= {:type :mem :width 32 :disp (parse-number 1)}
+             (parse-mem32 form)))
+      (is (mem32? (parse-mem32 form)))
+      (is (= form (:form meta)))
+      (is (:line meta))
+      (is (:column meta)))))
 
 (deftest test-parse-mem64
-  (is (mem64-form? '(%mem64 1)))
-  (is (= {:type :mem :width 64 :disp (parse-number 1)}
-         (parse-mem64 '(%mem64 1))))
-  (is (mem64? (parse-mem64 '(%mem64 1))))
-  (is (= '(%mem64 1) (:form (meta (parse-mem64 '(%mem64 1)))))))
+  (let [form '(%mem64 1)]
+    (is (mem64-form? form))
+    (let [mem (parse-mem64 form)
+          meta (meta mem)]
+      (is (= {:type :mem :width 64 :disp (parse-number 1)}
+             (parse-mem64 form)))
+      (is (mem64? (parse-mem64 form)))
+      (is (= form (:form meta)))
+      (is (:line meta))
+      (is (:column meta)))))
 
 (deftest test-parse-mem
   (is (= {:type :mem :width 64 :disp (parse-number 1)}
@@ -171,6 +191,21 @@
       (is (:line meta))
       (is (:column meta))))
   (is (thrown? Exception (parse-instruction '(%add (%add %rax 1) 1)))))
+
+(deftest test-parse-label
+  (let [form '(%label foo)]
+    (is (label-form? form))
+    (let [label (parse-label form)
+          meta (meta label)]
+      (is (= {:type :label :name (parse-symbol 'foo)}
+             label))
+      (is (label? label))
+      (is (= form (:form meta)))
+      (is (:line meta))
+      (is (:column meta))))
+  (is (thrown? Exception (parse-label '(%label))))
+  (is (thrown? Exception (parse-label '(%label 1))))
+  (is (thrown? Exception (parse-label '(%label foo bar)))))
 
 (deftest test-parse-defasm
   (let [form '(defasm foo (%add %rax 1))]

@@ -503,6 +503,46 @@
                       (map parse-operand operands)
                       form)))
 
+(defn label? [exp]
+  (typed-map? exp :label))
+
+(defn label-form? [form]
+  (tagged-list? form '%label))
+
+(defn make-label
+  ([name]
+     {:pre [(symbol? name)]}
+     {:type :label :name name})
+  ([name form]
+     {:pre [(label-form? form)]}
+     (-> (make-label name)
+         (vary-meta merge (meta form))
+         (vary-meta assoc :form (with-meta form {})))))
+
+(defn parse-label [form]
+  (when-not (label-form? form)
+    (error "expected %label, but was" form))
+  (let [arg-count (dec (count form))]
+    (when-not (= 1 arg-count)
+      (error "%label expects exactly 1 argument, but got" arg-count)))
+  (let [name (second form)]
+    (when-not (symbol-form? name)
+      (error "%label expects a symbol for name, but got" name))
+    (make-label (parse-symbol name) form)))
+
+(defn statement? [exp]
+  (or (instruction? exp) (label? exp)))
+
+(defn statement-form? [form]
+  (or (instruction-form? form) (label-form? form)))
+
+(defn parse-statement [form]
+  (when-not (statement-form? form)
+    (error "expected statement, but was" form))
+  (cond
+   (instruction-form? form) (parse-instruction form)
+   (label-form? form) (parse-label form)))
+
 (defn defasm? [exp]
   (typed-map? exp :defasm))
 
@@ -511,7 +551,7 @@
 
 (defn make-defasm
   ([name statements]
-     {:pre [(symbol? name) (every? instruction? statements)]}
+     {:pre [(symbol? name) (every? statement? statements)]}
      (with-meta {:type :defasm :name name :statements statements}
        {:definition? true}))
   ([name statements form]
@@ -530,9 +570,9 @@
     (when-not (symbol-form? name)
       (error "defasm expects a symbol for name, but got" name))
     (doseq [statement statements]
-      (when-not (instruction-form? statement)
+      (when-not (statement-form? statement)
         (error "defasm expects a statement, but got" statement)))
-    (make-defasm (parse-symbol name) (map parse-instruction statements) form)))
+    (make-defasm (parse-symbol name) (map parse-statement statements) form)))
 
 (defn defextern? [exp]
   (typed-map? exp :defextern))
