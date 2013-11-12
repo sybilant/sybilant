@@ -30,6 +30,11 @@
     (doseq [operand (:operands visited)]
       (get-in operand [:visited?]))))
 
+(deftest test-visit-label
+  (let [visited (visit (parse-label '(%label foo)) visitor)]
+    (is (get-in visited [:visited?]))
+    (is (get-in visited [:name :visited?]))))
+
 (deftest test-visit-defasm
   (let [visited (visit (parse-defasm '(defasm foo (%add %rax 1))) visitor)]
     (is (get-in visited [:visited?]))

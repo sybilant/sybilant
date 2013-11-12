@@ -11,13 +11,15 @@
             [sybilant.util :refer [error]]))
 
 (defn branch? [exp]
-  (contains? #{:mem :instruction :defasm :defextern} (:type exp)))
+  (contains? #{:mem :instruction :label :defasm :defextern} (:type exp)))
 
 (defmulti children (comp :type first list))
 (defmethod children :mem [{:keys [base index scale disp]}]
   [base index scale disp])
 (defmethod children :instruction [{:keys [operator operands]}]
   (cons operator operands))
+(defmethod children :label [{:keys [name]}]
+  [name])
 (defmethod children :defasm [{:keys [name statements]}]
   (cons name statements))
 (defmethod children :defextern [{:keys [name]}]
@@ -38,6 +40,8 @@
            {:disp disp})))
 (defmethod make-node :instruction [exp [operator & operands]]
   (assoc exp :operator operator :operands operands))
+(defmethod make-node :label [exp [name]]
+  (assoc exp :name name))
 (defmethod make-node :defasm [exp [name & statements]]
   (assoc exp :name name :statements statements))
 (defmethod make-node :defextern [exp [name]]

@@ -44,7 +44,7 @@
      - [X] parse %label form
      - [X] visit integers
      - [X] visit memory references
-     - [ ] visit %label form
+     - [X] visit %label form
      - [ ] analyze %label form
        - [ ] check doubly defined symbols (including re-defining a defasm name)
        - [ ] check for instruction after label (including first statement in defasm)
