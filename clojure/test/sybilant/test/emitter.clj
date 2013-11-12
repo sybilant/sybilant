@@ -39,6 +39,14 @@
 (deftest test-emit-register
   (is (= "rax" (emit* (parse-register '%rax)))))
 
+(deftest test-emit-mem
+  (is (= "byte [17]" (emit* (parse-mem '(%mem8 17)))))
+  (is (= "byte [rax]" (emit* (parse-mem '(%mem8 %rax)))))
+  (is (= "byte [rax+17]" (emit* (parse-mem '(%mem8 %rax 17)))))
+  (is (= "byte [(rbx*4)+17]" (emit* (parse-mem '(%mem8 %rbx 4 17)))))
+  (is (= "byte [rax+rbx+17]" (emit* (parse-mem '(%mem8 %rax %rbx 17)))))
+  (is (= "byte [rax+(rbx*4)+17]" (emit* (parse-mem '(%mem8 %rax %rbx 4 17))))))
+
 (deftest test-emit-operator
   (is (= "add" (emit* (parse-operator '%add)))))
 

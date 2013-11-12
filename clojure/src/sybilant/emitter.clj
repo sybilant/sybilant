@@ -27,6 +27,26 @@
   (.write out (str (:form exp))))
 (defmethod emit :register [exp out]
   (.write out (subs (str (:form (meta exp))) 1)))
+(defmethod emit :mem [{:keys [base index scale disp] :as exp} out]
+  (emit-width-prefix exp out)
+  (.write out "[")
+  (when base
+    (emit base out))
+  (when index
+    (when base
+      (.write out "+"))
+    (when scale
+      (.write out "("))
+    (emit index out)
+    (when scale
+      (.write out "*")
+      (emit scale out)
+      (.write out ")")))
+  (when disp
+    (when (or base index)
+      (.write out "+"))
+    (emit disp out))
+  (.write out "]"))
 (defmethod emit :operator [exp out]
   (.write out (subs (str (:form exp)) 1)))
 (defmethod emit :instruction [exp out]

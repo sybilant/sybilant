@@ -320,7 +320,9 @@
             ((maybe mem-base?) base)
             ((maybe mem-index?) index)
             ((maybe mem-scale?) scale)
-            ((maybe mem-disp?) disp)]}
+            ((maybe mem-disp?) disp)
+            (or (nil? scale) index)
+            (or (nil? index) disp)]}
      (merge {:type :mem :width (mem-width name)}
             (when base
               {:base base})
