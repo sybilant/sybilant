@@ -12,11 +12,13 @@
             [sybilant.parser :refer :all]
             [sybilant.util :refer [error]]))
 
-(def ^:dynamic *symbol-table* (atom {}))
+(def ^:dynamic *globals* (atom {}))
 
 (defn check-symbol-reference [exp]
   (when (symbol? exp)
-    (when (not (contains? @*symbol-table* exp))
+    (when-not (contains? (merge (:globals (meta exp))
+                                (:locals (meta exp)))
+                         exp)
       (error exp "is undefined")))
   exp)
 
@@ -26,21 +28,38 @@
       (error exp "is an invalid symbol")))
   exp)
 
+(defn add-symbol-table-entry [atom exp]
+  (swap! atom assoc (:name exp) (select-keys exp [:type :name])))
+
 (defn definition? [exp]
   (:definition? (meta exp)))
 
-(defn defined? [exp]
-  (contains? @*symbol-table* exp))
+(defn populate-symbol-table [exp]
+  (let [locals (atom {})]
+    (-> exp
+        (visit (fn [exp]
+                 (when (definition? exp)
+                   (when (contains? @locals (:name exp))
+                     (error (:name exp) "is already defined"))
+                   (add-symbol-table-entry locals exp))
+                 (vary-meta exp assoc :globals @*globals*)))
+        (visit (fn [exp]
+                 (vary-meta exp assoc :locals @locals))))))
 
-(defn define [exp]
+(defn global-defined? [exp]
+  (contains? @*globals* exp))
+
+(defn define-global [exp]
   {:pre [(definition? exp)]}
-  (when (defined? (:name exp))
+  (when (global-defined? (:name exp))
     (error (:name exp) "is already defined"))
-  (swap! *symbol-table*
-         assoc (:name exp) (select-keys exp [:type :name])))
+  (add-symbol-table-entry *globals* exp))
 
 (defn analyze [exp]
-  (when (definition? exp)
-    (define exp))
-  (visit exp (comp check-symbol-format
-                   check-symbol-reference)))
+  {:pre [(top-level? exp)]}
+  (let [exp (-> (populate-symbol-table exp)
+                (visit (comp check-symbol-format
+                             check-symbol-reference)))]
+    (when (definition? exp)
+      (define-global exp))
+    exp))

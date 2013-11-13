@@ -223,7 +223,12 @@
   (is (thrown? Exception (parse-defasm '(defasm))))
   (is (thrown? Exception (parse-defasm '(defasm foo))))
   (is (thrown? Exception (parse-defasm '(defasm 1))))
-  (is (thrown? Exception (parse-defasm '(defasm foo 1)))))
+  (is (thrown? Exception (parse-defasm '(defasm foo 1))))
+  (is (thrown? Exception (parse-defasm '(defasm foo (%label bar)))))
+  (is (thrown? Exception (parse-defasm '(defasm foo
+                                          (%add %rax 1)
+                                          (%label bar)
+                                          (%label baz))))))
 
 (deftest test-parse-defextern
   (let [form '(defextern foo)]

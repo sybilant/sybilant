@@ -13,26 +13,43 @@
             [sybilant.parser :refer :all]))
 
 (use-fixtures :each
-  (fn reset-symbol-table [f]
-    (binding [*symbol-table* (atom {})]
+  (fn reset-globals [f]
+    (binding [*globals* (atom {})]
       (f))))
 
 (deftest test-undefined-symbol-reference
-  (is (thrown? Exception (analyze (parse-symbol 'foo))))
-  (binding [*symbol-table* (atom {})]
-    (analyze (parse-defasm '(defasm foo (%add %rax 1))))
-    (is (= (parse-symbol 'foo) (analyze (parse-symbol 'foo)))))
-  (binding [*symbol-table* (atom {})]
-    (analyze (parse-defextern '(defextern foo)))
-    (is (= (parse-symbol 'foo) (analyze (parse-symbol 'foo))))))
+  (is (thrown? Exception (analyze (parse-defasm '(defasm foo (%jmp bar))))))
+  (binding [*globals* (atom {})]
+    (analyze (parse-defasm '(defasm bar (%add %rax 1))))
+    (is (= (parse-defasm '(defasm foo (%jmp bar)))
+           (analyze (parse-defasm '(defasm foo (%jmp bar)))))))
+  (binding [*globals* (atom {})]
+    (analyze (parse-defextern '(defextern bar)))
+    (is (= (parse-defasm '(defasm foo (%jmp bar)))
+           (analyze (parse-defasm '(defasm foo (%jmp bar))))))))
 
 (deftest test-check-double-symbol-definition
   (analyze (parse-defasm '(defasm foo (%add %rax 1))))
   (is (thrown? Exception (analyze (parse-defextern '(defextern foo))))))
 
 (deftest test-check-symbol-format
-  (analyze (parse-defextern '(defextern foo)))
-  (testing "valid format"
-    (is (= (parse-symbol 'foo) (analyze (parse-symbol 'foo)))))
-  (testing "invalid format"
-    (is (thrown? Exception (analyze (parse-symbol 'foo-bar))))))
+  (is (thrown? Exception (analyze (parse-defextern '(defextern foo-bar))))))
+
+(deftest test-check-labels
+  (binding [*globals* (atom {})]
+    (analyze (parse-defasm '(defasm foo
+                              (%jmp bar)
+                              (%label bar)
+                              (%add %rbx 1)))))
+  (binding [*globals* (atom {})]
+    (is (thrown? Exception (analyze (parse-defasm '(defasm foo
+                                                     (%add %rax 1)
+                                                     (%label foo)
+                                                     (%add %rbx 1)))))))
+  (binding [*globals* (atom {})]
+    (is (thrown? Exception (analyze (parse-defasm '(defasm foo
+                                                     (%add %rax 1)
+                                                     (%label bar)
+                                                     (%add %rbx 1)
+                                                     (%label bar)
+                                                     (%add %rcx 1))))))))

@@ -512,7 +512,8 @@
 (defn make-label
   ([name]
      {:pre [(symbol? name)]}
-     {:type :label :name name})
+     (with-meta {:type :label :name name}
+       {:definition? true}))
   ([name form]
      {:pre [(label-form? form)]}
      (-> (make-label name)
@@ -569,9 +570,18 @@
   (let [[_ name & statements] form]
     (when-not (symbol-form? name)
       (error "defasm expects a symbol for name, but got" name))
-    (doseq [statement statements]
-      (when-not (statement-form? statement)
-        (error "defasm expects a statement, but got" statement)))
+    (when-not (instruction-form? (first statements))
+      (error "defasm expects an instruction as its first statement, but got"
+             (first statements)))
+    (loop [prev (first statements)
+           [statement & statements] (rest statements)]
+      (when statement
+        (when-not (statement-form? statement)
+          (error "defasm expects a statement, but got" statement))
+        (when (and (label-form? prev) (label-form? statement))
+          (error "%label expects to be followed by an instruction, but got"
+                 statement))
+        (recur statement statements)))
     (make-defasm (parse-symbol name) (map parse-statement statements) form)))
 
 (defn defextern? [exp]

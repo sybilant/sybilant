@@ -45,9 +45,9 @@
      - [X] visit integers
      - [X] visit memory references
      - [X] visit %label form
-     - [ ] analyze %label form
-       - [ ] check doubly defined symbols (including re-defining a defasm name)
-       - [ ] check for instruction after label (including first statement in defasm)
+     - [X] analyze %label form
+       - [X] check doubly defined symbols (including re-defining a defasm name)
+       - [X] check for instruction after label (including first statement in defasm)
      - [X] emit integers
      - [X] emit memory references
      - [ ] emit %label form
