@@ -33,13 +33,17 @@
   (is (thrown? Exception (analyze (parse-defextern '(defextern foo))))))
 
 (deftest test-check-symbol-format
-  (is (thrown? Exception (analyze (parse-defextern '(defextern foo-bar))))))
+  (is (thrown? Exception (analyze (parse-defextern '(defextern foo-bar)))))
+  (is (thrown? Exception (analyze (parse-defasm '(defasm ^:extern foo-bar
+                                                   (%add %rax 1))))))
+  (analyze (parse-defasm '(defasm foo-bar
+                            (%add %rax 1)))))
 
 (deftest test-check-labels
   (binding [*globals* (atom {})]
     (analyze (parse-defasm '(defasm foo
-                              (%jmp bar)
-                              (%label bar)
+                              (%jmp bar-baz)
+                              (%label bar-baz)
                               (%add %rbx 1)))))
   (binding [*globals* (atom {})]
     (is (thrown? Exception (analyze (parse-defasm '(defasm foo

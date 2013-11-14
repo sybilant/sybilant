@@ -7,10 +7,11 @@
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.test.emitter
-  (:refer-clojure :exclude [number? symbol?])
+  (:refer-clojure :exclude [munge number? symbol?])
   (:require [clojure.test :refer :all]
-            [sybilant.parser :refer :all]
-            [sybilant.emitter :refer :all])
+            [sybilant.analyzer :refer [*globals* analyze]]
+            [sybilant.emitter :refer :all]
+            [sybilant.parser :refer :all])
   (:import (java.io StringWriter)))
 
 (defn emit* [exp]
@@ -54,11 +55,22 @@
   (is (= "add rax, 1\n" (emit* (parse-instruction '(%add %rax 1))))))
 
 (deftest test-emit-label
-  (is (= "foo:\n" (emit* (parse-label '(%label foo))))))
+  (binding [*globals* (atom {})]
+    (is (= "\nglobal foo\nfoo:\njmp .bar\n.bar:\n"
+           (emit* (analyze (parse-defasm '(defasm foo
+                                            (%jmp bar)
+                                            (%label bar))))))))
+  (binding [*globals* (atom {})]
+    (is (= "\nglobal bar\nbar:\njmp ._u2603\n._u2603:\n"
+           (emit* (analyze (parse-defasm '(defasm bar
+                                            (%jmp ☃)
+                                            (%label ☃)))))))))
 
 (deftest test-emit-defasm
   (is (= "\nglobal foo\nfoo:\nadd rax, 1\n"
-         (emit* (parse-defasm '(defasm foo (%add %rax 1)))))))
+         (emit* (parse-defasm '(defasm foo (%add %rax 1))))))
+  (is (= "\nglobal _u2603\n_u2603:\nadd rax, 1\n"
+         (emit* (parse-defasm '(defasm ☃ (%add %rax 1)))))))
 
 (deftest test-emit-defextern
   (is (= "\nextern foo\n"

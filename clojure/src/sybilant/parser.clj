@@ -554,7 +554,9 @@
   ([name statements]
      {:pre [(symbol? name) (every? statement? statements)]}
      (with-meta {:type :defasm :name name :statements statements}
-       {:definition? true}))
+       (merge {:definition? true}
+              (when (:extern (meta name))
+                {:extern? true}))))
   ([name statements form]
      {:pre [(defasm-form? form)]}
      (-> (make-defasm name statements)
@@ -594,7 +596,8 @@
   ([name]
      {:pre [(symbol? name)]}
      (with-meta {:type :defextern :name name}
-       {:definition? true}))
+       {:definition? true
+        :extern? true}))
   ([name form]
      {:pre [(defextern-form? form)]}
      (-> (make-defextern name)

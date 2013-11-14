@@ -37,7 +37,7 @@
      - [X] emit defextern form
      - [X] build scripts
      - [X] test scripts
-   - [-] version 0.2
+   - [X] version 0.2
      - [X] read signed and unsigned integers (8-bit, 16-bit, 32-bit, 64-bit)
      - [X] parse signed and unsigned integers (8-bit, 16-bit, 32-bit, 64-bit)
      - [X] parse memory references (8-bit, 16-bit, 32-bit, 64-bit)
@@ -51,7 +51,7 @@
      - [X] emit integers
      - [X] emit memory references
      - [X] emit %label form
-     - [ ] munging of symbols
+     - [X] munging of symbols
    - [ ] version 0.3
      - [ ] parse defconst form (integers or symbol)
      - [ ] visit defconst form

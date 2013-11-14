@@ -8,28 +8,29 @@
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.analyzer
   (:refer-clojure :exclude [number? symbol?])
-  (:require [sybilant.visitor :refer [visit]]
-            [sybilant.parser :refer :all]
-            [sybilant.util :refer [error]]))
+  (:require [sybilant.parser :refer :all]
+            [sybilant.util :refer [error]]
+            [sybilant.visitor :refer [visit]]))
 
 (def ^:dynamic *globals* (atom {}))
 
 (defn check-symbol-reference [exp]
   (when (symbol? exp)
-    (when-not (contains? (merge (:globals (meta exp))
-                                (:locals (meta exp)))
-                         exp)
+    (when-not (contains? (:symbol-table (meta exp)) exp)
       (error exp "is undefined")))
   exp)
 
 (defn check-symbol-format [exp]
   (when (symbol? exp)
-    (when (not (re-matches #"^[a-zA-Z_][a-zA-Z0-9_]*$" (str (:form exp))))
+    (when (and (get-in (:symbol-table (meta exp)) [exp :extern?])
+               (not (re-matches #"^[a-zA-Z_][a-zA-Z0-9_]*$" (str (:form exp)))))
       (error exp "is an invalid symbol")))
   exp)
 
 (defn add-symbol-table-entry [atom exp]
-  (swap! atom assoc (:name exp) (select-keys exp [:type :name])))
+  (swap! atom assoc
+         (:name exp) (merge (select-keys exp [:type :name])
+                            (meta exp))))
 
 (defn definition? [exp]
   (:definition? (meta exp)))
@@ -44,7 +45,12 @@
                    (add-symbol-table-entry locals exp))
                  (vary-meta exp assoc :globals @*globals*)))
         (visit (fn [exp]
-                 (vary-meta exp assoc :locals @locals))))))
+                 (let [exp (vary-meta exp assoc :locals @locals)
+                       exp (vary-meta exp assoc
+                                      :symbol-table
+                                      (merge (:globals (meta exp))
+                                             (:locals (meta exp))))]
+                   exp))))))
 
 (defn global-defined? [exp]
   (contains? @*globals* exp))

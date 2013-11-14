@@ -7,5 +7,7 @@
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
 {%add {:type :operator :form %add}
+ %call {:type :operator :form %call}
  %jmp {:type :operator :form %jmp}
- %mov {:type :operator :form %mov}}
+ %mov {:type :operator :form %mov}
+ %ret {:type :operator :form %ret}}

@@ -1,0 +1,17 @@
+;; -*- mode: clojure -*-
+(defextern exit)
+
+(defasm ☃
+  (%mov %rdi 0)
+  (%ret))
+
+(defasm foo
+  (%call ☃)
+  (%ret))
+
+(defasm ^:extern _start
+  (%mov %rdi 1)
+  (%call foo)
+  (%jmp ☃)
+  (%label ☃)
+  (%jmp exit))
