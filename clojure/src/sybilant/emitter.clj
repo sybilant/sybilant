@@ -58,6 +58,9 @@
       (.write out ", ")
       (emit operand out)))
   (.write out "\n"))
+(defmethod emit :label [exp out]
+  (emit (:name exp) out)
+  (.write out ":\n"))
 (defmethod emit :defasm [exp out]
   (.write out "\nglobal ")
   (emit (:name exp) out)

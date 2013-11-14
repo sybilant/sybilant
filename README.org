@@ -50,7 +50,7 @@
        - [X] check for instruction after label (including first statement in defasm)
      - [X] emit integers
      - [X] emit memory references
-     - [ ] emit %label form
+     - [X] emit %label form
      - [ ] munging of symbols
    - [ ] version 0.3
      - [ ] parse defconst form (integers or symbol)

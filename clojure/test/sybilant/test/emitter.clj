@@ -53,6 +53,9 @@
 (deftest test-emit-instruction
   (is (= "add rax, 1\n" (emit* (parse-instruction '(%add %rax 1))))))
 
+(deftest test-emit-label
+  (is (= "foo:\n" (emit* (parse-label '(%label foo))))))
+
 (deftest test-emit-defasm
   (is (= "\nglobal foo\nfoo:\nadd rax, 1\n"
          (emit* (parse-defasm '(defasm foo (%add %rax 1)))))))
