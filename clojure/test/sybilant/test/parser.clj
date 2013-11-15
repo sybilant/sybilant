@@ -52,7 +52,7 @@
   (is (= {:type :symbol :form 'foo} (parse-symbol 'foo)))
   (is (symbol? (parse-symbol 'foo)))
   (is (nil? (meta (parse-symbol 'foo))))
-  (is (:extern (meta (parse-symbol '^:extern foo)))))
+  (is (:export (meta (parse-symbol '^:export foo)))))
 
 (deftest test-parse-number
   (is (number-form? 1))
@@ -219,8 +219,10 @@
              defasm))
       (is (defasm? defasm))
       (is (= form (:form meta)))
+      (is (not (:extern? meta)))
       (is (:line meta))
       (is (:column meta))))
+  (is (:extern? (meta (parse-defasm '(defasm ^:export foo (%add %rax 1))))))
   (is (thrown? Exception (parse-defasm '(defasm))))
   (is (thrown? Exception (parse-defasm '(defasm foo))))
   (is (thrown? Exception (parse-defasm '(defasm 1))))

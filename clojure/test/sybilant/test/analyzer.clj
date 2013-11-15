@@ -34,7 +34,7 @@
 
 (deftest test-check-symbol-format
   (is (thrown? Exception (analyze (parse-defimport '(defimport foo-bar)))))
-  (is (thrown? Exception (analyze (parse-defasm '(defasm ^:extern foo-bar
+  (is (thrown? Exception (analyze (parse-defasm '(defasm ^:export foo-bar
                                                    (%add %rax 1))))))
   (analyze (parse-defasm '(defasm foo-bar
                             (%add %rax 1)))))

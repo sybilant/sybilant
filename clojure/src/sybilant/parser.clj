@@ -555,7 +555,7 @@
      {:pre [(symbol? name) (every? statement? statements)]}
      (with-meta {:type :defasm :name name :statements statements}
        (merge {:definition? true}
-              (when (:extern (meta name))
+              (when (:export (meta name))
                 {:extern? true}))))
   ([name statements form]
      {:pre [(defasm-form? form)]}

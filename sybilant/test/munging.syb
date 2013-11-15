@@ -9,7 +9,7 @@
   (%call ☃)
   (%ret))
 
-(defasm ^:extern _start
+(defasm ^:export _start
   (%mov %rdi 1)
   (%call foo)
   (%jmp ☃)

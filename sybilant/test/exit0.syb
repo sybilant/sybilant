@@ -1,6 +1,6 @@
 ;; -*- mode: clojure -*-
 (defimport exit)
 
-(defasm ^:extern _start
+(defasm ^:export _start
   (%mov %rdi 0)
   (%jmp exit))
