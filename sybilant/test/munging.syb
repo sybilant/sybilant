@@ -1,5 +1,5 @@
 ;; -*- mode: clojure -*-
-(defextern exit)
+(defimport exit)
 
 (defasm ☃
   (%mov %rdi 0)

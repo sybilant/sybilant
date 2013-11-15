@@ -42,7 +42,7 @@
     (doseq [statement (:statements visited)]
       (is (get-in statement [:visited?])))))
 
-(deftest test-visit-defextern
-  (let [visited (visit (parse-defextern '(defextern foo)) visitor)]
+(deftest test-visit-defimport
+  (let [visited (visit (parse-defimport '(defimport foo)) visitor)]
     (is (get-in visited [:visited?]))
     (is (get-in visited [:name :visited?]))))

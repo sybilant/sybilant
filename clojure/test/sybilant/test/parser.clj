@@ -231,18 +231,18 @@
                                           (%label bar)
                                           (%label baz))))))
 
-(deftest test-parse-defextern
-  (let [form '(defextern foo)]
-    (is (defextern-form? form))
-    (let [defextern (parse-defextern form)
-          meta (meta defextern)]
-      (is (= {:type :defextern :name (parse-symbol 'foo)}
-             defextern))
-      (is (defextern? defextern))
+(deftest test-parse-defimport
+  (let [form '(defimport foo)]
+    (is (defimport-form? form))
+    (let [defimport (parse-defimport form)
+          meta (meta defimport)]
+      (is (= {:type :defimport :name (parse-symbol 'foo)}
+             defimport))
+      (is (defimport? defimport))
       (is (= form (:form meta)))
       (is (:extern? meta))
       (is (:line meta))
       (is (:column meta))))
-  (is (thrown? Exception (parse-defextern '(defextern))))
-  (is (thrown? Exception (parse-defextern '(defextern 1))))
-  (is (thrown? Exception (parse-defextern '(defextern foo bar)))))
+  (is (thrown? Exception (parse-defimport '(defimport))))
+  (is (thrown? Exception (parse-defimport '(defimport 1))))
+  (is (thrown? Exception (parse-defimport '(defimport foo bar)))))

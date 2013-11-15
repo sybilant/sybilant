@@ -135,7 +135,7 @@
   (.write out ":\n")
   (doseq [statement (:statements exp)]
     (emit statement out)))
-(defmethod emit :defextern [exp out]
+(defmethod emit :defimport [exp out]
   (.write out "\nextern ")
   (emit (:name exp) out)
   (.write out "\n"))

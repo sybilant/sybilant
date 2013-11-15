@@ -24,16 +24,16 @@
     (is (= (parse-defasm '(defasm foo (%jmp bar)))
            (analyze (parse-defasm '(defasm foo (%jmp bar)))))))
   (binding [*globals* (atom {})]
-    (analyze (parse-defextern '(defextern bar)))
+    (analyze (parse-defimport '(defimport bar)))
     (is (= (parse-defasm '(defasm foo (%jmp bar)))
            (analyze (parse-defasm '(defasm foo (%jmp bar))))))))
 
 (deftest test-check-double-symbol-definition
   (analyze (parse-defasm '(defasm foo (%add %rax 1))))
-  (is (thrown? Exception (analyze (parse-defextern '(defextern foo))))))
+  (is (thrown? Exception (analyze (parse-defimport '(defimport foo))))))
 
 (deftest test-check-symbol-format
-  (is (thrown? Exception (analyze (parse-defextern '(defextern foo-bar)))))
+  (is (thrown? Exception (analyze (parse-defimport '(defimport foo-bar)))))
   (is (thrown? Exception (analyze (parse-defasm '(defasm ^:extern foo-bar
                                                    (%add %rax 1))))))
   (analyze (parse-defasm '(defasm foo-bar

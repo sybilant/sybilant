@@ -72,6 +72,6 @@
   (is (= "\nglobal _u2603\n_u2603:\nadd rax, 1\n"
          (emit* (parse-defasm '(defasm ☃ (%add %rax 1)))))))
 
-(deftest test-emit-defextern
+(deftest test-emit-defimport
   (is (= "\nextern foo\n"
-         (emit* (parse-defextern '(defextern foo))))))
+         (emit* (parse-defimport '(defimport foo))))))

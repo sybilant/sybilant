@@ -586,44 +586,44 @@
         (recur statement statements)))
     (make-defasm (parse-symbol name) (map parse-statement statements) form)))
 
-(defn defextern? [exp]
-  (typed-map? exp :defextern))
+(defn defimport? [exp]
+  (typed-map? exp :defimport))
 
-(defn defextern-form? [form]
-  (tagged-list? form 'defextern))
+(defn defimport-form? [form]
+  (tagged-list? form 'defimport))
 
-(defn make-defextern
+(defn make-defimport
   ([name]
      {:pre [(symbol? name)]}
-     (with-meta {:type :defextern :name name}
+     (with-meta {:type :defimport :name name}
        {:definition? true
         :extern? true}))
   ([name form]
-     {:pre [(defextern-form? form)]}
-     (-> (make-defextern name)
+     {:pre [(defimport-form? form)]}
+     (-> (make-defimport name)
          (vary-meta merge (meta form))
          (vary-meta assoc :form (with-meta form {})))))
 
-(defn parse-defextern [form]
-  (when-not (defextern-form? form)
-    (error "expected defextern, but was" form))
+(defn parse-defimport [form]
+  (when-not (defimport-form? form)
+    (error "expected defimport, but was" form))
   (let [arg-count (dec (count form))]
     (when (not= arg-count 1)
-      (error "defextern expects exactly 1 argument, but got" arg-count)))
+      (error "defimport expects exactly 1 argument, but got" arg-count)))
   (let [name (second form)]
     (when-not (symbol-form? name)
-      (error "defextern expect a symbol for name, but got" name))
-    (make-defextern (parse-symbol name) form)))
+      (error "defimport expect a symbol for name, but got" name))
+    (make-defimport (parse-symbol name) form)))
 
 (defn top-level? [exp]
-  (or (defasm? exp) (defextern? exp)))
+  (or (defasm? exp) (defimport? exp)))
 
 (defn top-level-form? [form]
-  (or (defasm-form? form) (defextern-form? form)))
+  (or (defasm-form? form) (defimport-form? form)))
 
 (defn parse-top-level [form]
   (when-not (top-level-form? form)
     (error "expected top level form, but was" form))
   (cond
    (defasm-form? form) (parse-defasm form)
-   (defextern-form? form) (parse-defextern form)))
+   (defimport-form? form) (parse-defimport form)))

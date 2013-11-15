@@ -11,7 +11,7 @@
             [sybilant.util :refer [error]]))
 
 (defn branch? [exp]
-  (contains? #{:mem :instruction :label :defasm :defextern} (:type exp)))
+  (contains? #{:mem :instruction :label :defasm :defimport} (:type exp)))
 
 (defmulti children (comp :type first list))
 (defmethod children :mem [{:keys [base index scale disp]}]
@@ -22,7 +22,7 @@
   [name])
 (defmethod children :defasm [{:keys [name statements]}]
   (cons name statements))
-(defmethod children :defextern [{:keys [name]}]
+(defmethod children :defimport [{:keys [name]}]
   [name])
 (defmethod children :default [exp]
   (error "not a branch node" exp))
@@ -44,7 +44,7 @@
   (assoc exp :name name))
 (defmethod make-node :defasm [exp [name & statements]]
   (assoc exp :name name :statements statements))
-(defmethod make-node :defextern [exp [name]]
+(defmethod make-node :defimport [exp [name]]
   (assoc exp :name name))
 (defmethod make-node :default [exp children]
   (error "not a branch node" exp))
