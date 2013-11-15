@@ -1,4 +1,4 @@
-(defproject sybilant "0.0.1-SNAPSHOT"
+(defproject sybilant "0.3.0-SNAPSHOT"
   :description "A \"full stack\" Lisp programming language for the x86-64
   architecture."
   :url "http://github.com/sybilant/sybilant/"
