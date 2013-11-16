@@ -34,7 +34,7 @@
     (with-redefs [exit (fn [x] (flush) (reset! exit-code x))]
       (f)))
   (fn mock-compile [f]
-    (with-redefs [sybilant.compiler/compile (fn [in out] (io/copy in out))]
+    (with-redefs [sybilant.compiler/compile-file (fn [in out] (io/copy in out))]
       (f)))
   (fn reset-infile [f]
     (if (.exists infile)
@@ -75,7 +75,7 @@
   (is (= 0 @exit-code)))
 
 (deftest test-main-will-default-to-standard-out
-  (is (= [output ""]
+  (is (= [(str "bits 64\ndefault rel\n" output) ""]
          (with-output-strs (-main inpath))))
   (is (= 0 @exit-code)))
 
@@ -95,13 +95,15 @@
   (is (= 0 @exit-code)))
 
 (deftest test-main-cleans-up-output-file-on-exception
-  (with-redefs [sybilant.compiler/compile (fn [& _] (throw (Exception. "ex")))]
+  (with-redefs [sybilant.compiler/compile-file (fn [& _]
+                                                 (throw (Exception. "ex")))]
     (with-output-strs (-main "-o" outpath inpath)))
   (is (not (.exists outfile)))
   (is (= 1 @exit-code)))
 
 (deftest test-main-debug-flag-leaves-output-file
-  (with-redefs [sybilant.compiler/compile (fn [& _] (throw (Exception. "ex")))]
+  (with-redefs [sybilant.compiler/compile-file (fn [& _]
+                                                 (throw (Exception. "ex")))]
     (with-output-strs (-main "-d" "-o" outpath inpath)))
   (is (.exists outfile))
   (is (= 1 @exit-code)))
@@ -112,13 +114,15 @@
   (is (= 1 @exit-code)))
 
 (deftest test-main-prints-exception-string
-  (with-redefs [sybilant.compiler/compile (fn [& _] (throw (Exception. "ex")))]
+  (with-redefs [sybilant.compiler/compile-file (fn [& _]
+                                                 (throw (Exception. "ex")))]
     (is (= "An error occurred: ex\n"
            (second (with-output-strs (-main "-o" outpath inpath))))))
   (is (= 1 @exit-code)))
 
 (deftest test-main-debug-flag-prints-stack-trace
-  (with-redefs [sybilant.compiler/compile (fn [& _] (throw (Exception. "ex")))]
+  (with-redefs [sybilant.compiler/compile-file (fn [& _]
+                                                 (throw (Exception. "ex")))]
     (let [err (second (with-output-strs (-main "-d" "-o" outpath inpath)))]
       (is (.startsWith err (str "An error occurred: java.lang.Exception: ex\n"
                                 "\tat sybilant.test.compile"))

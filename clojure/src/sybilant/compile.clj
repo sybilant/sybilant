@@ -76,40 +76,15 @@
   (flush)
   (System/exit exit-code))
 
-(defn compile-files [{:keys [infiles out] :as options}]
-  (require 'sybilant.compiler)
-  (let [compile (resolve 'sybilant.compiler/compile)]
-    (if (seq infiles)
-      (doseq [infile infiles
-              :let [in (io/file infile)]]
-        (when-not (.exists in)
-          (die 1 "input file" infile "does not exist"))
-        (with-open [in (-> in
-                           (io/reader :encoding "utf-8")
-                           LineNumberingPushbackReader.)]
-          (compile in out)))
-      (compile *in* out))))
-
 (defn -main [& args]
+  (require 'sybilant.compiler)
   (try+
-    (let [{:keys [outfile force? debug?] :as options} (-> args
-                                                          prep-args
-                                                          parse-args)]
+    (let [{:keys [infiles outfile force? debug?] :as options} (-> args
+                                                                  prep-args
+                                                                  parse-args)
+          compile (resolve 'sybilant.compiler/compile)]
       (try+
-        (if-let [outfile (io/file outfile)]
-          (do
-            (when (and (.exists outfile) (not force?))
-              (die 1 "output file" outfile "exists"))
-            (try
-              (with-open [out (io/writer outfile :encoding "utf-8")]
-                (.write out "bits 64\n")
-                (.write out "default rel\n")
-                (compile-files (assoc (dissoc options :outfile) :out out)))
-              (catch Throwable t
-                (when-not debug?
-                  (.delete outfile))
-                (throw t))))
-          (compile-files (assoc options :out *out*)))
+        (compile infiles outfile force? debug?)
         (exit 0)
         (catch Throwable t
           (binding [*out* *err*]
