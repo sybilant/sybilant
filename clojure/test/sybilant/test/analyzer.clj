@@ -10,12 +10,10 @@
   (:refer-clojure :exclude [number? symbol?])
   (:require [clojure.test :refer :all]
             [sybilant.analyzer :refer :all]
-            [sybilant.parser :refer :all]))
+            [sybilant.parser :refer :all]
+            [sybilant.test.util :refer [reset-globals]]))
 
-(use-fixtures :each
-  (fn reset-globals [f]
-    (binding [*globals* (atom {})]
-      (f))))
+(use-fixtures :each reset-globals)
 
 (deftest test-undefined-symbol-reference
   (is (thrown? Exception (analyze (parse-defasm '(defasm foo (%jmp bar))))))

@@ -7,11 +7,8 @@
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.compile
-  (:require [clojure.java.io :as io]
-            [clojure.string :as str]
-            [slingshot.slingshot :refer [try+]]
+  (:require [slingshot.slingshot :refer [try+]]
             [sybilant.util :refer [die]])
-  (:import (clojure.lang LineNumberingPushbackReader))
   (:gen-class))
 
 (def usage

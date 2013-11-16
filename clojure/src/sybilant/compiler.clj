@@ -11,28 +11,48 @@
   (:require [clojure.java.io :as io]
             [sybilant.analyzer :refer [analyze]]
             [sybilant.emitter :refer [emit]]
-            [sybilant.parser :refer [parse-top-level]]
+            [sybilant.parser :refer [defdata? parse-top-level]]
             [sybilant.util :refer [die]])
   (:import (clojure.lang LineNumberingPushbackReader)))
 
-(defn compile-file [in out]
-  (doseq [exp (take-while (partial not= ::eof)
-                          (repeatedly #(read in false ::eof)))]
-    (emit (analyze (parse-top-level exp)) out)))
+(defn reader [in]
+  (LineNumberingPushbackReader. (io/reader in :encoding "utf-8")))
+
+(defn read-file [in]
+  (take-while (partial not= ::eof)
+              (repeatedly #(read in false ::eof))))
+
+(defn read-files [infiles]
+  (if (seq infiles)
+    (mapcat (fn [infile]
+              (let [in (io/file infile)]
+                (when-not (.exists in)
+                  (die 1 "input file" infile "does not exist"))
+                (with-open [in (reader in)]
+                  (doall (read-file in)))))
+            infiles)
+    (read-file *in*)))
+
+(defn data-exp? [exp]
+  (defdata? exp))
 
 (defn compile-files [infiles out]
-  (.write out "bits 64\n")
-  (.write out "default rel\n")
-  (if (seq infiles)
-    (doseq [infile infiles
-            :let [in (io/file infile)]]
-      (when-not (.exists in)
-        (die 1 "input file" infile "does not exist"))
-      (with-open [in (-> in
-                         (io/reader :encoding "utf-8")
-                         LineNumberingPushbackReader.)]
-        (compile-file in out)))
-    (compile-file *in* out)))
+  (let [forms (read-files infiles)
+        exps (->> forms
+                  (map parse-top-level)
+                  (map analyze))
+        data-exps (filter data-exp? exps)
+        code-exps (filter (complement data-exp?) exps)]
+    (.write out "bits 64\n")
+    (.write out "default rel\n")
+    (when (seq data-exps)
+      (.write out "\nsection .data\n")
+      (doseq [exp data-exps]
+        (emit exp out)))
+    (when (seq code-exps)
+      (.write out "\nsection .text\n")
+      (doseq [exp code-exps]
+        (emit exp out)))))
 
 (defn compile [infiles outfile force? debug?]
   (if-let [outfile (io/file outfile)]
