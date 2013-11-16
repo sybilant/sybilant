@@ -86,7 +86,7 @@
   (typed-map? exp :symbol))
 
 (defn symbol-form? [form]
-  (clj/symbol? form))
+  (and (clj/symbol? form) (not= \% (first (str form)))))
 
 (defn make-symbol [form]
   {:pre [(symbol-form? form)]}
@@ -307,10 +307,12 @@
   (and (number? exp) (mem-scale-form? (:form exp))))
 
 (defn mem-disp-form? [form]
-  (and (number-form? form) (<= Integer/MIN_VALUE form Integer/MAX_VALUE)))
+  (or (and (number-form? form) (<= Integer/MIN_VALUE form Integer/MAX_VALUE))
+      (symbol-form? form)))
 
 (defn mem-disp? [exp]
-  (and (number? exp) (mem-disp-form? (:form exp))))
+  (or (and (number? exp) (mem-disp-form? (:form exp)))
+      (symbol? exp)))
 
 (declare mem-form?)
 
@@ -359,6 +361,13 @@
    (mem-args? register-form? register-form? mem-scale-form? mem-disp-form? args)
    [a b c d]))
 
+(defn parse-disp [form]
+  (when-not (mem-disp-form? form)
+    (error "expected memory displacement, but got" form))
+  (if (number-form? form)
+    (parse-number form)
+    (parse-symbol form)))
+
 (defn parse-mem [form]
   (when-not (mem-form? form)
     (error "expected %mem, but was" form))
@@ -378,7 +387,7 @@
                   (when scale
                     (parse-number scale))
                   (when disp
-                    (parse-number disp))
+                    (parse-disp disp))
                   form)
         (error "invalid arguments for" form)))))
 

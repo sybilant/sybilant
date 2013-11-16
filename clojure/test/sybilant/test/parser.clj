@@ -116,6 +116,8 @@
 (deftest test-parse-mem
   (is (= {:type :mem :width 64 :disp (parse-number 1)}
          (parse-mem '(%mem64 1))))
+  (is (= {:type :mem :width 64 :disp (parse-symbol 'foo)}
+         (parse-mem '(%mem64 foo))))
   (is (= {:type :mem :width 64 :base (parse-register '%rax)}
          (parse-mem '(%mem64 %rax))))
   (is (= {:type :mem :width 64
