@@ -75,3 +75,9 @@
 (deftest test-emit-defimport
   (is (= "\nextern foo\n"
          (emit* (parse-defimport '(defimport foo))))))
+
+(deftest test-emit-defdata
+  (is (= "\nglobal foo\nfoo:\n1 2\n"
+         (emit* (parse-defdata '(defdata foo 1 2)))))
+  (is (= "\nglobal _u2603\n_u2603:\n1 2\n"
+         (emit* (parse-defdata '(defdata ☃ 1 2))))))

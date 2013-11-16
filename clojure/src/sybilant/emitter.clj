@@ -139,3 +139,14 @@
   (.write out "\nextern ")
   (emit (:name exp) out)
   (.write out "\n"))
+(defmethod emit :defdata [exp out]
+  (.write out "\nglobal ")
+  (emit (:name exp) out)
+  (.write out "\n")
+  (emit (:name exp) out)
+  (.write out ":\n")
+  (emit (first (:values exp)) out)
+  (doseq [value (rest (:values exp))]
+    (.write out " ")
+    (emit value out))
+  (.write out "\n"))

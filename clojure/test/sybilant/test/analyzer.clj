@@ -36,8 +36,12 @@
   (is (thrown? Exception (analyze (parse-defimport '(defimport foo-bar)))))
   (is (thrown? Exception (analyze (parse-defasm '(defasm ^:export foo-bar
                                                    (%add %rax 1))))))
-  (analyze (parse-defasm '(defasm foo-bar
-                            (%add %rax 1)))))
+  (binding [*globals* (atom {})]
+    (analyze (parse-defasm '(defasm foo-bar (%add %rax 1)))))
+  (is (thrown? Exception (analyze (parse-defdata
+                                   '(defdata ^:export foo-bar 1)))))
+  (binding [*globals* (atom {})]
+    (analyze (parse-defdata '(defdata foo-bar 1)))))
 
 (deftest test-check-labels
   (binding [*globals* (atom {})]
