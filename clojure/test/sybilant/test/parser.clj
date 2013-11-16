@@ -248,3 +248,41 @@
   (is (thrown? Exception (parse-defimport '(defimport))))
   (is (thrown? Exception (parse-defimport '(defimport 1))))
   (is (thrown? Exception (parse-defimport '(defimport foo bar)))))
+
+(deftest test-parse-value
+  (testing "number"
+    (is (value-form? 1))
+    (is (= (parse-number 1) (parse-value 1)))
+    (is (value? (parse-value 1))))
+  (testing "signed integers"
+    (doseq [i [(byte 1) (short 1) (int 1) (->Int64 1)]]
+      (is (value-form? i))
+      (is (= (parse-int i) (parse-value i)))
+      (is (value? (parse-value i)))))
+  (testing "unsigned integers"
+    (doseq [i [(->Uint8 1) (->Uint16 1) (->Uint32 1) (->Uint64 1)]]
+      (is (value-form? i))
+      (is (= (parse-uint i) (parse-value i)))
+      (is (value? (parse-value i)))))
+  (testing "symbol"
+    (is (value-form? 'foo))
+    (is (= (parse-symbol 'foo) (parse-value 'foo)))
+    (is (value? (parse-value 'foo)))))
+
+(deftest test-parse-defdata
+  (let [form '(defdata foo 1 2)]
+    (is (defdata-form? form))
+    (let [defdata (parse-defdata form)
+          meta (meta defdata)]
+      (is (= {:type :defdata :name (parse-symbol 'foo)
+              :values [(parse-number 1) (parse-number 2)]}
+             defdata))
+      (is (defdata? defdata))
+      (is (= form (:form meta)))
+      (is (not (:extern? meta)))
+      (is (:line meta))
+      (is (:column meta))))
+  (is (:extern? (meta (parse-defdata '(defdata ^:export foo 1 2)))))
+  (is (thrown? Exception (parse-defdata '(defdata))))
+  (is (thrown? Exception (parse-defdata '(defdata foo))))
+  (is (thrown? Exception (parse-defdata '(defdata 1)))))

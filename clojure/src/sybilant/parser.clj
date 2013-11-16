@@ -615,15 +615,65 @@
       (error "defimport expect a symbol for name, but got" name))
     (make-defimport (parse-symbol name) form)))
 
+(defn value? [exp]
+  (or (int? exp) (uint? exp) (number? exp) (symbol? exp)))
+
+(defn value-form? [form]
+  (or (int-form? form) (uint-form? form) (number-form? form)
+      (symbol-form? form)))
+
+(defn parse-value [form]
+  (when-not (value-form? form)
+    (error "expected value, but was" form))
+  (cond
+   (int-form? form) (parse-int form)
+   (uint-form? form) (parse-uint form)
+   (number-form? form) (parse-number form)
+   (symbol-form? form) (parse-symbol form)))
+
+(defn defdata? [exp]
+  (typed-map? exp :defdata))
+
+(defn defdata-form? [form]
+  (tagged-list? form 'defdata))
+
+(defn make-defdata
+  ([name values]
+     {:pre [(symbol? name) (every? value? values)]}
+     (with-meta {:type :defdata :name name :values values}
+       (merge {:definition? true}
+              (when (:export (meta name))
+                {:extern? true}))))
+  ([name values form]
+     {:pre [(defdata-form? form)]}
+     (-> (make-defdata name values)
+         (vary-meta merge (meta form))
+         (vary-meta assoc :form (with-meta form {})))))
+
+(defn parse-defdata [form]
+  (when-not (defdata-form? form)
+    (error "expected defdata, but was" form))
+  (let [arg-count (dec (count form))]
+    (when (< arg-count 2)
+      (error "defdata expects at least 2 argument, but got" arg-count)))
+  (let [[name & values] (rest form)]
+    (when-not (symbol-form? name)
+      (error "defdata expects a symbol for name, but got" name))
+    (doseq [value values]
+      (when-not (value-form? value)
+        (error "defdata expects a value for value, but got" value)))
+    (make-defdata (parse-symbol name) (map parse-value values) form)))
+
 (defn top-level? [exp]
-  (or (defasm? exp) (defimport? exp)))
+  (or (defasm? exp) (defimport? exp) (defdata? exp)))
 
 (defn top-level-form? [form]
-  (or (defasm-form? form) (defimport-form? form)))
+  (or (defasm-form? form) (defimport-form? form) (defdata-form? form)))
 
 (defn parse-top-level [form]
   (when-not (top-level-form? form)
     (error "expected top level form, but was" form))
   (cond
    (defasm-form? form) (parse-defasm form)
-   (defimport-form? form) (parse-defimport form)))
+   (defimport-form? form) (parse-defimport form)
+   (defdata-form? form) (parse-defdata form)))

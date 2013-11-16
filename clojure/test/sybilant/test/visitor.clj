@@ -13,36 +13,58 @@
             [sybilant.visitor :refer :all]))
 
 (defn visitor [n]
-  (assoc n :visited? true))
+  (vary-meta n assoc :visited? true))
+
+(defn visited? [obj]
+  (:visited? (meta obj)))
 
 (deftest test-visit-mem
-  (let [visited (visit (parse-mem '(%mem8 %rax %rbx 4 17)) visitor)]
-    (is (get-in visited [:visited?]))
-    (is (get-in visited [:base :visited?]))
-    (is (get-in visited [:index :visited?]))
-    (is (get-in visited [:scale :visited?]))
-    (is (get-in visited [:disp :visited?]))))
+  (let [exp (parse-mem '(%mem8 %rax %rbx 4 17))
+        visited (visit exp visitor)]
+    (is (= exp visited))
+    (is (visited? visited))
+    (is (visited? (:base visited)))
+    (is (visited? (:index visited)))
+    (is (visited? (:scale visited)))
+    (is (visited? (:disp visited)))))
 
 (deftest test-visit-instruction
-  (let [visited (visit (parse-instruction '(%add %rax 1)) visitor)]
-    (is (get-in visited [:visited?]))
-    (is (get-in visited [:operator :visited?]))
+  (let [exp (parse-instruction '(%add %rax 1))
+        visited (visit exp visitor)]
+    (is (= exp visited))
+    (is (visited? visited))
+    (is (visited? (:operator visited)))
     (doseq [operand (:operands visited)]
-      (get-in operand [:visited?]))))
+      (visited? operand))))
 
 (deftest test-visit-label
-  (let [visited (visit (parse-label '(%label foo)) visitor)]
-    (is (get-in visited [:visited?]))
-    (is (get-in visited [:name :visited?]))))
+  (let [exp (parse-label '(%label foo))
+        visited (visit exp visitor)]
+    (is (= exp visited))
+    (is (visited? visited))
+    (is (visited? (:name visited)))))
 
 (deftest test-visit-defasm
-  (let [visited (visit (parse-defasm '(defasm foo (%add %rax 1))) visitor)]
-    (is (get-in visited [:visited?]))
-    (is (get-in visited [:name :visited?]))
+  (let [exp (parse-defasm '(defasm foo (%add %rax 1)))
+        visited (visit exp visitor)]
+    (is (= exp visited))
+    (is (visited? visited))
+    (is (visited? (:name visited)))
     (doseq [statement (:statements visited)]
-      (is (get-in statement [:visited?])))))
+      (is (visited? statement)))))
 
 (deftest test-visit-defimport
-  (let [visited (visit (parse-defimport '(defimport foo)) visitor)]
-    (is (get-in visited [:visited?]))
-    (is (get-in visited [:name :visited?]))))
+  (let [exp (parse-defimport '(defimport foo))
+        visited (visit exp visitor)]
+    (is (= exp visited))
+    (is (visited? visited))
+    (is (visited? (:name visited)))))
+
+(deftest test-visit-defdata
+  (let [exp (parse-defdata '(defdata foo 1 2))
+        visited (visit exp visitor)]
+    (is (= exp visited))
+    (is (visited? visited))
+    (is (visited? (:name visited)))
+    (doseq [value (:values visited)]
+      (is (visited? value)))))
