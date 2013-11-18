@@ -58,5 +58,7 @@
   (let [zip (z/zipper branch? children make-node exp)]
     (loop [loc zip]
       (if-not (z/end? loc)
-        (recur (z/next (z/edit loc visitor)))
+        (recur (z/next (z/edit loc (fn [exp]
+                                     (when (seq exp)
+                                       (visitor exp))))))
         (z/root loc)))))

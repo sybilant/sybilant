@@ -19,6 +19,36 @@
   (:visited? (meta obj)))
 
 (deftest test-visit-mem
+  (let [exp (parse-mem '(%mem8 17))
+        visited (visit exp visitor)]
+    (is (= exp visited))
+    (is (visited? visited))
+    (is (visited? (:disp visited))))
+  (let [exp (parse-mem '(%mem8 %rax))
+        visited (visit exp visitor)]
+    (is (= exp visited))
+    (is (visited? visited))
+    (is (visited? (:base visited))))
+  (let [exp (parse-mem '(%mem8 %rax 17))
+        visited (visit exp visitor)]
+    (is (= exp visited))
+    (is (visited? visited))
+    (is (visited? (:base visited)))
+    (is (visited? (:disp visited))))
+  (let [exp (parse-mem '(%mem8 %rbx 4 17))
+        visited (visit exp visitor)]
+    (is (= exp visited))
+    (is (visited? visited))
+    (is (visited? (:index visited)))
+    (is (visited? (:scale visited)))
+    (is (visited? (:disp visited))))
+  (let [exp (parse-mem '(%mem8 %rax %rbx 17))
+        visited (visit exp visitor)]
+    (is (= exp visited))
+    (is (visited? visited))
+    (is (visited? (:base visited)))
+    (is (visited? (:index visited)))
+    (is (visited? (:disp visited))))
   (let [exp (parse-mem '(%mem8 %rax %rbx 4 17))
         visited (visit exp visitor)]
     (is (= exp visited))
