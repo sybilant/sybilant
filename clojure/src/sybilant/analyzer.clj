@@ -45,12 +45,11 @@
                    (add-symbol-table-entry locals exp))
                  (vary-meta exp assoc :globals @*globals*)))
         (visit (fn [exp]
-                 (let [exp (vary-meta exp assoc :locals @locals)
-                       exp (vary-meta exp assoc
-                                      :symbol-table
-                                      (merge (:globals (meta exp))
-                                             (:locals (meta exp))))]
-                   exp))))))
+                 (let [exp (vary-meta exp assoc :locals @locals)]
+                   (vary-meta exp assoc
+                              :symbol-table
+                              (merge (:globals (meta exp))
+                                     (:locals (meta exp))))))))))
 
 (defn global-defined? [exp]
   (contains? @*globals* exp))
