@@ -39,7 +39,7 @@
   (is (thrown? Exception (analyze (parse-defdata
                                    '(defdata ^:export foo-bar 1)))))
   (binding [*globals* (atom {})]
-    (analyze (parse-defdata '(defdata foo-bar 1)))))
+    (analyze (parse-defdata '(defdata foo-bar #int8 1)))))
 
 (deftest test-check-labels
   (binding [*globals* (atom {})]

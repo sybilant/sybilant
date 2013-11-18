@@ -91,7 +91,7 @@
     (is (visited? (:name visited)))))
 
 (deftest test-visit-defdata
-  (let [exp (parse-defdata '(defdata foo 1 2))
+  (let [exp (parse-defdata '(defdata foo #int8 1 #uint64 2))
         visited (visit exp visitor)]
     (is (= exp visited))
     (is (visited? visited))

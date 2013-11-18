@@ -625,20 +625,17 @@
     (make-defimport (parse-symbol name) form)))
 
 (defn value? [exp]
-  (or (int? exp) (uint? exp) (number? exp) (symbol? exp)))
+  (or (int? exp) (uint? exp)))
 
 (defn value-form? [form]
-  (or (int-form? form) (uint-form? form) (number-form? form)
-      (symbol-form? form)))
+  (or (int-form? form) (uint-form? form)))
 
 (defn parse-value [form]
   (when-not (value-form? form)
     (error "expected value, but was" form))
   (cond
    (int-form? form) (parse-int form)
-   (uint-form? form) (parse-uint form)
-   (number-form? form) (parse-number form)
-   (symbol-form? form) (parse-symbol form)))
+   (uint-form? form) (parse-uint form)))
 
 (defn defdata? [exp]
   (typed-map? exp :defdata))

@@ -1,0 +1,8 @@
+;; -*- mode: clojure -*-
+(defimport exit)
+
+(defdata data #int8 0)
+
+(defasm ^:export _start
+  (%mov %dil (%mem8 data))
+  (%jmp exit))

@@ -77,7 +77,7 @@
          (emit* (parse-defimport '(defimport foo))))))
 
 (deftest test-emit-defdata
-  (is (= "\nglobal foo\nfoo:\n1 2\n"
-         (emit* (parse-defdata '(defdata foo 1 2)))))
-  (is (= "\nglobal _u2603\n_u2603:\n1 2\n"
-         (emit* (parse-defdata '(defdata ☃ 1 2))))))
+  (is (= "\nglobal foo\nfoo:\ndb 1 dq 2\n"
+         (emit* (parse-defdata '(defdata foo #int8 1 #uint64 2)))))
+  (is (= "\nglobal _u2603\n_u2603:\ndb 1 dq 2\n"
+         (emit* (parse-defdata '(defdata ☃ #int8 1 #uint64 2))))))

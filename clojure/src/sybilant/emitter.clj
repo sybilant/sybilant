@@ -139,14 +139,22 @@
   (.write out "\nextern ")
   (emit (:name exp) out)
   (.write out "\n"))
+(defn emit-data-instruction [exp out]
+  (.write out (case (:width exp)
+                8 "db "
+                16 "dw "
+                32 "dd "
+                64 "dq ")))
 (defmethod emit :defdata [exp out]
   (.write out "\nglobal ")
   (emit (:name exp) out)
   (.write out "\n")
   (emit (:name exp) out)
   (.write out ":\n")
-  (emit (first (:values exp)) out)
+  (emit-data-instruction (first (:values exp)) out)
+  (.write out (str (:form (first (:values exp)))))
   (doseq [value (rest (:values exp))]
     (.write out " ")
-    (emit value out))
+    (emit-data-instruction value out)
+    (.write out (str (:form value))))
   (.write out "\n"))

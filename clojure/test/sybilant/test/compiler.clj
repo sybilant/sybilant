@@ -52,12 +52,12 @@
               "section .data\n\n"
               "global foo\n"
               "foo:\n"
-              "1\n\n"
+              "db 1\n\n"
               "section .text\n\n"
               "global bar\n"
               "bar:\n"
               "jmp bar\n")
-         (with-in-str "(defdata foo 1) (defasm bar (%jmp bar))"
+         (with-in-str "(defdata foo #int8 1) (defasm bar (%jmp bar))"
            (with-out-str (compile-files [] *out*))))))
 
 (deftest test-compile-will-default-to-standard-in
