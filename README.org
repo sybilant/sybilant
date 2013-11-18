@@ -52,10 +52,10 @@
      - [X] emit memory references
      - [X] emit %label form
      - [X] munging of symbols
-   - [-] version 0.3
+   - [X] version 0.3
      - [X] parse defdata form
      - [X] visit defdata form
-     - [ ] emit defdata form in a separate data section
+     - [X] emit defdata form in a separate data section
    - [ ] version 0.4
      - [ ] parse defconst form (integers or symbol)
      - [ ] visit defconst form
