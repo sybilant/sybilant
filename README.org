@@ -59,9 +59,8 @@
    - [-] version 0.4
      - [X] parse defconst form (integers or symbol)
      - [X] visit defconst form
-     - [ ] analyze defconst form
-       - [ ] check doubly defined symbols
-       - [ ] check that a symbol value for a constant is itself a constant
+     - [X] analyze defconst form
+       - [X] check doubly defined symbols
      - [ ] emit constant reference by replacing it with its value (fixed point)
    - [ ] version 0.5
      - [ ] analyze instructions

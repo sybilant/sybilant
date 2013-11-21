@@ -28,7 +28,9 @@
 
 (deftest test-check-double-symbol-definition
   (analyze (parse-defasm '(defasm foo (%add %rax 1))))
-  (is (thrown? Exception (analyze (parse-defimport '(defimport foo))))))
+  (is (thrown? Exception (analyze (parse-defimport '(defimport foo)))))
+  (is (thrown? Exception (analyze (parse-defdata '(defdata foo #int8 1)))))
+  (is (thrown? Exception (analyze (parse-defconst '(defconst foo 1))))))
 
 (deftest test-check-symbol-format
   (is (thrown? Exception (analyze (parse-defimport '(defimport foo-bar)))))

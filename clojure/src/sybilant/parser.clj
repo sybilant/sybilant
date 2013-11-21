@@ -699,7 +699,8 @@
 (defn make-defconst
   ([name value]
      {:pre [(symbol? name) (constant-value? value)]}
-     {:type :defconst :name name :value value})
+     (with-meta {:type :defconst :name name :value value}
+       {:definition? true}))
   ([name value form]
      {:pre [(defconst-form? form)]}
      (-> (make-defconst name value)
