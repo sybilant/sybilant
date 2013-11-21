@@ -101,7 +101,10 @@
   (typed-map? exp :number))
 
 (defn number-form? [form]
-  (instance? Long form))
+  (or (instance? Long form)
+      (and (or (instance? clojure.lang.BigInt form)
+               (instance? java.math.BigInteger form))
+           (<= -9223372036854775808 form 18446744073709551615N))))
 
 (defn make-number [form]
   {:pre [(number-form? form)]}
@@ -352,7 +355,7 @@
    [nil nil nil a]
    (mem-args? register-form? args)
    [a nil nil nil]
-   (mem-args? register-form? number-form? args)
+   (mem-args? register-form? mem-disp-form? args)
    [a nil nil b]
    (mem-args? register-form? mem-scale-form? mem-disp-form? args)
    [nil a b c]
@@ -625,17 +628,18 @@
     (make-defimport (parse-symbol name) form)))
 
 (defn value? [exp]
-  (or (int? exp) (uint? exp)))
+  (or (int? exp) (uint? exp) (symbol? exp)))
 
 (defn value-form? [form]
-  (or (int-form? form) (uint-form? form)))
+  (or (int-form? form) (uint-form? form) (symbol-form? form)))
 
 (defn parse-value [form]
   (when-not (value-form? form)
     (error "expected value, but was" form))
   (cond
    (int-form? form) (parse-int form)
-   (uint-form? form) (parse-uint form)))
+   (uint-form? form) (parse-uint form)
+   (symbol-form? form) (parse-symbol form)))
 
 (defn defdata? [exp]
   (typed-map? exp :defdata))
@@ -670,11 +674,57 @@
         (error "defdata expects a value for value, but got" value)))
     (make-defdata (parse-symbol name) (map parse-value values) form)))
 
+(defn constant-value? [exp]
+  (or (number? exp) (int? exp) (uint? exp) (symbol? exp)))
+
+(defn constant-value-form? [form]
+  (or (number-form? form) (int-form? form) (uint-form? form)
+      (symbol-form? form)))
+
+(defn parse-constant-value [form]
+  (when-not (constant-value-form? form)
+    (error "expected constant value, but was" form))
+  (cond
+   (number-form? form) (parse-number form)
+   (int-form? form) (parse-int form)
+   (uint-form? form) (parse-uint form)
+   (symbol-form? form) (parse-symbol form)))
+
+(defn defconst? [exp]
+  (typed-map? exp :defconst))
+
+(defn defconst-form? [form]
+  (tagged-list? form 'defconst))
+
+(defn make-defconst
+  ([name value]
+     {:pre [(symbol? name) (constant-value? value)]}
+     {:type :defconst :name name :value value})
+  ([name value form]
+     {:pre [(defconst-form? form)]}
+     (-> (make-defconst name value)
+         (vary-meta merge (meta form))
+         (vary-meta assoc :form (with-meta form {})))))
+
+(defn parse-defconst [form]
+  (when-not (defconst-form? form)
+    (error "expected defconst, but was" form))
+  (let [arg-count (dec (count form))]
+    (when (not= arg-count 2)
+      (error "defconst expects exactly two arguments, but got" arg-count)))
+  (let [[name value] (rest form)]
+    (when-not (symbol-form? name)
+      (error "defconst expects a symbol for name, but got" name))
+    (when-not (constant-value-form? value)
+      (error "defconst expects a constant value for value, but got" value))
+    (make-defconst (parse-symbol name) (parse-constant-value value) form)))
+
 (defn top-level? [exp]
-  (or (defasm? exp) (defimport? exp) (defdata? exp)))
+  (or (defasm? exp) (defimport? exp) (defdata? exp) (defconst? exp)))
 
 (defn top-level-form? [form]
-  (or (defasm-form? form) (defimport-form? form) (defdata-form? form)))
+  (or (defasm-form? form) (defimport-form? form) (defdata-form? form)
+      (defconst-form? form)))
 
 (defn parse-top-level [form]
   (when-not (top-level-form? form)
@@ -682,4 +732,5 @@
   (cond
    (defasm-form? form) (parse-defasm form)
    (defimport-form? form) (parse-defimport form)
-   (defdata-form? form) (parse-defdata form)))
+   (defdata-form? form) (parse-defdata form)
+   (defconst-form? form) (parse-defconst form)))

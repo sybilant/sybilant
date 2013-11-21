@@ -125,10 +125,19 @@
           :disp (parse-number 1)}
          (parse-mem '(%mem64 %rax 1))))
   (is (= {:type :mem :width 64
+          :base (parse-register '%rax)
+          :disp (parse-symbol 'foo)}
+         (parse-mem '(%mem64 %rax foo))))
+  (is (= {:type :mem :width 64
           :index (parse-register '%rax)
           :scale (parse-number 2)
           :disp (parse-number 1)}
          (parse-mem '(%mem64 %rax 2 1))))
+  (is (= {:type :mem :width 64
+          :index (parse-register '%rax)
+          :scale (parse-number 2)
+          :disp (parse-symbol 'foo)}
+         (parse-mem '(%mem64 %rax 2 foo))))
   (is (= {:type :mem :width 64
           :base (parse-register '%rax)
           :index (parse-register '%rbx)
@@ -137,9 +146,20 @@
   (is (= {:type :mem :width 64
           :base (parse-register '%rax)
           :index (parse-register '%rbx)
+          :disp (parse-symbol 'foo)}
+         (parse-mem '(%mem64 %rax %rbx foo))))
+  (is (= {:type :mem :width 64
+          :base (parse-register '%rax)
+          :index (parse-register '%rbx)
           :scale (parse-number 2)
           :disp (parse-number 1)}
          (parse-mem '(%mem64 %rax %rbx 2 1))))
+  (is (= {:type :mem :width 64
+          :base (parse-register '%rax)
+          :index (parse-register '%rbx)
+          :scale (parse-number 2)
+          :disp (parse-symbol 'foo)}
+         (parse-mem '(%mem64 %rax %rbx 2 foo))))
   (is (thrown? Exception (parse-mem '(%mem64))))
   (is (thrown? Exception (parse-mem '(%mem64 %rax %rbx %rcx %rdx %rsi))))
   (is (thrown? Exception (parse-mem '(%mem64 %rax %rbx %rcx))))
@@ -252,6 +272,10 @@
   (is (thrown? Exception (parse-defimport '(defimport foo bar)))))
 
 (deftest test-parse-value
+  (testing "symbol"
+    (is (value-form? 'foo))
+    (is (= (parse-symbol 'foo) (parse-value 'foo)))
+    (is (value? (parse-value 'foo))))
   (testing "signed integers"
     (doseq [i [(byte 1) (short 1) (int 1) (->Int64 1)]]
       (is (value-form? i))
@@ -281,3 +305,66 @@
   (is (thrown? Exception (parse-defdata '(defdata))))
   (is (thrown? Exception (parse-defdata '(defdata foo))))
   (is (thrown? Exception (parse-defdata '(defdata 1)))))
+
+(deftest test-parse-constant-value
+  (testing "symbol"
+    (is (constant-value-form? 'foo))
+    (is (= (parse-symbol 'foo) (parse-constant-value 'foo)))
+    (is (value? (parse-constant-value 'foo))))
+  (testing "number"
+    (is (constant-value-form? 1))
+    (is (= (parse-number 1) (parse-constant-value 1)))
+    (is (constant-value? (parse-constant-value 1))))
+  (testing "signed integers"
+    (doseq [i [(byte 1) (short 1) (int 1) (->Int64 1)]]
+      (is (constant-value-form? i))
+      (is (= (parse-int i) (parse-constant-value i)))
+      (is (constant-value? (parse-constant-value i)))))
+  (testing "unsigned integers"
+    (doseq [i [(->Uint8 1) (->Uint16 1) (->Uint32 1) (->Uint64 1)]]
+      (is (constant-value-form? i))
+      (is (= (parse-uint i) (parse-constant-value i)))
+      (is (constant-value? (parse-constant-value i))))))
+
+(deftest test-parse-defconst
+  (let [form '(defconst foo 1)]
+    (is (defconst-form? form))
+    (let [defconst (parse-defconst form)
+          meta (meta defconst)]
+      (is (= {:type :defconst :name (parse-symbol 'foo)
+              :value (parse-number 1)}
+             defconst))
+      (is (defconst? defconst))
+      (is (= form (:form meta)))
+      (is (not (:extern? meta)))
+      (is (:line meta))
+      (is (:column meta))))
+  (is (thrown? Exception (parse-defconst '(defconst))))
+  (is (thrown? Exception (parse-defconst '(defconst foo))))
+  (is (thrown? Exception (parse-defconst '(defconst 1)))))
+
+(deftest test-parse-top-level
+  (let [form '(defasm foo (%add %rax 1))
+        top-level (parse-top-level form)
+        meta (meta top-level)]
+    (is (top-level-form? form))
+    (is (= (parse-defasm form) top-level))
+    (is (top-level? top-level)))
+  (let [form '(defimport foo)
+        top-level (parse-top-level form)
+        meta (meta top-level)]
+    (is (top-level-form? form))
+    (is (= (parse-defimport form) top-level))
+    (is (top-level? top-level)))
+  (let [form '(defdata foo #int8 1)
+        top-level (parse-top-level form)
+        meta (meta top-level)]
+    (is (top-level-form? form))
+    (is (= (parse-defdata form) top-level))
+    (is (top-level? top-level)))
+  (let [form '(defconst foo 1)
+        top-level (parse-top-level form)
+        meta (meta top-level)]
+    (is (top-level-form? form))
+    (is (= (parse-defconst form) top-level))
+    (is (top-level? top-level))))

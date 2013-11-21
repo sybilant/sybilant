@@ -56,8 +56,8 @@
      - [X] parse defdata form
      - [X] visit defdata form
      - [X] emit defdata form in a separate data section
-   - [ ] version 0.4
-     - [ ] parse defconst form (integers or symbol)
+   - [-] version 0.4
+     - [X] parse defconst form (integers or symbol)
      - [ ] visit defconst form
      - [ ] analyze defconst form
        - [ ] check doubly defined symbols
