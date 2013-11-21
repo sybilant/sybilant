@@ -98,3 +98,11 @@
     (is (visited? (:name visited)))
     (doseq [value (:values visited)]
       (is (visited? value)))))
+
+(deftest test-visit-defconst
+  (let [exp (parse-defconst '(defconst foo 1))
+        visited (visit exp visitor)]
+    (is (= exp visited))
+    (is (visited? visited))
+    (is (visited? (:name visited)))
+    (is (visited? (:value visited)))))

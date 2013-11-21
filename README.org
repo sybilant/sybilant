@@ -58,7 +58,7 @@
      - [X] emit defdata form in a separate data section
    - [-] version 0.4
      - [X] parse defconst form (integers or symbol)
-     - [ ] visit defconst form
+     - [X] visit defconst form
      - [ ] analyze defconst form
        - [ ] check doubly defined symbols
        - [ ] check that a symbol value for a constant is itself a constant
