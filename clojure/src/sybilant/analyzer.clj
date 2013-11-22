@@ -29,8 +29,16 @@
 
 (defn add-symbol-table-entry [atom exp]
   (swap! atom assoc
-         (:name exp) (merge (select-keys exp [:type :name])
+         (:name exp) (merge (select-keys exp [:type :name :value])
                             (meta exp))))
+
+(defn replace-constants [exp]
+  (if (symbol? exp)
+    (let [globals (:globals (meta exp))]
+      (if (= :defconst (get-in globals [exp :type]))
+        (get-in globals [exp :value])
+        exp))
+    exp))
 
 (defn definition? [exp]
   (:definition? (meta exp)))
@@ -64,7 +72,8 @@
   {:pre [(top-level? exp)]}
   (let [exp (-> (populate-symbol-table exp)
                 (visit (comp check-symbol-format
-                             check-symbol-reference)))]
+                             check-symbol-reference
+                             replace-constants)))]
     (when (definition? exp)
       (define-global exp))
     exp))

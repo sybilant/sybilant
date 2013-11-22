@@ -61,3 +61,25 @@
                                                      (%add %rbx 1)
                                                      (%label bar)
                                                      (%add %rcx 1))))))))
+
+(deftest test-replace-constant-values
+  (binding [*globals* (atom {})]
+    (analyze (parse-defconst '(defconst baz 1)))
+    (analyze (parse-defconst '(defconst bar baz)))
+    (analyze (parse-defdata '(defdata quux #int8 1)))
+    (is (= (parse-defasm '(defasm foo1
+                            (%add (%mem8 1) 1)))
+           (analyze (parse-defasm '(defasm foo1
+                                     (%add (%mem8 baz) bar))))))
+    (is (= (parse-defasm '(defasm foo2
+                            (%add (%mem8 quux) quux)))
+           (analyze (parse-defasm '(defasm foo2
+                                     (%add (%mem8 quux) quux)))))))
+  (binding [*globals* (atom {})]
+    (analyze (parse-defconst '(defconst baz #int8 1)))
+    (analyze (parse-defconst '(defconst bar baz)))
+    (analyze (parse-defdata '(defdata quux #int8 1)))
+    (is (= (parse-defdata '(defdata foo1 #int8 1))
+           (analyze (parse-defdata '(defdata foo1 baz)))))
+    (is (= (parse-defdata '(defdata foo2 quux))
+           (analyze (parse-defdata '(defdata foo2 quux)))))))

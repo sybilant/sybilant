@@ -56,12 +56,12 @@
      - [X] parse defdata form
      - [X] visit defdata form
      - [X] emit defdata form in a separate data section
-   - [-] version 0.4
+   - [X] version 0.4
      - [X] parse defconst form (integers or symbol)
      - [X] visit defconst form
      - [X] analyze defconst form
        - [X] check doubly defined symbols
-     - [ ] emit constant reference by replacing it with its value (fixed point)
+       - [X] replace constant reference with its value
    - [ ] version 0.5
      - [ ] analyze instructions
        - [ ] check syntax for x86 instructions (%adc, %add, %and, %bsf, %bsr,
