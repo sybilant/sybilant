@@ -30,3 +30,7 @@
                *err* (new java.io.PrintWriter err#)]
        ~@body
        [(str out#) (str err#)])))
+
+(defmacro with-empty-env [& body]
+  `(binding [*globals* (atom {})]
+     ~@body))
