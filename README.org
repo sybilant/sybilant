@@ -62,24 +62,164 @@
      - [X] analyze defconst form
        - [X] check doubly defined symbols
        - [X] replace constant reference with its value
-   - [ ] version 0.5
-     - [ ] analyze instructions
-       - [ ] check syntax for x86 instructions (%adc, %add, %and, %bsf, %bsr,
-         %bswap, %bt, %btc, %btr, %bts, %call, %cbw, %cdq, %cdqe, %cmova, %cmovae,
-         %cmovb, %cmovbe, %cmovc, %cmove, %cmovg, %cmovge, %cmovl, %cmovle,
-         %cmovna, %cmovnae, %cmovnb, %cmovnbe, %cmovnc, %cmovne, %cmovng,
-         %cmovnge, %cmovnl, %cmovnle, %cmovno, %cmovnp, %cmovns, %cmovnz, %cmovo,
-         %cmovp, %cmovpe, %cmovpo, %cmovs, %cmovz, %cmp, %cmpxchg, %cqo, %crc32,
-         %cwd, %cwde, %dec, %div, %idiv, %imul, %inc, %ja, %jae, %jb, %jbe, %jc,
-         %jcxz, %je, %jecxz, %jg, %jge, %jl, %jle, %jmp, %jna, %jnae, %jnb, %jnbe,
-         %jnc, %jne, %jng, %jnge, %jnl, %jnle, %jno, %jnp, %jns, %jnz, %jo, %jp,
-         %jpe, %jpo, %jrcxz, %js, %jz, %loop, %loope, %loopne, %mov, %movsx,
-         %movsxd, %movzx, %mul, %neg, %nop, %not, %or, %pop, %popcnt, %push, %rcl,
-         %rcr, %ret, %rol, %ror, %sal, %sar, %sbb, %seta, %setae, %setb, %setbe,
-         %setc, %sete, %setg, %setge, %setl, %setle, %setna, %setnae, %setnb,
-         %setnbe, %setnc, %setne, %setng, %setnge, %setnl, %setnle, %setno,
-         %setnp, %setns, %setnz, %seto, %setp, %setpe, %setpo, %sets, %setz, %shl,
-         %shld, %shr, %shrd, %sub, %test, %xadd, %xchg, %xor)
+   - [-] version 0.5
+     - [-] analyze instructions
+       - [X] check syntax for x86 instructions
+         - [X] %adc
+         - [X] %add
+         - [X] %and
+         - [X] %bsf
+         - [X] %bsr
+         - [X] %bswap
+         - [X] %bt
+         - [X] %btc
+         - [X] %btr
+         - [X] %bts
+         - [X] %call
+         - [X] %cbw
+         - [X] %cdq
+         - [X] %cdqe
+         - [X] %cmova
+         - [X] %cmovae
+         - [X] %cmovb
+         - [X] %cmovbe
+         - [X] %cmovc
+         - [X] %cmove
+         - [X] %cmovg
+         - [X] %cmovge
+         - [X] %cmovl
+         - [X] %cmovle
+         - [X] %cmovna
+         - [X] %cmovnae
+         - [X] %cmovnb
+         - [X] %cmovnbe
+         - [X] %cmovnc
+         - [X] %cmovne
+         - [X] %cmovng
+         - [X] %cmovnge
+         - [X] %cmovnl
+         - [X] %cmovnle
+         - [X] %cmovno
+         - [X] %cmovnp
+         - [X] %cmovns
+         - [X] %cmovnz
+         - [X] %cmovo
+         - [X] %cmovp
+         - [X] %cmovpe
+         - [X] %cmovpo
+         - [X] %cmovs
+         - [X] %cmovz
+         - [X] %cmp
+         - [X] %cmpxchg
+         - [X] %cqo
+         - [X] %crc32
+         - [X] %cwd
+         - [X] %cwde
+         - [X] %dec
+         - [X] %div
+         - [X] %idiv
+         - [X] %imul
+         - [X] %inc
+         - [X] %ja
+         - [X] %jae
+         - [X] %jb
+         - [X] %jbe
+         - [X] %jc
+         - [X] %je
+         - [X] %jecxz
+         - [X] %jg
+         - [X] %jge
+         - [X] %jl
+         - [X] %jle
+         - [X] %jmp
+         - [X] %jna
+         - [X] %jnae
+         - [X] %jnb
+         - [X] %jnbe
+         - [X] %jnc
+         - [X] %jne
+         - [X] %jng
+         - [X] %jnge
+         - [X] %jnl
+         - [X] %jnle
+         - [X] %jno
+         - [X] %jnp
+         - [X] %jns
+         - [X] %jnz
+         - [X] %jo
+         - [X] %jp
+         - [X] %jpe
+         - [X] %jpo
+         - [X] %jrcxz
+         - [X] %js
+         - [X] %jz
+         - [X] %loop
+         - [X] %loope
+         - [X] %loopne
+         - [X] %mov
+         - [X] %movbe
+         - [X] %movsx
+         - [X] %movsxd
+         - [X] %movzx
+         - [X] %mul
+         - [X] %neg
+         - [X] %nop
+         - [X] %not
+         - [X] %or
+         - [X] %pop
+         - [X] %popcnt
+         - [X] %push
+         - [X] %rcl
+         - [X] %rcr
+         - [X] %ret
+         - [X] %rol
+         - [X] %ror
+         - [X] %sal
+         - [X] %sar
+         - [X] %sbb
+         - [X] %seta
+         - [X] %setae
+         - [X] %setb
+         - [X] %setbe
+         - [X] %setc
+         - [X] %sete
+         - [X] %setg
+         - [X] %setge
+         - [X] %setl
+         - [X] %setle
+         - [X] %setna
+         - [X] %setnae
+         - [X] %setnb
+         - [X] %setnbe
+         - [X] %setnc
+         - [X] %setne
+         - [X] %setng
+         - [X] %setnge
+         - [X] %setnl
+         - [X] %setnle
+         - [X] %setno
+         - [X] %setnp
+         - [X] %setns
+         - [X] %setnz
+         - [X] %seto
+         - [X] %setp
+         - [X] %setpe
+         - [X] %setpo
+         - [X] %sets
+         - [X] %setz
+         - [X] %shl
+         - [X] %shld
+         - [X] %shr
+         - [X] %shrd
+         - [X] %sub
+         - [X] %test
+         - [X] %xadd
+         - [X] %xchg
+         - [X] %xor
+       - [ ] segment registers
+         - [ ] %mov
+         - [ ] %pop
+         - [ ] %push
    - [ ] version 0.6
      - [ ] parse primitive tags
      - [ ] parse label tag

@@ -83,3 +83,15 @@
            (analyze (parse-defdata '(defdata foo1 baz)))))
     (is (= (parse-defdata '(defdata foo2 quux))
            (analyze (parse-defdata '(defdata foo2 quux)))))))
+
+(deftest test-syntax-check
+  (with-empty-env
+    (is (thrown? Exception (analyze (parse-defasm '(defasm foo
+                                                     (%add %rax)))))))
+  (with-empty-env
+    (is (thrown? Exception (analyze (parse-defasm '(defasm foo
+                                                     (%add %rax #int16 1)))))))
+  (with-empty-env
+    (analyze (parse-defconst '(defconst bar #int16 1)))
+    (is (thrown? Exception (analyze (parse-defasm '(defasm foo
+                                                     (%add %rax bar))))))))
