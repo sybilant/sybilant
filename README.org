@@ -217,6 +217,11 @@
          - [X] %xchg
          - [X] %xor
    - [ ] version 0.6
+     - [ ] check syntax for flag instructions (%clc, %cmc, %stc)
+     - [ ] parse string literal data
+     - [ ] analyze string literal data
+     - [ ] emit string literal data
+   - [ ] version 0.7
      - [ ] parse primitive tags
      - [ ] parse label tag
      - [ ] analyze defasm form
@@ -234,7 +239,7 @@
          %mov, %movsx, %movsxd, %movzx, %mul, %neg, %not, %or, %popcnt, %rcl,
          %rcr, %rdtsc, %ret, %rol, %ror, %sal, %sar, %sbb, %shl, %shld, %shr,
          %shrd, %sub, %test, %xadd, %xchg, %xor)
-   - [ ] version 0.7
+   - [ ] version 0.8
      - [ ] parse tuple types
      - [ ] parse defdata type (must be a tuple type)
      - [ ] parse %malloc pseudo-instruction
@@ -248,7 +253,7 @@
      - [ ] emit %malloc
      - [ ] emit %mget
      - [ ] emit %mset
-   - [ ] version 0.8
+   - [ ] version 0.9
      - [ ] parse stack tag
      - [ ] parse %salloc pseudo-instruction
      - [ ] parse %sget pseudo-instruction
@@ -266,8 +271,7 @@
        - I think they can contain other types, but if you're trying to execute a
          stack operation that explicitly or implicitly references one of them,
          then they would have to have a stack type.
-   - [ ] version 0.9
-     - [ ] check syntax for flag instructions (%clc, %cmc, %stc)
+   - [ ] version 0.10
      - [ ] check flags for x86 arithmetic instructions (%adc, %add, %dec, %div,
        %idiv, %imul, %inc, %mul, %neg, %sbb, %sub, %xadd)
      - [ ] check flags for x86 logical instructions (%and, %not, %or, %test,
