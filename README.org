@@ -62,8 +62,8 @@
      - [X] analyze defconst form
        - [X] check doubly defined symbols
        - [X] replace constant reference with its value
-   - [-] version 0.5
-     - [-] analyze instructions
+   - [X] version 0.5
+     - [X] analyze instructions
        - [X] check syntax for x86 instructions
          - [X] %adc
          - [X] %add
@@ -216,10 +216,6 @@
          - [X] %xadd
          - [X] %xchg
          - [X] %xor
-       - [ ] segment registers
-         - [ ] %mov
-         - [ ] %pop
-         - [ ] %push
    - [ ] version 0.6
      - [ ] parse primitive tags
      - [ ] parse label tag
@@ -285,6 +281,10 @@
        %jnge, %jnl, %jnle, %jno, %jnp, %jns, %jnz, %jo, %jp, %jpe, %jpo, %js,
        %jz, %loope, %loopne)
    - [ ] future version
+     - [ ] segment registers
+       - [ ] %mov
+       - [ ] %pop
+       - [ ] %push
      - [ ] instruction prefixes
      - [ ] floating point
      - [ ] mmx etc.
