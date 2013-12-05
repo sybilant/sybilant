@@ -7,7 +7,7 @@
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.test.emitter
-  (:refer-clojure :exclude [munge number? symbol?])
+  (:refer-clojure :exclude [munge number? string? symbol?])
   (:require [clojure.test :refer :all]
             [sybilant.analyzer :refer [*globals* analyze]]
             [sybilant.emitter :refer :all]
@@ -22,37 +22,41 @@
 (deftest test-emit-symbol
   (is (= "foo" (emit* (parse-symbol 'foo)))))
 
+(deftest test-emit-string
+  (is (= "102, 111, 111" (emit* (parse-string "foo"))))
+  (is (= "-30, -104, -125" (emit* (parse-string "☃")))))
+
 (deftest test-emit-number
   (is (= "1" (emit* (parse-number 1)))))
 
 (deftest test-emit-signed-integers
-  (is (= "byte 1" (emit* (parse-int8 (byte 1)))))
-  (is (= "word 1" (emit* (parse-int16 (short 1)))))
-  (is (= "dword 1" (emit* (parse-int32 (int 1)))))
-  (is (= "qword 1" (emit* (parse-int64 (->Int64 1))))))
+  (is (= "1" (emit* (parse-int8 (byte 1)))))
+  (is (= "1" (emit* (parse-int16 (short 1)))))
+  (is (= "1" (emit* (parse-int32 (int 1)))))
+  (is (= "1" (emit* (parse-int64 (->Int64 1))))))
 
 (deftest test-emit-unsigned-integers
-  (is (= "byte 1" (emit* (parse-uint8 (->Uint8 1)))))
-  (is (= "word 1" (emit* (parse-uint16 (->Uint16 1)))))
-  (is (= "dword 1" (emit* (parse-uint32 (->Uint32 1)))))
-  (is (= "qword 1" (emit* (parse-uint64 (->Uint64 1))))))
+  (is (= "1" (emit* (parse-uint8 (->Uint8 1)))))
+  (is (= "1" (emit* (parse-uint16 (->Uint16 1)))))
+  (is (= "1" (emit* (parse-uint32 (->Uint32 1)))))
+  (is (= "1" (emit* (parse-uint64 (->Uint64 1))))))
 
 (deftest test-emit-register
   (is (= "rax" (emit* (parse-register '%rax)))))
 
 (deftest test-emit-mem
-  (is (= "byte [17]" (emit* (parse-mem '(%mem8 17)))))
-  (is (= "byte [rax]" (emit* (parse-mem '(%mem8 %rax)))))
-  (is (= "byte [rax+17]" (emit* (parse-mem '(%mem8 %rax 17)))))
-  (is (= "byte [(rbx*4)+17]" (emit* (parse-mem '(%mem8 %rbx 4 17)))))
-  (is (= "byte [rax+rbx+17]" (emit* (parse-mem '(%mem8 %rax %rbx 17)))))
-  (is (= "byte [rax+(rbx*4)+17]" (emit* (parse-mem '(%mem8 %rax %rbx 4 17))))))
+  (is (= "[17]" (emit* (parse-mem '(%mem8 17)))))
+  (is (= "[rax]" (emit* (parse-mem '(%mem8 %rax)))))
+  (is (= "[rax+17]" (emit* (parse-mem '(%mem8 %rax 17)))))
+  (is (= "[(rbx*4)+17]" (emit* (parse-mem '(%mem8 %rbx 4 17)))))
+  (is (= "[rax+rbx+17]" (emit* (parse-mem '(%mem8 %rax %rbx 17)))))
+  (is (= "[rax+(rbx*4)+17]" (emit* (parse-mem '(%mem8 %rax %rbx 4 17))))))
 
 (deftest test-emit-operator
   (is (= "add" (emit* (parse-operator '%add)))))
 
 (deftest test-emit-instruction
-  (is (= "add rax, 1\n" (emit* (parse-instruction '(%add %rax 1))))))
+  (is (= "add rax, byte 1\n" (emit* (parse-instruction '(%add %rax #int8 1))))))
 
 (deftest test-emit-label
   (binding [*globals* (atom {})]
@@ -77,7 +81,7 @@
          (emit* (parse-defimport '(defimport foo))))))
 
 (deftest test-emit-defdata
-  (is (= "\nglobal foo\nfoo:\ndb 1 dq 2\n"
+  (is (= "\nglobal foo\nfoo:\ndb 1\ndq 2\n"
          (emit* (parse-defdata '(defdata foo #int8 1 #uint64 2)))))
-  (is (= "\nglobal _u2603\n_u2603:\ndb 1 dq 2\n"
+  (is (= "\nglobal _u2603\n_u2603:\ndb 1\ndq 2\n"
          (emit* (parse-defdata '(defdata ☃ #int8 1 #uint64 2))))))

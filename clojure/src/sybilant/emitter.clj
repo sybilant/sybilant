@@ -8,7 +8,8 @@
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.emitter
   (:refer-clojure :exclude [munge])
-  (:require [sybilant.util :refer [error]]))
+  (:require [sybilant.parser :refer [int? mem? uint?]]
+            [sybilant.util :refer [error]]))
 
 (defn munge [value]
   (let [chars (seq (if (namespace value)
@@ -77,24 +78,22 @@
      (.write out (munge (:form exp)))
      :else
      (.write out (str (:form exp))))))
+(defmethod emit :string [exp out]
+  (let [chars (seq (.getBytes (:form exp) "utf-8"))]
+    (when (seq chars)
+      (.write out (str (first chars)))
+      (doseq [char (rest chars)]
+        (.write out ", ")
+        (.write out (str char))))))
 (defmethod emit :number [exp out]
   (.write out (str (:form exp))))
-(defn emit-width-prefix [exp out]
-  (.write out (case (:width exp)
-                8 "byte "
-                16 "word "
-                32 "dword "
-                64 "qword ")))
 (defmethod emit :int [exp out]
-  (emit-width-prefix exp out)
   (.write out (str (:form exp))))
 (defmethod emit :uint [exp out]
-  (emit-width-prefix exp out)
   (.write out (str (:form exp))))
 (defmethod emit :register [exp out]
   (.write out (subs (str (:form (meta exp))) 1)))
 (defmethod emit :mem [{:keys [base index scale disp] :as exp} out]
-  (emit-width-prefix exp out)
   (.write out "[")
   (when base
     (emit base out))
@@ -115,13 +114,25 @@
   (.write out "]"))
 (defmethod emit :operator [exp out]
   (.write out (subs (str (:form exp)) 1)))
+(defn emit-prefix? [exp]
+  (or (int? exp) (mem? exp) (uint? exp)))
+(defn emit-width-prefix [exp out]
+  (.write out (case (:width exp)
+                8 "byte "
+                16 "word "
+                32 "dword "
+                64 "qword ")))
 (defmethod emit :instruction [exp out]
   (emit (:operator exp) out)
   (when-let [operands (seq (:operands exp))]
     (.write out " ")
+    (when (emit-prefix? (first operands))
+      (emit-width-prefix (first operands) out))
     (emit (first operands) out)
     (doseq [operand (rest operands)]
       (.write out ", ")
+      (when (emit-prefix? operand)
+        (emit-width-prefix operand out))
       (emit operand out)))
   (.write out "\n"))
 (defmethod emit :label [exp out]
@@ -152,9 +163,9 @@
   (emit (:name exp) out)
   (.write out ":\n")
   (emit-data-instruction (first (:values exp)) out)
-  (.write out (str (:form (first (:values exp)))))
+  (emit (first (:values exp)) out)
   (doseq [value (rest (:values exp))]
-    (.write out " ")
+    (.write out "\n")
     (emit-data-instruction value out)
-    (.write out (str (:form value))))
+    (emit value out))
   (.write out "\n"))

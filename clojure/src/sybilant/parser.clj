@@ -7,7 +7,7 @@
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.parser
-  (:refer-clojure :exclude [number? symbol?])
+  (:refer-clojure :exclude [number? string? symbol?])
   (:require [clojure.core :as clj]
             [clojure.java.io :as io]
             [slingshot.slingshot :refer [throw+]]
@@ -627,11 +627,27 @@
       (error "defimport expect a symbol for name, but got" name))
     (make-defimport (parse-symbol name) form)))
 
+(defn string? [exp]
+  (typed-map? exp :string))
+
+(defn string-form? [form]
+  (clj/string? form))
+
+(defn make-string [form]
+  {:pre [(clj/string? form)]}
+  {:type :string :form form :width 8})
+
+(defn parse-string [form]
+  (when-not (string-form? form)
+    (error "expected string, but was" form))
+  (make-string form))
+
 (defn value? [exp]
-  (or (int? exp) (uint? exp) (symbol? exp)))
+  (or (int? exp) (uint? exp) (symbol? exp) (string? exp)))
 
 (defn value-form? [form]
-  (or (int-form? form) (uint-form? form) (symbol-form? form)))
+  (or (int-form? form) (uint-form? form) (symbol-form? form)
+      (string-form? form)))
 
 (defn parse-value [form]
   (when-not (value-form? form)
@@ -639,7 +655,8 @@
   (cond
    (int-form? form) (parse-int form)
    (uint-form? form) (parse-uint form)
-   (symbol-form? form) (parse-symbol form)))
+   (symbol-form? form) (parse-symbol form)
+   (string-form? form) (parse-string form)))
 
 (defn defdata? [exp]
   (typed-map? exp :defdata))

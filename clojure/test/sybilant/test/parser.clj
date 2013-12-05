@@ -7,7 +7,7 @@
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.test.parser
-  (:refer-clojure :exclude [number? symbol?])
+  (:refer-clojure :exclude [number? string? symbol?])
   (:require [clojure.test :refer :all]
             [sybilant.parser :refer :all]))
 
@@ -271,6 +271,11 @@
   (is (thrown? Exception (parse-defimport '(defimport 1))))
   (is (thrown? Exception (parse-defimport '(defimport foo bar)))))
 
+(deftest test-parse-string
+  (is (string-form? "foo"))
+  (is (= {:type :string :form "foo" :width 8} (parse-string "foo")))
+  (is (string? (parse-string "foo"))))
+
 (deftest test-parse-value
   (testing "symbol"
     (is (value-form? 'foo))
@@ -285,7 +290,11 @@
     (doseq [i [(->Uint8 1) (->Uint16 1) (->Uint32 1) (->Uint64 1)]]
       (is (value-form? i))
       (is (= (parse-uint i) (parse-value i)))
-      (is (value? (parse-value i))))))
+      (is (value? (parse-value i)))))
+  (testing "string"
+    (is (value-form? "foo"))
+    (is (= (parse-string "foo") (parse-value "foo")))
+    (is (value? (parse-value "foo")))))
 
 (deftest test-parse-defdata
   (let [form '(defdata foo #int8 1 #uint64 2)]
