@@ -216,11 +216,11 @@
          - [X] %xadd
          - [X] %xchg
          - [X] %xor
-   - [-] version 0.6
+   - [X] version 0.6
      - [X] check syntax for flag instructions (%clc, %cmc, %stc)
-     - [ ] parse string literal data
-     - [ ] analyze string literal data
-     - [ ] emit string literal data
+     - [X] parse string literal data
+     - [X] analyze string literal data
+     - [X] emit string literal data
    - [ ] version 0.7
      - [ ] parse primitive tags
      - [ ] parse label tag
