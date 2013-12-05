@@ -11,26 +11,27 @@
   (:require [clojure.core :as clj]
             [clojure.java.io :as io]
             [slingshot.slingshot :refer [throw+]]
-            [sybilant.util :refer [error maybe]]))
+            [sybilant.util :refer [error maybe]])
+  (:import (java.io Writer)))
 
 (defn read-int8 [form]
   (unchecked-byte form))
 
-(defmethod print-method Byte [form out]
+(defmethod print-method Byte [form ^Writer out]
   (.write out "#int8 ")
   (.write out (str form)))
 
 (defn read-int16 [form]
   (unchecked-short form))
 
-(defmethod print-method Short [form out]
+(defmethod print-method Short [form ^Writer out]
   (.write out "#int16 ")
   (.write out (str form)))
 
 (defn read-int32 [form]
   (unchecked-int form))
 
-(defmethod print-method Integer [form out]
+(defmethod print-method Integer [form ^Writer out]
   (.write out "#int32 ")
   (.write out (str form)))
 
@@ -39,7 +40,7 @@
 (defn read-int64 [form]
   (->Int64 (long form)))
 
-(defmethod print-method Int64 [form out]
+(defmethod print-method Int64 [form ^Writer out]
   (.write out "#int64 ")
   (.write out (str (:form form))))
 
@@ -48,7 +49,7 @@
 (defn read-uint8 [form]
   (->Uint8 (long form)))
 
-(defmethod print-method Uint8 [form out]
+(defmethod print-method Uint8 [form ^Writer out]
   (.write out "#uint8 ")
   (.write out (str (:form form))))
 
@@ -57,7 +58,7 @@
 (defn read-uint16 [form]
   (->Uint16 (long form)))
 
-(defmethod print-method Uint16 [form out]
+(defmethod print-method Uint16 [form ^Writer out]
   (.write out "#uint16 ")
   (.write out (str (:form form))))
 
@@ -66,7 +67,7 @@
 (defn read-uint32 [form]
   (->Uint32 (long form)))
 
-(defmethod print-method Uint32 [form out]
+(defmethod print-method Uint32 [form ^Writer out]
   (.write out "#uint32 ")
   (.write out (str (:form form))))
 
@@ -75,7 +76,7 @@
 (defn read-uint64 [form]
   (->Uint64 (long form)))
 
-(defmethod print-method Uint64 [form out]
+(defmethod print-method Uint64 [form ^Writer out]
   (.write out "#uint64 ")
   (.write out (str (:form form))))
 

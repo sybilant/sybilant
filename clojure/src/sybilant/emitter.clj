@@ -9,9 +9,10 @@
 (ns sybilant.emitter
   (:refer-clojure :exclude [munge])
   (:require [sybilant.parser :refer [int? mem? uint?]]
-            [sybilant.util :refer [error]]))
+            [sybilant.util :refer [error]])
+  (:import (java.io Writer)))
 
-(defn munge [value]
+(defn munge ^String [value]
   (let [chars (seq (if (namespace value)
                      (str (namespace value) "/" (name value))
                      (name value)))
@@ -23,7 +24,7 @@
                        (rest chars))
                 chars)]
     (when (seq chars)
-      (loop [[c & chars] chars]
+      (loop [[^Character c & chars] chars]
         (let [chars (cond
                      (or (and (not (pos? (.compareTo \a c)))
                               (not (pos? (.compareTo c \z))))
@@ -69,7 +70,7 @@
     (.toString sb)))
 
 (defmulti emit (comp :type first list))
-(defmethod emit :symbol [exp out]
+(defmethod emit :symbol [exp ^Writer out]
   (let [symbol-info (get-in (meta exp) [:symbol-table exp])]
     (when (= :label (:type symbol-info))
       (.write out "."))
@@ -78,22 +79,22 @@
      (.write out (munge (:form exp)))
      :else
      (.write out (str (:form exp))))))
-(defmethod emit :string [exp out]
-  (let [chars (seq (.getBytes (:form exp) "utf-8"))]
+(defmethod emit :string [exp ^Writer out]
+  (let [chars (seq (.getBytes ^String (:form exp) "utf-8"))]
     (when (seq chars)
       (.write out (str (first chars)))
       (doseq [char (rest chars)]
         (.write out ", ")
         (.write out (str char))))))
-(defmethod emit :number [exp out]
+(defmethod emit :number [exp ^Writer out]
   (.write out (str (:form exp))))
-(defmethod emit :int [exp out]
+(defmethod emit :int [exp ^Writer out]
   (.write out (str (:form exp))))
-(defmethod emit :uint [exp out]
+(defmethod emit :uint [exp ^Writer out]
   (.write out (str (:form exp))))
-(defmethod emit :register [exp out]
+(defmethod emit :register [exp ^Writer out]
   (.write out (subs (str (:form (meta exp))) 1)))
-(defmethod emit :mem [{:keys [base index scale disp] :as exp} out]
+(defmethod emit :mem [{:keys [base index scale disp] :as exp} ^Writer out]
   (.write out "[")
   (when base
     (emit base out))
@@ -112,17 +113,17 @@
       (.write out "+"))
     (emit disp out))
   (.write out "]"))
-(defmethod emit :operator [exp out]
+(defmethod emit :operator [exp ^Writer out]
   (.write out (subs (str (:form exp)) 1)))
 (defn emit-prefix? [exp]
   (or (int? exp) (mem? exp) (uint? exp)))
-(defn emit-width-prefix [exp out]
-  (.write out (case (:width exp)
+(defn emit-width-prefix [exp ^Writer out]
+  (.write out (case (long (:width exp))
                 8 "byte "
                 16 "word "
                 32 "dword "
                 64 "qword ")))
-(defmethod emit :instruction [exp out]
+(defmethod emit :instruction [exp ^Writer out]
   (emit (:operator exp) out)
   (when-let [operands (seq (:operands exp))]
     (.write out " ")
@@ -135,10 +136,10 @@
         (emit-width-prefix operand out))
       (emit operand out)))
   (.write out "\n"))
-(defmethod emit :label [exp out]
+(defmethod emit :label [exp ^Writer out]
   (emit (:name exp) out)
   (.write out ":\n"))
-(defmethod emit :defasm [exp out]
+(defmethod emit :defasm [exp ^Writer out]
   (.write out "\nglobal ")
   (emit (:name exp) out)
   (.write out "\n")
@@ -146,17 +147,17 @@
   (.write out ":\n")
   (doseq [statement (:statements exp)]
     (emit statement out)))
-(defmethod emit :defimport [exp out]
+(defmethod emit :defimport [exp ^Writer out]
   (.write out "\nextern ")
   (emit (:name exp) out)
   (.write out "\n"))
-(defn emit-data-instruction [exp out]
-  (.write out (case (:width exp)
+(defn emit-data-instruction [exp ^Writer out]
+  (.write out (case (long (:width exp))
                 8 "db "
                 16 "dw "
                 32 "dd "
                 64 "dq ")))
-(defmethod emit :defdata [exp out]
+(defmethod emit :defdata [exp ^Writer out]
   (.write out "\nglobal ")
   (emit (:name exp) out)
   (.write out "\n")

@@ -13,9 +13,10 @@
             [sybilant.emitter :refer [emit]]
             [sybilant.parser :refer [defdata? parse-top-level]]
             [sybilant.util :refer [die]])
-  (:import (clojure.lang LineNumberingPushbackReader)))
+  (:import (clojure.lang LineNumberingPushbackReader)
+           (java.io Writer)))
 
-(defn reader [in]
+(defn reader ^java.io.Reader [in]
   (LineNumberingPushbackReader. (io/reader in :encoding "utf-8")))
 
 (defn read-file [in]
@@ -36,7 +37,7 @@
 (defn data-exp? [exp]
   (defdata? exp))
 
-(defn compile-files [infiles out]
+(defn compile-files [infiles ^Writer out]
   (let [forms (read-files infiles)
         exps (->> forms
                   (map parse-top-level)
