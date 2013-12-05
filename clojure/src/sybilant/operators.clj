@@ -110,6 +110,12 @@
  %cbw
  ^{:schemata [[]]}
  {:type :operator :form %cbw}
+ %clc
+ ^{:schemata [[]]}
+ {:type :operator :form %clc}
+ %cmc
+ ^{:schemata [[]]}
+ {:type :operator :form %cmc}
  %cdq
  ^{:schemata [[]]}
  {:type :operator :form %cdq}
@@ -793,6 +799,9 @@
               [:rm64 :r64 :imm8]
               [:rm64 :r64 :cl]]}
  {:type :operator :form %shrd}
+ %stc
+ ^{:schemata [[]]}
+ {:type :operator :form %stc}
  %sub
  ^{:schemata [[:rm8 :imm8]
               [:rm16 :imm16]
