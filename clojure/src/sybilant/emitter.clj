@@ -170,3 +170,5 @@
     (emit-data-instruction value out)
     (emit value out))
   (.write out "\n"))
+(defmethod emit :defconst [exp ^Writer out]
+  (comment intentionally left blank))

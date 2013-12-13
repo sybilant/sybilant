@@ -1,6 +1,8 @@
 ;; -*- mode: clojure -*-
 (defimport exit)
 
+(defconst exit-code 0)
+
 (defasm ^:export _start
-  (%mov %rdi 0)
+  (%mov %rdi exit-code)
   (%jmp exit))
