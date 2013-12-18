@@ -94,4 +94,12 @@
   (with-empty-env
     (analyze (parse-defconst '(defconst bar #int16 1)))
     (is (thrown? Exception (analyze (parse-defasm '(defasm foo
-                                                     (%add %rax bar))))))))
+                                                     (%add %rax bar)))))))
+  (with-empty-env
+    (analyze (parse-defconst '(defconst bar #int16 1)))
+    (is (= {:type :defasm
+            :name (parse-symbol 'foo)
+            :statements [(parse-instruction '(%mov %rax 0xfffffffffffffff8))]}
+           (analyze (parse-defasm
+                     '(defasm foo
+                        (%mov %rax 0xfffffffffffffff8))))))))

@@ -102,7 +102,7 @@
                         (and (number? %)
                              (<= Long/MIN_VALUE
                                  (:form %)
-                                 (inc' (*' Long/MAX_VALUE)))))
+                                 (inc' (*' Long/MAX_VALUE 2)))))
             :int8 #(or (int8? %)
                        (symbol? %)
                        (and (number? %)
