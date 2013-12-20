@@ -546,7 +546,8 @@
               [:rm64]]}
  {:type :operator :form %neg}
  %nop
- ^{:schemata [[:rm16]
+ ^{:schemata [[]
+              [:rm16]
               [:rm32]]}
  {:type :operator :form %nop}
  %not
