@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 if [ -n "$*" ]; then
     for t in $@; do
         test_files="$test_files sybilant/test/$t.syb"
@@ -10,7 +10,7 @@ fi
 
 function assemble {
     yasm -g dwarf2 -f elf64 -o $2 $1 &&
-    ld -dynamic-linker /lib64/ld-linux-x86-64.so.2  -lc -o $3 $2
+    ld -lc -o $3 $2
 }
 
 if [ -z "$skip_lein" ]; then
@@ -31,7 +31,7 @@ for test_file in $test_files; do
     if (lein trampoline run -m sybilant.compile -f $debug -o $asm_file \
         $test_file &&
             assemble $asm_file $object_file $bin_file &&
-            /usr/bin/time -v -o $stats_file ./$bin_file); then
+            /usr/bin/env time -v -o $stats_file ./$bin_file); then
         echo "passed ($(grep "Elapsed (wall clock) time" $stats_file | \
                         cut -f8 -d" "))"
     else
