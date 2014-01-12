@@ -98,6 +98,8 @@
     (error "expected symbol, but was" form))
   (make-symbol form))
 
+(def number-tag {:type :number-tag})
+
 (defn number? [exp]
   (typed-map? exp :number))
 
@@ -109,15 +111,22 @@
 
 (defn make-number [form]
   {:pre [(number-form? form)]}
-  {:type :number :form form})
+  (with-meta {:type :number :form form}
+    {:tag number-tag}))
 
 (defn parse-number [form]
   (when-not (number-form? form)
     (error "expected number, but was" form))
   (make-number form))
 
+(defn int-tag? [exp]
+  (typed-map? exp :int-tag))
+
 (defn int? [exp]
   (typed-map? exp :int))
+
+(def int8-tag {:type :int-tag :width 8 :form 'int8
+               :min Byte/MIN_VALUE :max Byte/MAX_VALUE})
 
 (defn int8? [exp]
   (and (int? exp) (= 8 (:width exp))))
@@ -127,12 +136,16 @@
 
 (defn make-int8 [form]
   {:pre [(int8-form? form)]}
-  {:type :int :width 8 :form form})
+  (with-meta {:type :int :width 8 :form form}
+    {:tag int8-tag}))
 
 (defn parse-int8 [form]
   (when-not (int8-form? form)
     (error "expected int8, but was" form))
   (make-int8 form))
+
+(def int16-tag {:type :int-tag :width 16 :form 'int16
+                :min Short/MIN_VALUE :max Short/MAX_VALUE})
 
 (defn int16? [exp]
   (and (int? exp) (= 16 (:width exp))))
@@ -142,12 +155,16 @@
 
 (defn make-int16 [form]
   {:pre [(int16-form? form)]}
-  {:type :int :width 16 :form form})
+  (with-meta {:type :int :width 16 :form form}
+    {:tag int16-tag}))
 
 (defn parse-int16 [form]
   (when-not (int16-form? form)
     (error "expected int16, but was" form))
   (make-int16 form))
+
+(def int32-tag {:type :int-tag :width 32 :form 'int32
+                :min Integer/MIN_VALUE :max Integer/MAX_VALUE})
 
 (defn int32? [exp]
   (and (int? exp) (= 32 (:width exp))))
@@ -157,12 +174,16 @@
 
 (defn make-int32 [form]
   {:pre [(int32-form? form)]}
-  {:type :int :width 32 :form form})
+  (with-meta {:type :int :width 32 :form form}
+    {:tag int32-tag}))
 
 (defn parse-int32 [form]
   (when-not (int32-form? form)
     (error "expected int32, but was" form))
   (make-int32 form))
+
+(def int64-tag {:type :int-tag :width 64 :form 'int64
+                :min Long/MIN_VALUE :max Long/MAX_VALUE})
 
 (defn int64? [exp]
   (and (int? exp) (= 64 (:width exp))))
@@ -172,7 +193,8 @@
 
 (defn make-int64 [form]
   {:pre [(int64-form? form)]}
-  {:type :int :width 64 :form (:form form)})
+  (with-meta {:type :int :width 64 :form (:form form)}
+    {:tag int64-tag}))
 
 (defn parse-int64 [form]
   (when-not (int64-form? form)
@@ -192,8 +214,14 @@
    (int32-form? form) (parse-int32 form)
    (int64-form? form) (parse-int64 form)))
 
+(defn uint-tag? [exp]
+  (typed-map? exp :uint-tag))
+
 (defn uint? [exp]
   (typed-map? exp :uint))
+
+(def uint8-tag {:type :uint-tag :width 8 :form 'uint8
+                :min 0 :max (inc (* Byte/MAX_VALUE 2))})
 
 (defn uint8? [exp]
   (and (uint? exp) (= 8 (:width exp))))
@@ -203,12 +231,16 @@
 
 (defn make-uint8 [form]
   {:pre [(uint8-form? form)]}
-  {:type :uint :width 8 :form (:form form)})
+  (with-meta {:type :uint :width 8 :form (:form form)}
+    {:tag uint8-tag}))
 
 (defn parse-uint8 [form]
   (when-not (uint8-form? form)
     (error "expected uint8, but was" form))
   (make-uint8 form))
+
+(def uint16-tag {:type :uint-tag :width 16 :form 'uint16
+                 :min 0 :max (inc (* Short/MAX_VALUE 2))})
 
 (defn uint16? [exp]
   (and (uint? exp) (= 16 (:width exp))))
@@ -218,12 +250,16 @@
 
 (defn make-uint16 [form]
   {:pre [(uint16-form? form)]}
-  {:type :uint :width 16 :form (:form form)})
+  (with-meta {:type :uint :width 16 :form (:form form)}
+    {:tag uint16-tag}))
 
 (defn parse-uint16 [form]
   (when-not (uint16-form? form)
     (error "expected uint16, but was" form))
   (make-uint16 form))
+
+(def uint32-tag {:type :uint-tag :width 32 :form 'uint32
+                 :min 0 :max (inc (* Integer/MAX_VALUE 2))})
 
 (defn uint32? [exp]
   (and (uint? exp) (= 32 (:width exp))))
@@ -233,12 +269,16 @@
 
 (defn make-uint32 [form]
   {:pre [(uint32-form? form)]}
-  {:type :uint :width 32 :form (:form form)})
+  (with-meta {:type :uint :width 32 :form (:form form)}
+    {:tag uint32-tag}))
 
 (defn parse-uint32 [form]
   (when-not (uint32-form? form)
     (error "expected uint32, but was" form))
   (make-uint32 form))
+
+(def uint64-tag {:type :uint-tag :width 64 :form 'uint64
+                 :min 0 :max (inc' (*' Long/MAX_VALUE 2))})
 
 (defn uint64? [exp]
   (and (uint? exp) (= 64 (:width exp))))
@@ -248,7 +288,8 @@
 
 (defn make-uint64 [form]
   {:pre [(uint64-form? form)]}
-  {:type :uint :width 64 :form (:form form)})
+  (with-meta {:type :uint :width 64 :form (:form form)}
+    {:tag uint64-tag}))
 
 (defn parse-uint64 [form]
   (when-not (uint64-form? form)
@@ -267,6 +308,9 @@
    (uint16-form? form) (parse-uint16 form)
    (uint32-form? form) (parse-uint32 form)
    (uint64-form? form) (parse-uint64 form)))
+
+(defn primitive-tag? [exp]
+  (or (int-tag? exp) (uint-tag? exp)))
 
 (def registers
   (-> "sybilant/registers.clj"

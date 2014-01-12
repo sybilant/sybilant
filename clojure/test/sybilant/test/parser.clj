@@ -23,11 +23,21 @@
   (is (= "#int32 1" (pr-str (int 1))))
   (is (= "#int64 1" (pr-str (->Int64 1)))))
 
+(def value-and-meta (juxt identity meta))
+
 (deftest test-parse-signed-integers
-  (is (= {:type :int :width 8 :form 1} (parse-int8 (byte 1))))
-  (is (= {:type :int :width 16 :form 1} (parse-int16 (short 1))))
-  (is (= {:type :int :width 32 :form 1} (parse-int32 (int 1))))
-  (is (= {:type :int :width 64 :form 1} (parse-int64 (->Int64 1)))))
+  (is (= [{:type :int :width 8 :form 1}
+          {:tag int8-tag}]
+         (value-and-meta (parse-int8 (byte 1)))))
+  (is (= [{:type :int :width 16 :form 1}
+          {:tag int16-tag}]
+         (value-and-meta (parse-int16 (short 1)))))
+  (is (= [{:type :int :width 32 :form 1}
+          {:tag int32-tag}]
+         (value-and-meta (parse-int32 (int 1)))))
+  (is (= [{:type :int :width 64 :form 1}
+          {:tag int64-tag}]
+         (value-and-meta (parse-int64 (->Int64 1))))))
 
 (deftest test-read-unsigned-integers
   (is (= (->Uint8 1) (read-string "#uint8 1")))
@@ -42,10 +52,18 @@
   (is (= "#uint64 1" (pr-str (->Uint64 1)))))
 
 (deftest test-parse-unsigned-integers
-  (is (= {:type :uint :width 8 :form 1} (parse-uint8 (->Uint8 1))))
-  (is (= {:type :uint :width 16 :form 1} (parse-uint16 (->Uint16 1))))
-  (is (= {:type :uint :width 32 :form 1} (parse-uint32 (->Uint32 1))))
-  (is (= {:type :uint :width 64 :form 1} (parse-uint64 (->Uint64 1)))))
+  (is (= [{:type :uint :width 8 :form 1}
+          {:tag uint8-tag}]
+         (value-and-meta (parse-uint8 (->Uint8 1)))))
+  (is (= [{:type :uint :width 16 :form 1}
+          {:tag uint16-tag}]
+         (value-and-meta (parse-uint16 (->Uint16 1)))))
+  (is (= [{:type :uint :width 32 :form 1}
+          {:tag uint32-tag}]
+         (value-and-meta (parse-uint32 (->Uint32 1)))))
+  (is (= [{:type :uint :width 64 :form 1}
+          {:tag uint64-tag}]
+         (value-and-meta (parse-uint64 (->Uint64 1))))))
 
 (deftest test-parse-symbol
   (is (symbol-form? 'foo))
@@ -56,7 +74,9 @@
 
 (deftest test-parse-number
   (is (number-form? 1))
-  (is (= {:type :number :form 1} (parse-number 1)))
+  (is (= [{:type :number :form 1}
+          {:tag number-tag}]
+         (value-and-meta (parse-number 1))))
   (is (number? (parse-number 1))))
 
 (deftest test-parse-register
