@@ -224,12 +224,21 @@
    - [ ] version 0.7
      - [ ] parse primitive tags
      - [ ] parse label tag
+     - [ ] associate tags with literals at parse-time
+     - [ ] richer tag equality
+       - [ ] number tag in the right range should be equal to a number with
+         specific size
      - [ ] analyze defasm form
        - [ ] parse defasm into basic blocks
        - [ ] check tag for tagged basic blocks
        - [ ] check tag for local untagged basic blocks
-       - [ ] check back referencing jump instructions have tags
-       - [ ] check for an disallow uses of memory references
+         - [ ] follow conditional and unconditional jump instructions
+         - [ ] don't follow jump instruction to block with lower index
+         - [ ] continue to next untagged basic block in order
+         - [ ] don't follow to next block when the block ends in an
+           unconditional jump
+       - [ ] check for back referencing jump instructions without tags
+       - [ ] check for uses of memory references
        - [ ] check tag for x86 instructions (%adc, %add, %and, %bsf, %bsr, %bt,
          %btc, %btr, %bts, %call, %cbw, %cdq, %cdqe, %cmp, %cmpxchg, %cqo,
          %crc32, %cwd, %cwde, %dec, %div, %idiv, %imul, %inc, %ja, %jae, %jb,
@@ -370,6 +379,10 @@
           Another possibility would be to have a form of integers that are not
           explicitly typed, but can take on a type in the context they are used
           (perhaps with some kind of syntax directed parsing).
+     - Number range refinement :: Track the ranges of number types and refine
+          the ranges with arithmetic and comparison operations.  Could be used
+          to type check operations that could overflow.  Might be useful for
+          array bounds checking?
 ** License
   : Copyright © 2013 Paul Stadig. All rights reserved.
   : 
