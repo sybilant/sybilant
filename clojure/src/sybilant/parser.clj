@@ -563,6 +563,70 @@
                       (map parse-operand operands)
                       form)))
 
+(def primitive-tag-forms
+  {'uint8 uint8-tag 'int8 int8-tag 'uint16 uint16-tag 'int16 int16-tag
+   'uint32 uint32-tag 'int32 int32-tag 'uint64 uint64-tag 'int64 int64-tag})
+
+(doseq [[k v] primitive-tag-forms]
+  (assert (= k (:form v)) k) true)
+
+(defn primitive-tag-form? [form]
+  (contains? primitive-tag-forms form))
+
+(defn make-primitive-tag [form]
+  {:pre [(primitive-tag-form? form)]}
+  (vary-meta (get primitive-tag-forms form) merge (meta form)))
+
+(defn parse-primitive-tag [form]
+  (when-not (primitive-tag-form? form)
+    (error "expected primitive tag, but was" form))
+  (make-primitive-tag form))
+
+(declare tag-form? parse-tag)
+
+(defn label-tag? [exp]
+  (typed-map? exp :label-tag))
+
+(defn label-tag-form? [form]
+  (and (map? form)
+       (every? register-form? (keys form))
+       (every? tag-form? (vals form))))
+
+(defn make-label-tag
+  ([tags]
+     {:type :label-tag :tags tags :width 64})
+  ([tags form]
+     {:pre [(label-tag-form? form)]}
+     (-> (make-label-tag tags)
+         (vary-meta merge (meta form))
+         (vary-meta assoc :form (with-meta form {})))))
+
+(defn parse-label-tag [form]
+  (when-not (label-tag-form? form)
+    (error "expected label tag, but was" form))
+  (let [tags (reduce-kv (fn [m k v]
+                          (assoc m (parse-register k) (parse-tag v)))
+                        {}
+                        form)]
+    (doseq [[reg tag] tags]
+      (when (not= (:width reg) (:width tag))
+        (error "label tag expects register and tag to be same width, but got"
+               reg "with" tag)))
+    (make-label-tag tags form)))
+
+(defn tag? [exp]
+  (or (primitive-tag? exp) (label-tag? exp)))
+
+(defn tag-form? [form]
+  (or (primitive-tag-form? form) (label-tag-form? form)))
+
+(defn parse-tag [form]
+  (when-not (tag-form? form)
+    (error "expected tag, but was" form))
+  (cond
+   (primitive-tag-form? form) (parse-primitive-tag form)
+   (label-tag-form? form) (parse-label-tag form)))
+
 (defn label? [exp]
   (typed-map? exp :label))
 
@@ -571,12 +635,16 @@
 
 (defn make-label
   ([name]
-     {:pre [(symbol? name)]}
+     (make-label name nil))
+  ([name maybe-tag]
+     {:pre [(symbol? name) ((maybe label-tag?) maybe-tag)]}
      (with-meta {:type :label :name name}
-       {:definition? true}))
-  ([name form]
+       (merge {:definition? true}
+              (when maybe-tag
+                {:tag maybe-tag}))))
+  ([name maybe-tag form]
      {:pre [(label-form? form)]}
-     (-> (make-label name)
+     (-> (make-label name maybe-tag)
          (vary-meta merge (meta form))
          (vary-meta assoc :form (with-meta form {})))))
 
@@ -584,12 +652,17 @@
   (when-not (label-form? form)
     (error "expected %label, but was" form))
   (let [arg-count (dec (count form))]
-    (when-not (= 1 arg-count)
-      (error "%label expects exactly 1 argument, but got" arg-count)))
-  (let [name (second form)]
+    (when-not (<= arg-count 2)
+      (error "%label expects 1 or 2 arguments, but got" arg-count)))
+  (let [[_ name maybe-tag] form]
     (when-not (symbol-form? name)
       (error "%label expects a symbol for name, but got" name))
-    (make-label (parse-symbol name) form)))
+    (when-not ((maybe label-tag-form?) maybe-tag)
+      (error "%labels expects a label tag for tag, but got" maybe-tag))
+    (make-label (parse-symbol name)
+                (when maybe-tag
+                  (parse-label-tag maybe-tag))
+                form)))
 
 (defn statement? [exp]
   (or (instruction? exp) (label? exp)))
@@ -611,15 +684,19 @@
   (tagged-list? form 'defasm))
 
 (defn make-defasm
-  ([name statements]
-     {:pre [(symbol? name) (every? statement? statements)]}
+  ([name maybe-tag statements]
+     {:pre [(symbol? name)
+            ((maybe label-tag?) maybe-tag)
+            (every? statement? statements)]}
      (with-meta {:type :defasm :name name :statements statements}
        (merge {:definition? true}
               (when (:export (meta name))
-                {:extern? true}))))
-  ([name statements form]
+                {:extern? true})
+              (when maybe-tag
+                {:tag maybe-tag}))))
+  ([name maybe-tag statements form]
      {:pre [(defasm-form? form)]}
-     (-> (make-defasm name statements)
+     (-> (make-defasm name maybe-tag statements)
          (vary-meta merge (meta form))
          (vary-meta assoc :form (with-meta form {})))))
 
@@ -629,7 +706,10 @@
   (let [arg-count (dec (count form))]
     (when (< arg-count 2)
       (error "defasm expects at least 2 arguments, but got" arg-count)))
-  (let [[_ name & statements] form]
+  (let [[_ name & statements] form
+        [maybe-tag statements] (if (label-tag-form? (first statements))
+                                 [(first statements) (rest statements)]
+                                 [nil statements])]
     (when-not (symbol-form? name)
       (error "defasm expects a symbol for name, but got" name))
     (when-not (instruction-form? (first statements))
@@ -644,7 +724,11 @@
           (error "%label expects to be followed by an instruction, but got"
                  (first statements)))
         (recur statements)))
-    (make-defasm (parse-symbol name) (map parse-statement statements) form)))
+    (make-defasm (parse-symbol name)
+                 (when maybe-tag
+                   (parse-label-tag maybe-tag))
+                 (map parse-statement statements)
+                 form)))
 
 (defn defimport? [exp]
   (typed-map? exp :defimport))

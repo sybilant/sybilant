@@ -235,6 +235,16 @@
       (is (:column meta))))
   (is (thrown? Exception (parse-instruction '(%add (%add %rax 1) 1)))))
 
+(deftest test-parse-primitive-tag
+  (is (= uint64-tag (parse-primitive-tag 'uint64))))
+
+(deftest test-parse-label-tag
+  (is (= {:type :label-tag
+          :tags {(parse-register '%rax) (parse-primitive-tag 'uint64)}
+          :width 64}
+         (parse-label-tag '{%rax uint64})))
+  (is (thrown? Exception (parse-label-tag '{%rax uint8}))))
+
 (deftest test-parse-label
   (let [form '(%label foo)]
     (is (label-form? form))
@@ -246,9 +256,12 @@
       (is (= form (:form meta)))
       (is (:line meta))
       (is (:column meta))))
+  (is (= (parse-label-tag '{%rax uint64})
+         (:tag (meta (parse-label '(%label foo {%rax uint64}))))))
   (is (thrown? Exception (parse-label '(%label))))
   (is (thrown? Exception (parse-label '(%label 1))))
-  (is (thrown? Exception (parse-label '(%label foo bar)))))
+  (is (thrown? Exception (parse-label '(%label foo bar))))
+  (is (thrown? Exception (parse-label '(%label foo {%rax uint64} bar)))))
 
 (deftest test-parse-defasm
   (let [form '(defasm foo (%add %rax 1))]
@@ -269,6 +282,8 @@
   (is (thrown? Exception (parse-defasm '(defasm foo))))
   (is (thrown? Exception (parse-defasm '(defasm 1))))
   (is (thrown? Exception (parse-defasm '(defasm foo 1))))
+  (is (thrown? Exception (parse-defasm '(defasm foo {%rax uint64}))))
+  (is (thrown? Exception (parse-defasm '(defasm foo {%rax uint64} 1))))
   (is (thrown? Exception (parse-defasm '(defasm foo (%label bar)))))
   (is (thrown? Exception (parse-defasm '(defasm foo
                                           (%add %rax 1)
@@ -277,7 +292,10 @@
                                           (%add %rax 1)
                                           (%label bar)
                                           (%label baz)
-                                          (%add %rax 1))))))
+                                          (%add %rax 1)))))
+  (is (= (parse-label-tag '{%rax uint64})
+         (:tag (meta (parse-defasm '(defasm foo {%rax uint64}
+                                      (%add %rax 1))))))))
 
 (deftest test-parse-defimport
   (let [form '(defimport foo)]

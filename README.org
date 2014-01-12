@@ -224,7 +224,7 @@
    - [-] version 0.7
      - [X] parse primitive tags
      - [X] associate tags with literals at parse-time
-     - [ ] parse label tag
+     - [X] parse label tag
      - [ ] rich tag equality
        - [ ] number tag in the right range should be equal to a number with
          specific size
