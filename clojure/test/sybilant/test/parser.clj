@@ -252,8 +252,12 @@
   (is (thrown? Exception (parse-defasm '(defasm foo (%label bar)))))
   (is (thrown? Exception (parse-defasm '(defasm foo
                                           (%add %rax 1)
+                                          (%label bar)))))
+  (is (thrown? Exception (parse-defasm '(defasm foo
+                                          (%add %rax 1)
                                           (%label bar)
-                                          (%label baz))))))
+                                          (%label baz)
+                                          (%add %rax 1))))))
 
 (deftest test-parse-defimport
   (let [form '(defimport foo)]

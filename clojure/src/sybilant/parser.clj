@@ -591,15 +591,15 @@
     (when-not (instruction-form? (first statements))
       (error "defasm expects an instruction as its first statement, but got"
              (first statements)))
-    (loop [prev (first statements)
-           [statement & statements] (rest statements)]
+    (loop [[statement & statements] statements]
       (when statement
         (when-not (statement-form? statement)
           (error "defasm expects a statement, but got" statement))
-        (when (and (label-form? prev) (label-form? statement))
+        (when (and (label-form? statement)
+                   (not (instruction-form? (first statements))))
           (error "%label expects to be followed by an instruction, but got"
-                 statement))
-        (recur statement statements)))
+                 (first statements)))
+        (recur statements)))
     (make-defasm (parse-symbol name) (map parse-statement statements) form)))
 
 (defn defimport? [exp]

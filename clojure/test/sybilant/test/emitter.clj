@@ -60,15 +60,17 @@
 
 (deftest test-emit-label
   (binding [*globals* (atom {})]
-    (is (= "\nglobal foo\nfoo:\njmp .bar\n.bar:\n"
+    (is (= "\nglobal foo\nfoo:\njmp .bar\n.bar:\nadd rax, 1\n"
            (emit* (analyze (parse-defasm '(defasm foo
                                             (%jmp bar)
-                                            (%label bar))))))))
+                                            (%label bar)
+                                            (%add %rax 1))))))))
   (binding [*globals* (atom {})]
-    (is (= "\nglobal bar\nbar:\njmp ._u2603\n._u2603:\n"
+    (is (= "\nglobal bar\nbar:\njmp ._u2603\n._u2603:\nadd rax, 1\n"
            (emit* (analyze (parse-defasm '(defasm bar
                                             (%jmp ☃)
-                                            (%label ☃)))))))))
+                                            (%label ☃)
+                                            (%add %rax 1)))))))))
 
 (deftest test-emit-defasm
   (is (= "\nglobal foo\nfoo:\nadd rax, 1\n"
