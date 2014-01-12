@@ -169,7 +169,7 @@
   (is (operator-form? '%add))
   (is (= {:type :operator :form '%add} (parse-operator '%add)))
   (is (operator? (parse-operator '%add)))
-  (is (nil? (meta (parse-operator '%add)))))
+  (is (= {:schemata [[:rel8] [:rel32] [:rm64]]} (meta (parse-operator '%jmp)))))
 
 (deftest test-parse-operand
   (testing "number"

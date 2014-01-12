@@ -464,7 +464,10 @@
 
 (defn make-operator [form]
   {:pre [(operator-form? form)]}
-  (with-meta (get operators form) (meta form)))
+  (let [operator (get operators form)]
+    (with-meta (get operators form)
+      (merge (meta operator)
+             (meta form)))))
 
 (defn parse-operator [form]
   (when-not (operator-form? form)

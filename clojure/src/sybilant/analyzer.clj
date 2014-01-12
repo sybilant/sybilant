@@ -172,8 +172,8 @@
 
 (defn check-syntax [exp]
   (when (instruction? exp)
-    (let [operator (get-in exp [:operator :form])]
-      (when-let [schemata (:schemata (meta (get operators operator)))]
+    (let [operator (:operator exp)]
+      (when-let [schemata (:schemata (meta operator))]
         (check-schemata exp schemata))))
   exp)
 
