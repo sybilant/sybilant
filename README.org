@@ -228,8 +228,8 @@
      - [ ] rich tag equality
        - [ ] number tag in the right range should be equal to a number with
          specific size
-     - [ ] analyze defasm form
-       - [ ] parse defasm into basic blocks
+     - [-] analyze defasm form
+       - [X] parse defasm into basic blocks
        - [ ] check tag for tagged basic blocks
        - [ ] check tag for local untagged basic blocks
          - [ ] follow conditional and unconditional jump instructions

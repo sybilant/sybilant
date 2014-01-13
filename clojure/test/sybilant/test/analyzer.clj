@@ -103,3 +103,68 @@
            (analyze (parse-defasm
                      '(defasm foo
                         (%mov %rax 0xfffffffffffffff8))))))))
+
+(deftest test-basic-blocks
+  (let [label-foo (parse-label '(%label foo {%rax uint64}))
+        symbol-foo (:name label-foo)
+        add1 (parse-instruction '(%add %rax 1))
+        add2 (parse-instruction '(%add %rax 2))
+        jmp-foo (parse-instruction '(%jmp foo))]
+    (with-empty-env
+      (let [block0 {:index 0
+                    :label label-foo
+                    :instructions [add1 add2]}]
+        (is (= {symbol-foo block0 0 block0}
+               (:basic-blocks (meta (analyze (parse-defasm
+                                              '(defasm foo {%rax uint64}
+                                                 (%add %rax 1)
+                                                 (%add %rax 2))))))))))
+    (with-empty-env
+      (let [block0 {:index 0
+                    :label label-foo
+                    :instructions [add1 jmp-foo]}]
+        (is (= {symbol-foo block0 0 block0}
+               (:basic-blocks (meta (analyze (parse-defasm
+                                              '(defasm foo {%rax uint64}
+                                                 (%add %rax 1)
+                                                 (%jmp foo))))))))))
+    (with-empty-env
+      (let [block0 {:index 0
+                    :label label-foo
+                    :instructions [add1 jmp-foo]}
+            block1 {:index 1
+                    :instructions [add2]}]
+        (is (= {symbol-foo block0 0 block0 1 block1}
+               (:basic-blocks (meta (analyze (parse-defasm
+                                              '(defasm foo {%rax uint64}
+                                                 (%add %rax 1)
+                                                 (%jmp foo)
+                                                 (%add %rax 2))))))))))
+    (let [label-bar (parse-label '(%label bar))
+          symbol-bar (:name label-bar)
+          block1 {:index 1
+                  :label label-bar
+                  :instructions [add2]}]
+      (with-empty-env
+        (let [block0 {:index 0
+                      :label label-foo
+                      :instructions [add1]}]
+          (is (= {symbol-foo block0 0 block0
+                  symbol-bar block1 1 block1}
+                 (:basic-blocks (meta (analyze (parse-defasm
+                                                '(defasm foo {%rax uint64}
+                                                   (%add %rax 1)
+                                                   (%label bar)
+                                                   (%add %rax 2))))))))))
+      (with-empty-env
+        (let [block0 {:index 0
+                      :label label-foo
+                      :instructions [add1 jmp-foo]}]
+          (is (= {symbol-foo block0 0 block0
+                  symbol-bar block1 1 block1}
+                 (:basic-blocks (meta (analyze (parse-defasm
+                                                '(defasm foo {%rax uint64}
+                                                   (%add %rax 1)
+                                                   (%jmp foo)
+                                                   (%label bar)
+                                                   (%add %rax 2)))))))))))))

@@ -177,6 +177,45 @@
         (check-schemata exp schemata))))
   exp)
 
+(defn branch? [{:keys [operator]}]
+  (:branch? (meta operator)))
+
+(defn parse-basic-blocks [exp]
+  (if (defasm? exp)
+    (letfn [(assoc-block [exp {:keys [index label instructions] :as block}]
+              (let [exp (vary-meta exp assoc-in [:basic-blocks index] block)]
+                (if label
+                  (vary-meta exp assoc-in [:basic-blocks (:name label)] block)
+                  exp)))]
+      (loop [exp exp
+             [statement & statements] (:statements exp)
+             block {:index 0
+                    :label (vary-meta (make-label (:name exp))
+                                      merge
+                                      (select-keys (meta exp)
+                                                   [:tag :line :column]))
+                    :instructions []}]
+        (if (label? statement)
+          (if (empty? (:instructions block))
+            (recur exp statements (assoc-in block [:label] statement))
+            (recur (assoc-block exp block)
+                   statements
+                   {:index (inc (:index block))
+                    :label statement
+                    :instructions []}))
+          (let [block (update-in block [:instructions] conj statement)]
+            (if (seq statements)
+              (let [exp (if (branch? statement)
+                          (assoc-block exp block)
+                          exp)
+                    block (if (branch? statement)
+                            {:index (inc (:index block))
+                             :instructions []}
+                            block)]
+                (recur exp statements block))
+              (assoc-block exp block))))))
+    exp))
+
 (defn global-defined? [exp]
   (contains? @*globals* exp))
 
@@ -189,10 +228,11 @@
 (defn analyze [exp]
   {:pre [(top-level? exp)]}
   (let [exp (-> (populate-symbol-table exp)
-                (visit (comp check-symbol-format
+                (visit (comp replace-constants
+                             parse-basic-blocks
+                             check-syntax
                              check-symbol-reference
-                             replace-constants
-                             check-syntax)))]
+                             check-symbol-format)))]
     (when (definition? exp)
       (define-global exp))
     exp))

@@ -105,7 +105,8 @@
  {:type :operator :form %bts}
  %call
  ^{:schemata [[:rel32]
-              [:rm64]]}
+              [:rm64]]
+   :branch? true}
  {:type :operator :form %call}
  %cbw
  ^{:schemata [[]]}
@@ -352,143 +353,179 @@
  {:type :operator :form %inc}
  %ja
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %ja}
  %jae
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jae}
  %jb
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jb}
  %jbe
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jbe}
  %jc
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jc}
  %je
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %je}
  %jecxz
- ^{:schemata [[:rel8]]}
+ ^{:schemata [[:rel8]]
+   :branch? true}
  {:type :operator :form %jecxz}
  %jg
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jg}
  %jge
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jge}
  %jl
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jl}
  %jle
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jle}
  %jmp
  ^{:schemata [[:rel8]
               [:rel32]
-              [:rm64]]}
+              [:rm64]]
+   :branch? true}
  {:type :operator :form %jmp}
  %jna
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jna}
  %jnae
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jnae}
  %jnb
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jnb}
  %jnbe
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jnbe}
  %jnc
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jnc}
  %jne
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jne}
  %jng
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jng}
  %jnge
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jnge}
  %jnl
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jnl}
  %jnle
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jnle}
  %jno
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jno}
  %jnp
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jnp}
  %jns
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jns}
  %jnz
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jnz}
  %jo
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jo}
  %jp
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jp}
  %jpe
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jpe}
  %jpo
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jpo}
  %jrcxz
- ^{:schemata [[:rel8]]}
+ ^{:schemata [[:rel8]]
+   :branch? true}
  {:type :operator :form %jrcxz}
  %js
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %js}
  %jz
  ^{:schemata [[:rel8]
-              [:rel32]]}
+              [:rel32]]
+   :branch? true}
  {:type :operator :form %jz}
  %loop
- ^{:schemata [[:rel8]]}
+ ^{:schemata [[:rel8]]
+   :branch? true}
  {:type :operator :form %loop}
  %loope
- ^{:schemata [[:rel8]]}
+ ^{:schemata [[:rel8]]
+   :branch? true}
  {:type :operator :form %loope}
  %loopne
- ^{:schemata [[:rel8]]}
+ ^{:schemata [[:rel8]]
+   :branch? true}
  {:type :operator :form %loopne}
  %mov
  ^{:schemata [[:rm8 :r8]
