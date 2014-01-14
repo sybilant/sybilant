@@ -75,7 +75,7 @@
 (deftest test-parse-number
   (is (number-form? 1))
   (is (= [{:type :number :form 1}
-          {:tag number-tag}]
+          {:tag (assoc number-tag :form 1)}]
          (value-and-meta (parse-number 1))))
   (is (number? (parse-number 1))))
 

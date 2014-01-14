@@ -100,6 +100,9 @@
 
 (def number-tag {:type :number-tag})
 
+(defn number-tag? [exp]
+  (typed-map? exp :number-tag))
+
 (defn number? [exp]
   (typed-map? exp :number))
 
@@ -112,7 +115,7 @@
 (defn make-number [form]
   {:pre [(number-form? form)]}
   (with-meta {:type :number :form form}
-    {:tag number-tag}))
+    {:tag (assoc number-tag :form form)}))
 
 (defn parse-number [form]
   (when-not (number-form? form)

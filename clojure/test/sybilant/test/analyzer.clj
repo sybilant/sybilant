@@ -168,3 +168,21 @@
                                                    (%jmp foo)
                                                    (%label bar)
                                                    (%add %rax 2)))))))))))))
+
+(deftest test-check-tags
+  (with-empty-env
+    (analyze (parse-defasm '(defasm foo {%rax uint64 %rbx uint64}
+                              (%add %rax %rbx)))))
+  (is (thrown? Exception
+               (analyze (parse-defasm '(defasm foo {%rax uint64 %rbx int64}
+                                         (%add %rax %rbx))))))
+  (with-empty-env
+    (analyze (parse-defasm '(defasm foo {%eax uint32}
+                              (%add %eax #uint32 1)))))
+  (is (thrown? Exception
+               (analyze (parse-defasm '(defasm foo {%eax uint32}
+                                         (%add %eax #int32 1))))))
+  (with-empty-env
+    (is (thrown? Exception
+                 (analyze (parse-defasm '(defasm foo {%rax uint64}
+                                           (%add %rax %rbx))))))))

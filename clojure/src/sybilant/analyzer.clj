@@ -10,7 +10,7 @@
   (:refer-clojure :exclude [number? string? symbol?])
   (:require [clojure.java.io :as io]
             [sybilant.parser :refer :all]
-            [sybilant.util :refer [error]]
+            [sybilant.util :refer [error form]]
             [sybilant.visitor :refer [visit]]))
 
 (def ^:dynamic *globals* (atom {}))
@@ -216,6 +216,68 @@
               (assoc-block exp block))))))
     exp))
 
+(defn set-tag
+  ([env [reg tag]]
+     (set-tag env reg tag))
+  ([env reg tag]
+     (assoc-in env [:tags (:name reg)] tag)))
+
+(defn get-tag [env exp]
+  (if (register? exp)
+    (get-in env [:tags (:name exp)])
+    (:tag (meta exp))))
+
+(defn make-env [label-tag]
+  {:pre [(label-tag? label-tag)]}
+  (reduce set-tag {} (:tags label-tag)))
+
+(defn tag=
+  ([tag] true)
+  ([tag0 tag1]
+     (cond
+      (and (or (int-tag? tag0) (uint-tag? tag0)) (number-tag? tag1))
+      (<= (:min tag0) (:form tag1) (:max tag0))
+      (and (number-tag? tag0) (or (int-tag? tag1) (uint-tag? tag1)))
+      (<= (:min tag1) (:form tag0) (:max tag1))
+      :else
+      (= tag0 tag1)))
+  ([tag0 tag1 & tags]
+     (if (tag= tag0 tag1)
+       (if (next tags)
+         (recur tag1 (first tags) (next tags))
+         (tag= tag1 (first tags)))
+       false)))
+
+(defmulti check-instruction-tag (comp :form :operator second list))
+(defmethod check-instruction-tag '%jmp [env exp]
+  env)
+(defmethod check-instruction-tag :default [env {:keys [operands]}]
+  (let [tags (map (fn [operand]
+                    (let [tag (get-tag env operand)]
+                      (when-not tag
+                        (error "missing tag for" operand))
+                      tag))
+                  operands)]
+    (when-not (apply tag= tags)
+      (apply error "incompatible types:" (map form tags))))
+  env)
+
+(defn check-block-tag [env {:keys [index label instructions] :as block}]
+  {:pre [(seq env)]}
+  (reduce check-instruction-tag env instructions))
+
+(defn check-tags [exp]
+  (when (defasm? exp)
+    (let [blocks (:basic-blocks (meta exp))]
+      (doseq [block (set (vals blocks))]
+        (when-let [label-tag (:tag (meta (:label block)))]
+          (loop [block block
+                 env (check-block-tag (make-env label-tag) block)]
+            (when-let [block (get blocks (inc (:index block)))]
+              (when-not (:tag (meta (:label block)))
+                (recur block env))))))))
+  exp)
+
 (defn global-defined? [exp]
   (contains? @*globals* exp))
 
@@ -229,6 +291,7 @@
   {:pre [(top-level? exp)]}
   (let [exp (-> (populate-symbol-table exp)
                 (visit (comp replace-constants
+                             check-tags
                              parse-basic-blocks
                              check-syntax
                              check-symbol-reference

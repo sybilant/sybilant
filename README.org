@@ -225,12 +225,12 @@
      - [X] parse primitive tags
      - [X] associate tags with literals at parse-time
      - [X] parse label tag
-     - [ ] rich tag equality
-       - [ ] number tag in the right range should be equal to a number with
+     - [X] rich tag equality
+       - [X] number tag in the right range should be equal to a number with
          specific size
      - [-] analyze defasm form
        - [X] parse defasm into basic blocks
-       - [ ] check tag for tagged basic blocks
+       - [X] check tag for tagged basic blocks
        - [ ] check tag for local untagged basic blocks
          - [ ] follow conditional and unconditional jump instructions
          - [ ] don't follow jump instruction to block with lower index
