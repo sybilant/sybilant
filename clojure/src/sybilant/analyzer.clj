@@ -261,8 +261,10 @@
                       tag))
                   operands)]
     (when-not (apply tag= tags)
-      (apply error "incompatible types:" (map form tags))))
-  env)
+      (apply error "incompatible types:" (map form tags)))
+    (if (number-tag? (first tags))
+      (set-tag env (first operands) (second tags))
+      env)))
 
 (defn check-block-tag [env {:keys [index label instructions] :as block}]
   {:pre [(seq env)]}

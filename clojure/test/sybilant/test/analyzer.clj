@@ -189,4 +189,9 @@
   (with-empty-env
     (analyze (parse-defasm '(defasm foo {%rax uint64}
                               (%mov %rbx #uint64 1)
-                              (%add %rax %rbx))))))
+                              (%add %rax %rbx)))))
+  (is (thrown? Exception
+               (analyze (parse-defasm '(defasm foo {%rbx uint64 %rcx int64}
+                                         (%mov %rax 1)
+                                         (%add %rax %rbx)
+                                         (%add %rax %rcx)))))))
