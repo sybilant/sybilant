@@ -239,15 +239,16 @@
            unconditional jump
        - [ ] check for back referencing jump instructions without tags
        - [ ] check for uses of memory references
+       - [X] check tag for %mov
        - [ ] check tag for x86 instructions (%adc, %add, %and, %bsf, %bsr, %bt,
          %btc, %btr, %bts, %call, %cbw, %cdq, %cdqe, %cmp, %cmpxchg, %cqo,
          %crc32, %cwd, %cwde, %dec, %div, %idiv, %imul, %inc, %ja, %jae, %jb,
          %jbe, %jc, %jcxz, %je, %jecxz, %jg, %jge, %jl, %jle, %jmp, %jna, %jnae,
          %jnb, %jnbe, %jnc, %jne, %jng, %jnge, %jnl, %jnle, %jno, %jnp, %jns,
          %jnz, %jo, %jp, %jpe, %jpo, %jrcxz, %js, %jz, %loop, %loope, %loopne,
-         %mov, %movsx, %movsxd, %movzx, %mul, %neg, %not, %or, %popcnt, %rcl,
-         %rcr, %rdtsc, %ret, %rol, %ror, %sal, %sar, %sbb, %shl, %shld, %shr,
-         %shrd, %sub, %test, %xadd, %xchg, %xor)
+         %movsx, %movsxd, %movzx, %mul, %neg, %not, %or, %popcnt, %rcl, %rcr,
+         %rdtsc, %ret, %rol, %ror, %sal, %sar, %sbb, %shl, %shld, %shr, %shrd,
+         %sub, %test, %xadd, %xchg, %xor)
    - [ ] version 0.8
      - [ ] parse tuple types
      - [ ] parse defdata type (must be a tuple type)

@@ -249,6 +249,8 @@
        false)))
 
 (defmulti check-instruction-tag (comp :form :operator second list))
+(defmethod check-instruction-tag '%mov [env {:keys [operands] :as exp}]
+  (set-tag env (first operands) (get-tag env (second operands))))
 (defmethod check-instruction-tag '%jmp [env exp]
   env)
 (defmethod check-instruction-tag :default [env {:keys [operands]}]
