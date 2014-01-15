@@ -16,7 +16,9 @@
 (use-fixtures :each reset-globals)
 
 (deftest test-undefined-symbol-reference
-  (is (thrown? Exception (analyze (parse-defasm '(defasm foo (%jmp bar))))))
+  (is (error?
+       "bar is undefined"
+       (analyze (parse-defasm '(defasm foo (%jmp bar))))))
   (with-empty-env
     (analyze (parse-defasm '(defasm bar (%add %rax 1))))
     (is (= (parse-defasm '(defasm foo (%jmp bar)))
@@ -28,39 +30,44 @@
 
 (deftest test-check-double-symbol-definition
   (analyze (parse-defasm '(defasm foo (%add %rax 1))))
-  (is (thrown? Exception (analyze (parse-defimport '(defimport foo)))))
-  (is (thrown? Exception (analyze (parse-defdata '(defdata foo #int8 1)))))
-  (is (thrown? Exception (analyze (parse-defconst '(defconst foo 1))))))
+  (is (error? "foo is already defined"
+              (analyze (parse-defimport '(defimport foo)))))
+  (is (error? "foo is already defined"
+              (analyze (parse-defdata '(defdata foo #int8 1)))))
+  (is (error? "foo is already defined"
+              (analyze (parse-defconst '(defconst foo 1))))))
 
 (deftest test-check-symbol-format
-  (is (thrown? Exception (analyze (parse-defimport '(defimport foo-bar)))))
-  (is (thrown? Exception (analyze (parse-defasm '(defasm ^:export foo-bar
-                                                   (%add %rax 1))))))
+  (is (error? "foo-bar is an invalid symbol"
+              (analyze (parse-defimport '(defimport foo-bar)))))
+  (is (error? "foo-bar is an invalid symbol"
+              (analyze (parse-defasm '(defasm ^:export foo-bar
+                                        (%add %rax 1))))))
   (with-empty-env
     (analyze (parse-defasm '(defasm foo-bar (%add %rax 1)))))
-  (is (thrown? Exception (analyze (parse-defdata
-                                   '(defdata ^:export foo-bar 1)))))
+  (is (error? "defdata expects a value for value, but got 1"
+              (analyze (parse-defdata
+                        '(defdata ^:export foo-bar 1)))))
   (with-empty-env
     (analyze (parse-defdata '(defdata foo-bar #int8 1)))))
 
 (deftest test-check-labels
-  (with-empty-env
-    (analyze (parse-defasm '(defasm foo
-                              (%jmp bar-baz)
-                              (%label bar-baz)
-                              (%add %rbx 1)))))
-  (with-empty-env
-    (is (thrown? Exception (analyze (parse-defasm '(defasm foo
-                                                     (%add %rax 1)
-                                                     (%label foo)
-                                                     (%add %rbx 1)))))))
-  (with-empty-env
-    (is (thrown? Exception (analyze (parse-defasm '(defasm foo
-                                                     (%add %rax 1)
-                                                     (%label bar)
-                                                     (%add %rbx 1)
-                                                     (%label bar)
-                                                     (%add %rcx 1))))))))
+  (analyze (parse-defasm '(defasm foo0
+                            (%jmp bar-baz)
+                            (%label bar-baz)
+                            (%add %rbx 1))))
+  (is (error? "foo1 is already defined"
+              (analyze (parse-defasm '(defasm foo1
+                                        (%add %rax 1)
+                                        (%label foo1)
+                                        (%add %rbx 1))))))
+  (is (error? "bar is already defined"
+              (analyze (parse-defasm '(defasm foo2
+                                        (%add %rax 1)
+                                        (%label bar)
+                                        (%add %rbx 1)
+                                        (%label bar)
+                                        (%add %rcx 1)))))))
 
 (deftest test-replace-constant-values
   (with-empty-env
@@ -86,15 +93,18 @@
 
 (deftest test-syntax-check
   (with-empty-env
-    (is (thrown? Exception (analyze (parse-defasm '(defasm foo
-                                                     (%add %rax)))))))
+    (is (error? "invalid syntax for \\(%add %rax\\)"
+                (analyze (parse-defasm '(defasm foo
+                                          (%add %rax)))))))
   (with-empty-env
-    (is (thrown? Exception (analyze (parse-defasm '(defasm foo
-                                                     (%add %rax #int16 1)))))))
+    (is (error? "invalid syntax for \\(%add %rax #int16 1\\)"
+                (analyze (parse-defasm '(defasm foo
+                                          (%add %rax #int16 1)))))))
   (with-empty-env
     (analyze (parse-defconst '(defconst bar #int16 1)))
-    (is (thrown? Exception (analyze (parse-defasm '(defasm foo
-                                                     (%add %rax bar)))))))
+    (is (error? "invalid syntax for \\(%add %rax bar\\)"
+                (analyze (parse-defasm '(defasm foo
+                                          (%add %rax bar)))))))
   (with-empty-env
     (analyze (parse-defconst '(defconst bar #int16 1)))
     (is (= {:type :defasm
@@ -106,13 +116,14 @@
 
 (deftest test-label-tag
   (with-empty-env
-    (is (thrown? Exception
-                 (analyze (parse-defasm '(defasm foo {%rax int64 %ax int16}
-                                           (%add %rax 1)))))))
+    (is (error? "duplicate register %rax"
+                (analyze (parse-defasm '(defasm foo {%rax int64 %ax int16}
+                                          (%add %rax 1)))))))
   (with-empty-env
-    (is (thrown? Exception
-                 (analyze (parse-defasm '(defasm foo {%rax int8}
-                                           (%add %rax 1))))))))
+    (is (error? "label tag expects register and tag to be same width, but got"
+                " %rax with int8"
+                (analyze (parse-defasm '(defasm foo {%rax int8}
+                                          (%add %rax 1))))))))
 
 (deftest test-basic-blocks
   (let [label-foo (parse-label '(%label foo {%rax uint64}))
@@ -183,25 +194,25 @@
   (with-empty-env
     (analyze (parse-defasm '(defasm foo {%rax uint64 %rbx uint64}
                               (%add %rax %rbx)))))
-  (is (thrown? Exception
-               (analyze (parse-defasm '(defasm foo {%rax uint64 %rbx int64}
-                                         (%add %rax %rbx))))))
+  (is (error? "incompatible types: uint64 int64"
+              (analyze (parse-defasm '(defasm foo {%rax uint64 %rbx int64}
+                                        (%add %rax %rbx))))))
   (with-empty-env
     (analyze (parse-defasm '(defasm foo {%eax uint32}
                               (%add %eax #uint32 1)))))
-  (is (thrown? Exception
-               (analyze (parse-defasm '(defasm foo {%eax uint32}
-                                         (%add %eax #int32 1))))))
+  (is (error? "incompatible types: uint32 int32"
+              (analyze (parse-defasm '(defasm foo {%eax uint32}
+                                        (%add %eax #int32 1))))))
   (with-empty-env
-    (is (thrown? Exception
-                 (analyze (parse-defasm '(defasm foo {%rax uint64}
-                                           (%add %rax %rbx)))))))
+    (is (error? "missing tag for %rbx"
+                (analyze (parse-defasm '(defasm foo {%rax uint64}
+                                          (%add %rax %rbx)))))))
   (with-empty-env
     (analyze (parse-defasm '(defasm foo {%rax uint64}
                               (%mov %rbx #uint64 1)
                               (%add %rax %rbx)))))
-  (is (thrown? Exception
-               (analyze (parse-defasm '(defasm foo {%rbx uint64 %rcx int64}
-                                         (%mov %rax 1)
-                                         (%add %rax %rbx)
-                                         (%add %rax %rcx)))))))
+  (is (error? "incompatible types: uint64 int64"
+              (analyze (parse-defasm '(defasm foo {%rbx uint64 %rcx int64}
+                                        (%mov %rax 1)
+                                        (%add %rax %rbx)
+                                        (%add %rax %rcx)))))))

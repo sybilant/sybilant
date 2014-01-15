@@ -7,7 +7,8 @@
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.test.util
-  (:require [sybilant.analyzer :refer [*globals*]]))
+  (:require [clojure.test :as test]
+            [sybilant.analyzer :refer [*globals*]]))
 
 (defn clear-file [file]
   (fn [f]
@@ -34,3 +35,20 @@
 (defmacro with-empty-env [& body]
   `(binding [*globals* (atom {})]
      ~@body))
+
+(defmethod test/assert-expr 'error? [msg form]
+  (let [re (butlast (next form))
+        body (last (next form))]
+    `(try ~body
+          (test/do-report {:type :fail
+                           :message ~msg
+                           :expected '~form
+                           :actual nil})
+          (catch clojure.lang.ExceptionInfo e#
+            (let [m# (:message (:object (ex-data e#)))]
+              (if (re-find (re-pattern (str "^" ~@re "$")) m#)
+                (test/do-report {:type :pass, :message ~msg,
+                                 :expected '~form, :actual e#})
+                (test/do-report {:type :fail, :message ~msg,
+                                 :expected '~form, :actual e#})))
+            e#))))
