@@ -243,8 +243,7 @@
   (is (= {:type :label-tag
           :tags {(parse-register '%rax) (parse-primitive-tag 'uint64)}
           :width 64}
-         (parse-label-tag '{%rax uint64})))
-  (is (thrown? Exception (parse-label-tag '{%rax uint8}))))
+         (parse-label-tag '{%rax uint64}))))
 
 (deftest test-parse-label
   (let [form '(%label foo)]

@@ -611,10 +611,6 @@
                           (assoc m (parse-register k) (parse-tag v)))
                         {}
                         form)]
-    (doseq [[reg tag] tags]
-      (when (not= (:width reg) (:width tag))
-        (error "label tag expects register and tag to be same width, but got"
-               reg "with" tag)))
     (make-label-tag tags form)))
 
 (defn tag? [exp]

@@ -171,6 +171,17 @@
     (error "invalid syntax for" exp)))
 
 (defn check-syntax [exp]
+  (when (or (defasm? exp) (label? exp))
+    (when-let [tag (:tag (meta exp))]
+      (reduce-kv (fn [seen {:keys [name] :as reg} tag]
+                   (when (contains? seen name)
+                     (error "duplicate register" reg))
+                   (when (not= (:width reg) (:width tag))
+                     (error "label tag expects register and tag to be same"
+                            "width, but got" reg "with" tag))
+                   (conj seen name))
+                 #{}
+                 (:tags tag))))
   (when (instruction? exp)
     (let [operator (:operator exp)]
       (when-let [schemata (:schemata (meta operator))]

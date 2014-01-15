@@ -104,6 +104,16 @@
                      '(defasm foo
                         (%mov %rax 0xfffffffffffffff8))))))))
 
+(deftest test-label-tag
+  (with-empty-env
+    (is (thrown? Exception
+                 (analyze (parse-defasm '(defasm foo {%rax int64 %ax int16}
+                                           (%add %rax 1)))))))
+  (with-empty-env
+    (is (thrown? Exception
+                 (analyze (parse-defasm '(defasm foo {%rax int8}
+                                           (%add %rax 1))))))))
+
 (deftest test-basic-blocks
   (let [label-foo (parse-label '(%label foo {%rax uint64}))
         symbol-foo (:name label-foo)
