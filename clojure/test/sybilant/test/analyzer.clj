@@ -45,9 +45,9 @@
                                         (%add %rax 1))))))
   (with-empty-env
     (analyze (parse-defasm '(defasm foo-bar (%add %rax 1)))))
-  (is (error? "defdata expects a value for value, but got 1"
+  (is (error? "foo-bar is an invalid symbol"
               (analyze (parse-defdata
-                        '(defdata ^:export foo-bar 1)))))
+                        '(defdata ^:export foo-bar #int8 1)))))
   (with-empty-env
     (analyze (parse-defdata '(defdata foo-bar #int8 1)))))
 
