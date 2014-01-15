@@ -269,6 +269,9 @@
                     (let [tag (get-tag env operand)]
                       (when-not tag
                         (error "missing tag for" operand))
+                      (when (and (not (number-tag? tag))
+                                 (not= (:width tag) (:width operand)))
+                        (error operand "not compatible with tag:" tag))
                       tag))
                   operands)]
     (when-not (apply tag= tags)
