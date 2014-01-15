@@ -215,4 +215,10 @@
               (analyze (parse-defasm '(defasm foo {%rbx uint64 %rcx int64}
                                         (%mov %rax 1)
                                         (%add %rax %rbx)
-                                        (%add %rax %rcx)))))))
+                                        (%add %rax %rcx))))))
+  (with-empty-env
+    (analyze (parse-defasm '(defasm foo {%rax int64}
+                              (%add %rax #int32 1)))))
+  (is (error? "incompatible types: uint64 int32"
+              (analyze (parse-defasm '(defasm foo {%rax uint64}
+                                        (%add %rax #int32 1)))))))

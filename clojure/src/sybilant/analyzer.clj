@@ -251,7 +251,7 @@
       (and (number-tag? tag0) (or (int-tag? tag1) (uint-tag? tag1)))
       (<= (:min tag1) (:form tag0) (:max tag1))
       :else
-      (= tag0 tag1)))
+      (= (:type tag0) (:type tag1))))
   ([tag0 tag1 & tags]
      (if (tag= tag0 tag1)
        (if (next tags)
