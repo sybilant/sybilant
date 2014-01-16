@@ -231,11 +231,11 @@
      - [-] analyze defasm form
        - [X] parse defasm into basic blocks
        - [X] check tag for tagged basic blocks
-       - [ ] check tag for local untagged basic blocks
+       - [-] check tag for local untagged basic blocks
          - [ ] follow conditional and unconditional jump instructions
          - [ ] don't follow jump instruction to block with lower index
-         - [ ] continue to next untagged basic block in order
-         - [ ] don't follow to next block when the block ends in an
+         - [X] continue to next untagged basic block in order
+         - [X] don't follow to next block when the block ends in an
            unconditional jump
        - [ ] check for back referencing jump instructions without tags
        - [ ] check for uses of memory references

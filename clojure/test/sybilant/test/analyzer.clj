@@ -226,4 +226,30 @@
               (analyze (parse-defasm '(defasm foo {%rax int64}
                                         (%add %eax #int32 1))))))
   (analyze (parse-defasm '(defasm foo {%rax int64}
-                            (%ret)))))
+                            (%ret))))
+  (with-empty-env
+    (is (error? "incompatible types: int32 uint32"
+                (analyze (parse-defasm '(defasm foo {%eax int32}
+                                          (%cmp %eax #int32 1)
+                                          (%jne bar)
+                                          (%add %eax #int32 1)
+                                          (%label bar)
+                                          (%sub %eax #uint32 1)))))))
+  (with-empty-env
+    (is (error? "incompatible types for %eax: uint32 int32"
+                (analyze (parse-defasm '(defasm foo {%eax int32}
+                                          (%cmp %eax #int32 1)
+                                          (%jne bar)
+                                          (%add %eax #int32 1)
+                                          (%label bar {%eax uint32})
+                                          (%sub %eax #uint32 1)))))))
+  (with-empty-env
+    (analyze (parse-defasm '(defasm foo {%eax int32}
+                              (%cmp %eax #int32 1)
+                              (%jne bar)
+                              (%add %eax #int32 1)
+                              (%jmp end)
+                              (%label bar {%eax uint32})
+                              (%sub %eax #uint32 1)
+                              (%label end)
+                              (%ret))))))

@@ -259,41 +259,59 @@
          (tag= tag1 (first tags)))
        false)))
 
+(defn check-branch-instruction [env exp]
+  env)
+
 (defmulti check-instruction-tag (comp :form :operator second list))
 (defmethod check-instruction-tag '%mov [env {:keys [operands] :as exp}]
   (set-tag env (first operands) (get-tag env (second operands))))
 (defmethod check-instruction-tag '%jmp [env exp]
   env)
-(defmethod check-instruction-tag :default [env {:keys [operands]}]
-  (let [tags (map (fn [operand]
-                    (let [tag (get-tag env operand)]
-                      (when-not tag
-                        (error "missing tag for" operand))
-                      (when (and (not (number-tag? tag))
-                                 (not= (:width tag) (:width operand)))
-                        (error operand "not compatible with tag:" tag))
-                      tag))
-                  operands)]
-    (when (and (seq tags) (not (apply tag= tags)))
-      (apply error "incompatible types:" (map form tags)))
-    (if (number-tag? (first tags))
-      (set-tag env (first operands) (second tags))
-      env)))
+(defmethod check-instruction-tag :default
+  [env {:keys [operator operands] :as exp}]
+  (if (:branch? (meta operator))
+    (check-branch-instruction env exp)
+    (let [tags (map (fn [operand]
+                      (let [tag (get-tag env operand)]
+                        (when-not tag
+                          (error "missing tag for" operand))
+                        (when (and (not (number-tag? tag))
+                                   (not= (:width tag) (:width operand)))
+                          (error operand "not compatible with tag:" tag))
+                        tag))
+                    operands)]
+      (when (and (seq tags) (not (apply tag= tags)))
+        (apply error "incompatible types:" (map form tags)))
+      (if (number-tag? (first tags))
+        (set-tag env (first operands) (second tags))
+        env))))
 
-(defn check-block-tag [env {:keys [index label instructions] :as block}]
-  {:pre [(seq env)]}
-  (reduce check-instruction-tag env instructions))
+(defn jmp? [exp]
+  (and (instruction? exp)
+       (= '%jmp (get-in exp [:operator :form]))))
 
-(defn check-tags [exp]
+(defn tag-subset? [sub-tag super-tag]
+  (every? identity (for [[k v] (:tags sub-tag)
+                         :let [t (get-tag super-tag k)]]
+                     (when-not (= v t)
+                       (error "incompatible types for" (str (form k) ":")
+                              v t)))))
+
+(defn check-basic-block [env block blocks]
+  (let [env (reduce check-instruction-tag env (:instructions block))]
+    (when-let [block (get blocks (inc (:index block)))]
+      (when-not (jmp? (last (:instructions block)))
+        (if-let [tag (:tag (meta (:label block)))]
+          (tag-subset? tag env)
+          (recur env block blocks))))))
+
+(defn check-exp-tag [exp]
   (when (defasm? exp)
     (let [blocks (:basic-blocks (meta exp))]
-      (doseq [block (set (vals blocks))]
-        (when-let [label-tag (:tag (meta (:label block)))]
-          (loop [block block
-                 env (check-block-tag (make-env label-tag) block)]
-            (when-let [block (get blocks (inc (:index block)))]
-              (when-not (:tag (meta (:label block)))
-                (recur block env))))))))
+      (doseq [block (set (vals blocks))
+              :let [label-tag (:tag (meta (:label block)))]
+              :when label-tag]
+        (check-basic-block (make-env label-tag) block blocks))))
   exp)
 
 (defn global-defined? [exp]
@@ -309,7 +327,7 @@
   {:pre [(top-level? exp)]}
   (let [exp (-> (populate-symbol-table exp)
                 (visit (comp replace-constants
-                             check-tags
+                             check-exp-tag
                              parse-basic-blocks
                              check-syntax
                              check-symbol-reference
