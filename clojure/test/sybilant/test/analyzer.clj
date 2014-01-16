@@ -292,4 +292,11 @@
                                           (%jne bar)))))))
   (is (error? "\\(%mem64 %rbx\\) not allowed in checked block"
               (analyze (parse-defasm '(defasm foo {%rax uint64 %rbx int64}
-                                        (%add %rax (%mem64 %rbx))))))))
+                                        (%add %rax (%mem64 %rbx)))))))
+  (with-empty-env
+    (analyze (parse-defasm '(defasm foo ^:unchecked {%rax uint64}
+                              (%add %rax (%mem64 %rbx)))))
+    (is (error? "incompatible types for %rax: uint64 int64"
+                (analyze (parse-defasm '(defasm bar {%rax int64}
+                                          (%add %rax 1)
+                                          (%jmp foo))))))))

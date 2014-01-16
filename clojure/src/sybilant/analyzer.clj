@@ -293,8 +293,6 @@
 (defmulti check-instruction-tag (comp :form :operator second list))
 (defmethod check-instruction-tag '%mov [env {:keys [operands] :as exp}]
   (set-tag env (first operands) (get-tag env (second operands))))
-(defmethod check-instruction-tag '%jmp [env exp]
-  env)
 (defmethod check-instruction-tag :default
   [env {:keys [operator operands] :as exp}]
   (if (:branch? (meta operator))
@@ -334,7 +332,7 @@
     (let [blocks (:basic-blocks (meta exp))]
       (doseq [block (set (vals blocks))
               :let [label-tag (:tag (meta (:label block)))]
-              :when label-tag]
+              :when (and label-tag (nil? (:unchecked (meta label-tag))))]
         (check-basic-block (assoc (make-env label-tag) :basic-blocks blocks)
                            block))))
   exp)
