@@ -228,6 +228,8 @@
      - [X] rich tag equality
        - [X] number tag in the right range should be equal to a number with
          specific size
+     - [ ] honor :trust-me flag for label tag
+     - [ ] jump instruction target should be a label or defasm
      - [-] analyze defasm form
        - [X] parse defasm into basic blocks
        - [X] check tag for tagged basic blocks
