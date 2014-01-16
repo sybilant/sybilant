@@ -274,7 +274,7 @@
                         (error operand "not compatible with tag:" tag))
                       tag))
                   operands)]
-    (when-not (apply tag= tags)
+    (when (and (seq tags) (not (apply tag= tags)))
       (apply error "incompatible types:" (map form tags)))
     (if (number-tag? (first tags))
       (set-tag env (first operands) (second tags))

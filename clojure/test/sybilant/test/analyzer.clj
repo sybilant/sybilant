@@ -224,4 +224,6 @@
                                         (%add %rax #int32 1))))))
   (is (error? "%eax not compatible with tag: int64"
               (analyze (parse-defasm '(defasm foo {%rax int64}
-                                        (%add %eax #int32 1)))))))
+                                        (%add %eax #int32 1))))))
+  (analyze (parse-defasm '(defasm foo {%rax int64}
+                            (%ret)))))
