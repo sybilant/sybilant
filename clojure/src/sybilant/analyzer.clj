@@ -301,6 +301,8 @@
     (check-branch-instruction env exp)
     (let [tags (map (fn [operand]
                       (let [tag (get-tag env operand)]
+                        (when (mem? operand)
+                          (error operand "not allowed in checked block"))
                         (when-not tag
                           (error "missing tag for" operand))
                         (when (and (not (number-tag? tag))

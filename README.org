@@ -240,7 +240,7 @@
          - [X] don't follow to next block when the block ends in an
            unconditional jump
        - [X] check for back referencing jump instructions without tags
-       - [ ] check for uses of memory references
+       - [X] check for uses of memory references
        - [X] check tag for %mov
        - [ ] check tag for x86 instructions (%adc, %add, %and, %bsf, %bsr, %bt,
          %btc, %btr, %bts, %call, %cbw, %cdq, %cdqe, %cmp, %cmpxchg, %cqo,
