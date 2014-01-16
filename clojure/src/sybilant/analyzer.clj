@@ -194,7 +194,11 @@
 (defn parse-basic-blocks [exp]
   (if (defasm? exp)
     (letfn [(assoc-block [exp {:keys [index label instructions] :as block}]
-              (let [exp (vary-meta exp assoc-in [:basic-blocks index] block)]
+              (let [block (assoc block
+                            :instructions
+                            (map #(vary-meta % assoc :block-index index)
+                                 instructions))
+                    exp (vary-meta exp assoc-in [:basic-blocks index] block)]
                 (if label
                   (vary-meta exp assoc-in [:basic-blocks (:name label)] block)
                   exp)))]
@@ -259,7 +263,31 @@
          (tag= tag1 (first tags)))
        false)))
 
-(defn check-branch-instruction [env exp]
+(defn tag-subset? [sub-tag env]
+  (every? identity (for [[k v] (:tags sub-tag)
+                         :let [t (get-tag env k)]]
+                     (when-not (= v t)
+                       (error "incompatible types for" (str (form k) ":")
+                              v t)))))
+
+(declare check-basic-block)
+
+(defn check-branch-instruction [env {:keys [operands] :as exp}]
+  (let [blocks (:basic-blocks env)
+        label-name (first operands)]
+    (if-let [block (get blocks label-name)]
+      (if-let [tag (:tag (meta (:label block)))]
+        (tag-subset? tag env)
+        (if (> (:index block) (:block-index (meta exp)))
+          (check-basic-block env block)
+          (error label-name "requires a tag")))
+      (let [defasm (get (:symbol-table (meta exp)) label-name)]
+        (assert defasm)
+        (when-not (defasm? defasm)
+          (error "target of jump instruction must be a label or defasm:"
+                 label-name))
+        (when-let [tag (:tag (meta defasm))]
+          (tag-subset? tag env)))))
   env)
 
 (defmulti check-instruction-tag (comp :form :operator second list))
@@ -290,20 +318,14 @@
   (and (instruction? exp)
        (= '%jmp (get-in exp [:operator :form]))))
 
-(defn tag-subset? [sub-tag super-tag]
-  (every? identity (for [[k v] (:tags sub-tag)
-                         :let [t (get-tag super-tag k)]]
-                     (when-not (= v t)
-                       (error "incompatible types for" (str (form k) ":")
-                              v t)))))
-
-(defn check-basic-block [env block blocks]
-  (let [env (reduce check-instruction-tag env (:instructions block))]
+(defn check-basic-block [env block]
+  (let [blocks (:basic-blocks env)
+        env (reduce check-instruction-tag env (:instructions block))]
     (when-let [block (get blocks (inc (:index block)))]
       (when-not (jmp? (last (:instructions block)))
         (if-let [tag (:tag (meta (:label block)))]
           (tag-subset? tag env)
-          (recur env block blocks))))))
+          (recur env block))))))
 
 (defn check-exp-tag [exp]
   (when (defasm? exp)
@@ -311,7 +333,8 @@
       (doseq [block (set (vals blocks))
               :let [label-tag (:tag (meta (:label block)))]
               :when label-tag]
-        (check-basic-block (make-env label-tag) block blocks))))
+        (check-basic-block (assoc (make-env label-tag) :basic-blocks blocks)
+                           block))))
   exp)
 
 (defn global-defined? [exp]

@@ -246,10 +246,47 @@
   (with-empty-env
     (analyze (parse-defasm '(defasm foo {%eax int32}
                               (%cmp %eax #int32 1)
-                              (%jne bar)
+                              (%jne end)
                               (%add %eax #int32 1)
                               (%jmp end)
                               (%label bar {%eax uint32})
                               (%sub %eax #uint32 1)
                               (%label end)
-                              (%ret))))))
+                              (%ret)))))
+  (with-empty-env
+    (is (error? "incompatible types: int32 uint32"
+                (analyze (parse-defasm '(defasm foo {%eax int32}
+                                          (%cmp %eax #int32 1)
+                                          (%jne bar)
+                                          (%add %eax #int32 1)
+                                          (%jmp end)
+                                          (%label bar)
+                                          (%sub %eax #uint32 1)
+                                          (%label end)
+                                          (%ret)))))))
+  (with-empty-env
+    (is (error? "bar requires a tag"
+                (analyze (parse-defasm '(defasm foo {%eax int32}
+                                          (%cmp %eax #int32 1)
+                                          (%label bar)
+                                          (%jne bar)
+                                          (%ret)))))))
+  (with-empty-env
+    (analyze (parse-defasm '(defasm bar
+                              (%ret))))
+    (analyze (parse-defasm '(defasm foo {%eax int32}
+                              (%cmp %eax #int32 1)
+                              (%jne bar)))))
+  (with-empty-env
+    (analyze (parse-defasm '(defasm bar {%eax uint32}
+                              (%ret))))
+    (is (error? "incompatible types for %eax: uint32 int32"
+                (analyze (parse-defasm '(defasm foo {%eax int32}
+                                          (%cmp %eax #int32 1)
+                                          (%jne bar)))))))
+  (with-empty-env
+    (analyze (parse-defdata '(defdata bar #int8 1)))
+    (is (error? "target of jump instruction must be a label or defasm: bar"
+                (analyze (parse-defasm '(defasm foo {%eax int32}
+                                          (%cmp %eax #int32 1)
+                                          (%jne bar))))))))
