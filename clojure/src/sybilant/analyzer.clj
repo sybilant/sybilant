@@ -238,9 +238,13 @@
      (assoc-in env [:tags (:name reg)] tag)))
 
 (defn get-tag [env exp]
-  (if (register? exp)
-    (get-in env [:tags (:name exp)])
-    (:tag (meta exp))))
+
+  (let [tag (if (register? exp)
+              (get-in env [:tags (:name exp)])
+              (:tag (meta exp)))]
+    (when-not tag
+      (error "missing tag for" exp))
+    tag))
 
 (defn make-env [label-tag]
   {:pre [(label-tag? label-tag)]}
@@ -298,11 +302,9 @@
   (if (:branch? (meta operator))
     (check-branch-instruction env exp)
     (let [tags (map (fn [operand]
+                      (when (mem? operand)
+                        (error operand "not allowed in checked block"))
                       (let [tag (get-tag env operand)]
-                        (when (mem? operand)
-                          (error operand "not allowed in checked block"))
-                        (when-not tag
-                          (error "missing tag for" operand))
                         (when (and (not (number-tag? tag))
                                    (not= (:width tag) (:width operand)))
                           (error operand "not compatible with tag:" tag))

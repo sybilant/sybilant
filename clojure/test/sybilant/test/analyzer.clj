@@ -299,4 +299,8 @@
     (is (error? "incompatible types for %rax: uint64 int64"
                 (analyze (parse-defasm '(defasm bar {%rax int64}
                                           (%add %rax 1)
-                                          (%jmp foo))))))))
+                                          (%jmp foo)))))))
+  (with-empty-env
+    (is (error? "missing tag for %rbx"
+                (analyze (parse-defasm '(defasm foo {%rax uint64}
+                                          (%mov %rax %rbx))))))))
