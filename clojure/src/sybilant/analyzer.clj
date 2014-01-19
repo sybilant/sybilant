@@ -294,9 +294,20 @@
           (tag-subset? tag env)))))
   env)
 
+(def literal-cast
+  {:int-tag {8 int8-tag
+             16 int16-tag
+             32 int32-tag
+             64 int64-tag}})
+
 (defmulti check-instruction-tag (comp :form :operator second list))
 (defmethod check-instruction-tag '%mov [env {:keys [operands] :as exp}]
-  (set-tag env (first operands) (get-tag env (second operands))))
+  (let [[dst src] operands
+        tag (get-tag env src)
+        dst-tag (if (int-tag? tag)
+                  (get-in literal-cast [(:type tag) (:width dst)])
+                  tag)]
+    (set-tag env dst dst-tag)))
 (defmethod check-instruction-tag :default
   [env {:keys [operator operands] :as exp}]
   (if (:branch? (meta operator))

@@ -303,4 +303,7 @@
   (with-empty-env
     (is (error? "missing tag for %rbx"
                 (analyze (parse-defasm '(defasm foo {%rax uint64}
-                                          (%mov %rax %rbx))))))))
+                                          (%mov %rax %rbx))))))
+    (analyze (parse-defasm '(defasm foo {%rax int64}
+                              (%mov %rbx #int32 1)
+                              (%add %rax %rbx))))))
