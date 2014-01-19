@@ -238,7 +238,6 @@
      (assoc-in env [:tags (:name reg)] tag)))
 
 (defn get-tag [env exp]
-
   (let [tag (if (register? exp)
               (get-in env [:tags (:name exp)])
               (:tag (meta exp)))]
@@ -267,8 +266,8 @@
          (tag= tag1 (first tags)))
        false)))
 
-(defn tag-subset? [sub-tag env]
-  (every? identity (for [[k v] (:tags sub-tag)
+(defn check-label-tag [label-tag env]
+  (every? identity (for [[k v] (:tags label-tag)
                          :let [t (get-tag env k)]]
                      (when-not (= v t)
                        (error "incompatible types for" (str (form k) ":")
@@ -281,7 +280,7 @@
         label-name (first operands)]
     (if-let [block (get blocks label-name)]
       (if-let [tag (:tag (meta (:label block)))]
-        (tag-subset? tag env)
+        (check-label-tag tag env)
         (if (> (:index block) (:block-index (meta exp)))
           (check-basic-block env block)
           (error label-name "requires a tag")))
@@ -291,7 +290,7 @@
           (error "target of jump instruction must be a label or defasm:"
                  label-name))
         (when-let [tag (:tag (meta defasm))]
-          (tag-subset? tag env)))))
+          (check-label-tag tag env)))))
   env)
 
 (def literal-cast
@@ -337,7 +336,7 @@
     (when-let [block (get blocks (inc (:index block)))]
       (when-not (jmp? (last (:instructions block)))
         (if-let [tag (:tag (meta (:label block)))]
-          (tag-subset? tag env)
+          (check-label-tag tag env)
           (recur env block))))))
 
 (defn check-exp-tag [exp]
