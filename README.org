@@ -4,7 +4,7 @@
    Sybilant is a "full stack" Lisp programming language for the x86-64
    architecture.  It is designed for writing high-level functional programs
    while maintaining complete control over machine instructions (when needed).
-   
+
    It is still a work in progress, so details will be fleshed out as its
    implementation proceeds.
 ** Roadmap
@@ -242,15 +242,10 @@
        - [X] check for back referencing jump instructions without tags
        - [X] check for uses of memory references
        - [X] check tag for %mov
-       - [ ] check tag for x86 instructions (%adc, %add, %and, %bsf, %bsr, %bt,
-         %btc, %btr, %bts, %call, %cbw, %cdq, %cdqe, %cmp, %cmpxchg, %cqo,
-         %crc32, %cwd, %cwde, %dec, %div, %idiv, %imul, %inc, %ja, %jae, %jb,
-         %jbe, %jc, %jcxz, %je, %jecxz, %jg, %jge, %jl, %jle, %jmp, %jna, %jnae,
-         %jnb, %jnbe, %jnc, %jne, %jng, %jnge, %jnl, %jnle, %jno, %jnp, %jns,
-         %jnz, %jo, %jp, %jpe, %jpo, %jrcxz, %js, %jz, %loop, %loope, %loopne,
-         %movsx, %movsxd, %movzx, %mul, %neg, %not, %or, %popcnt, %rcl, %rcr,
-         %rdtsc, %ret, %rol, %ror, %sal, %sar, %sbb, %shl, %shld, %shr, %shrd,
-         %sub, %test, %xadd, %xchg, %xor)
+       - [X] check tag for instructions
+       - [ ] check tag for instructions that change register types (%bsf, %bsr,
+         %cbw, %cdq, %cdqe, %cqo, %cwd, %cwde, %div, %idiv, %imul, %movsx,
+         %movsxd, %movzx, %mul, %rdtsc, %xchg)
    - [ ] version 0.8
      - [ ] parse tuple types
      - [ ] parse defdata type (must be a tuple type)
@@ -274,7 +269,7 @@
      - [ ] visit %sget
      - [ ] visit %sset
      - [ ] analyze instructions
-       - [ ] check stack for x86 stack instructions (%pop, %push)
+       - [ ] check stack for x86 stack instructions (%pop, %push, %ret, %call)
        - [ ] check stack for stack pseudo-instructions (%salloc, %sget, %sset)
      - [ ] emit %salloc
      - [ ] emit %sget
@@ -388,10 +383,10 @@
           array bounds checking?
 ** License
   : Copyright © 2013 Paul Stadig. All rights reserved.
-  : 
+  :
   : This Source Code Form is subject to the terms of the Mozilla Public License,
   : v. 2.0. If a copy of the MPL was not distributed with this file, You can
   : obtain one at http://mozilla.org/MPL/2.0/.
-  : 
+  :
   : This Source Code Form is "Incompatible With Secondary Licenses", as defined
   : by the Mozilla Public License, v. 2.0.
