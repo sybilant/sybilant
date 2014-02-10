@@ -386,12 +386,12 @@
 (defn analyze [exp]
   {:pre [(top-level? exp)]}
   (let [exp (-> (populate-symbol-table exp)
-                (visit (comp replace-constants
-                             check-exp-tag
-                             parse-basic-blocks
-                             check-syntax
-                             check-symbol-reference
-                             check-symbol-format)))]
+                (visit check-symbol-format)
+                (visit check-symbol-reference)
+                (visit check-syntax)
+                (visit parse-basic-blocks)
+                (visit check-exp-tag)
+                (visit replace-constants))]
     (when (definition? exp)
       (define-global exp))
     exp))
