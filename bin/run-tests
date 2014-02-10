@@ -10,7 +10,7 @@ fi
 
 function assemble {
     yasm -g dwarf2 -f elf64 -o $2 $1 &&
-    ld -lc -o $3 $2
+    ld -dynamic-linker /lib64/ld-linux-x86-64.so.2 -lc -o $3 $2
 }
 
 if [ -z "$skip_lein" ]; then
