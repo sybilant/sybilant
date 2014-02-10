@@ -297,16 +297,41 @@
   {:int-tag {8 int8-tag
              16 int16-tag
              32 int32-tag
-             64 int64-tag}})
+             64 int64-tag}
+   :uint-tag {8 uint8-tag
+              16 uint16-tag
+              32 uint32-tag
+              64 uint64-tag}})
 
 (defmulti check-instruction-tag (comp :form :operator second list))
 (defmethod check-instruction-tag '%mov [env {:keys [operands] :as exp}]
   (let [[dst src] operands
         tag (get-tag env src)
-        dst-tag (if (int-tag? tag)
+        dst-tag (if (int? src)
                   (get-in literal-cast [(:type tag) (:width dst)])
                   tag)]
+    (when (and (not (number-tag? dst-tag))
+               (not= (:width dst-tag) (:width dst)))
+      (error dst "not compatible with tag:" dst-tag))
     (set-tag env dst dst-tag)))
+(defmethod check-instruction-tag '%movsx [env {:keys [operands] :as exp}]
+  (let [[dst src] operands
+        tag (get-tag env src)]
+    (when-not (int-tag? tag)
+      (error tag "is incompatible with %movsx"))
+    (set-tag env dst (get-in literal-cast [(:type tag) (:width dst)]))))
+(defmethod check-instruction-tag '%movsxd [env {:keys [operands] :as exp}]
+  (let [[dst src] operands
+        tag (get-tag env src)]
+    (when-not (int-tag? tag)
+      (error tag "is incompatible with %movsxd"))
+    (set-tag env dst (get-in literal-cast [(:type tag) (:width dst)]))))
+(defmethod check-instruction-tag '%movzx [env {:keys [operands] :as exp}]
+  (let [[dst src] operands
+        tag (get-tag env src)]
+    (when-not (uint-tag? tag)
+      (error tag "is incompatible with %movzx"))
+    (set-tag env dst (get-in literal-cast [(:type tag) (:width dst)]))))
 (defmethod check-instruction-tag :default
   [env {:keys [operator operands] :as exp}]
   (if (:branch? (meta operator))

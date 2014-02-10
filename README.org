@@ -47,7 +47,8 @@
      - [X] visit %label form
      - [X] analyze %label form
        - [X] check doubly defined symbols (including re-defining a defasm name)
-       - [X] check for instruction after label (including first statement in defasm)
+       - [X] check for instruction after label (including first statement in
+         defasm)
      - [X] emit integers
      - [X] emit memory references
      - [X] emit %label form
@@ -244,8 +245,10 @@
        - [X] check tag for %mov
        - [X] check tag for instructions
        - [ ] check tag for instructions that change register types (%bsf, %bsr,
-         %cbw, %cdq, %cdqe, %cqo, %cwd, %cwde, %div, %idiv, %imul, %movsx,
+         %cbw, %cdq, %cdqe, %cqo, %cwd, %cwde, %div, %idiv, %imul, %mov, %movsx,
          %movsxd, %movzx, %mul, %rdtsc, %xchg)
+       - [ ] unsigned extend tag when a 32-bit register is used as a 64-bit
+         register.
    - [ ] version 0.8
      - [ ] parse tuple types
      - [ ] parse defdata type (must be a tuple type)

@@ -307,3 +307,21 @@
     (analyze (parse-defasm '(defasm foo {%rax int64}
                               (%mov %rbx #int32 1)
                               (%add %rax %rbx))))))
+
+(deftest test-check-movsx
+  (analyze (parse-defasm '(defasm foo {%ax int16}
+                            (%movsx %rbx %ax)
+                            (%label bar {%rbx int64})
+                            (%ret)))))
+
+(deftest test-check-movsxd
+  (analyze (parse-defasm '(defasm foo {%eax int32}
+                            (%movsxd %rbx %eax)
+                            (%label bar {%rbx int64})
+                            (%ret)))))
+
+(deftest test-check-movzx
+  (analyze (parse-defasm '(defasm foo {%ax uint16}
+                            (%movzx %rbx %ax)
+                            (%label bar {%rbx uint64})
+                            (%ret)))))
