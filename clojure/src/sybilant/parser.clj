@@ -9,6 +9,7 @@
 (ns sybilant.parser
   (:refer-clojure :exclude [< <= >= >])
   (:require [clojure.core :as clj]
+            [clojure.java.io :as io]
             [clojure.string :as str]
             [sybilant.numbers :refer [< <= >= >]]
             [sybilant.utils :as u]))
@@ -718,3 +719,29 @@
    :else
    (let [[min max] (check-uint64-type-form form)]
      (make-uint64-type (parse-int min) (parse-int max) form))))
+
+(def register-type (make-type :register))
+
+(def registers (-> (io/resource "sybilant/registers.clj")
+                   slurp
+                   read-string
+                   eval))
+
+(defn register-form?
+  [form]
+  (contains? registers form))
+
+(defn make-register
+  [form]
+  {:pre [(register-form? form)]}
+  (assoc-form (get registers form) form))
+
+(defn parse-register
+  [form]
+  (when-not (register-form? form)
+    (syntax-error :register form))
+  (make-register form))
+
+(defn register?
+  [exp]
+  (u/typed-map? register-type exp))
