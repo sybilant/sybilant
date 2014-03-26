@@ -7,6 +7,7 @@
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.test.parser
+  (:refer-clojure :exclude [symbol?])
   (:require [clojure.test :refer :all]
             [sybilant.parser :refer :all]))
 

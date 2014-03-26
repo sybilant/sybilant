@@ -7,7 +7,7 @@
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.parser
-  (:refer-clojure :exclude [< <= >= >])
+  (:refer-clojure :exclude [< <= >= > symbol?])
   (:require [clojure.core :as clj]
             [clojure.java.io :as io]
             [clojure.string :as str]
@@ -745,3 +745,24 @@
 (defn register?
   [exp]
   (u/typed-map? register-type exp))
+
+(def symbol-type (make-type :symbol))
+
+(defn symbol-form?
+  [form]
+  (and (clj/symbol? form) (not (register-form? form))))
+
+(defn make-symbol
+  [form]
+  {:pre [(symbol-form? form)]}
+  (vary-meta {:type symbol-type :form form} merge (meta form)))
+
+(defn parse-symbol
+  [form]
+  (when-not (symbol-form? form)
+    (syntax-error :symbol form))
+  (make-symbol form))
+
+(defn symbol?
+  [exp]
+  (u/typed-map? symbol-type exp))
