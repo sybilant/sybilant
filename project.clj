@@ -7,4 +7,5 @@
   :dependencies [[org.clojure/clojure "1.5.1"]]
   :source-paths ["clojure/src"]
   :test-paths ["clojure/test"]
-  :aot [sybilant.compile])
+  :aot [sybilant.compile]
+  :profiles {:dev {:dependencies [[pjstadig/humane-test-output "0.2.0"]]}})
