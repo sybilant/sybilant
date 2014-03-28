@@ -26,3 +26,10 @@
 (defn tagged-list?
   [t obj]
   (and (list? obj) (= t (first obj))))
+
+(defn maybe [pred]
+  (fn [x]
+    (or (nil? x) (pred x))))
+
+(defn implies [p q]
+  (or (not p) q))

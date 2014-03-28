@@ -99,3 +99,22 @@
        (parse-uint64-type (list 'uint64 -1 +uint64-max-value+))))
   (is (max-out-of-range?
        (parse-uint64-type (list 'uint64 0 (inc' +uint64-max-value+))))))
+
+(deftest test-parse-mem
+  (is (= [(parse-register '%rax)
+          (parse-register '%rbx)
+          (parse-int 4)
+          (parse-int 17)]
+         (parse-mem '(%mem64 %rax %rbx 4 17))))
+  (is (thrown? Exception (parse-mem '(%mem64)))
+      "too few arguments")
+  (is (thrown? Exception (parse-mem '(%mem64 %rax %rbx 4 17 18)))
+      "too many arguments")
+  (is (thrown? Exception (parse-mem '(%mem64 "foo" %rbx 4 17)))
+      "wrong type for base")
+  (is (thrown? Exception (parse-mem '(%mem64 %rax "foo" 4 17)))
+      "wrong type for index")
+  (is (thrown? Exception (parse-mem '(%mem64 %rax %rbx "foo" 17)))
+      "wrong type for scale")
+  (is (thrown? Exception (parse-mem '(%mem64 %rax %rbx 4 "foo")))
+      "wrong type for disp"))

@@ -720,6 +720,18 @@
    (let [[min max] (check-uint64-type-form form)]
      (make-uint64-type (parse-int min) (parse-int max) form))))
 
+(defn integer-form?
+  [form]
+  (or (int-form? form)
+      (int8-form? form)
+      (uint8-form? form)
+      (int16-form? form)
+      (uint16-form? form)
+      (int32-form? form)
+      (uint32-form? form)
+      (int64-form? form)
+      (uint64-form? form)))
+
 (def register-type (make-type :register))
 
 (def registers (-> (io/resource "sybilant/registers.clj")
@@ -766,3 +778,181 @@
 (defn symbol?
   [exp]
   (u/typed-map? symbol-type exp))
+
+(def mem-type (make-type :mem))
+
+(defn mem-type?
+  [exp]
+  (and (type? exp)
+       (= :mem (:name exp))))
+
+(defn make-mem
+  [type base index scale disp]
+  {:pre [(mem-type? type)
+         ((u/maybe register?) base)
+         ((u/maybe register?) index)
+         ((u/maybe int?) scale)
+         ((u/maybe int?) disp)
+         (or base index scale disp)
+         (u/implies scale index)
+         (u/implies index disp)]}
+  (merge {:type type}
+         (when base
+           {:base base})
+         (when index
+           {:index index})
+         (when scale
+           {:scale scale})
+         (when disp
+           {:disp disp})))
+
+(defn disp-form?
+  [form]
+  (and (integer-form? form)
+       (<= (:min int32-type) (u/form form) (:max int32-type))))
+
+(defn scale-form?
+  [form]
+  (contains? #{1 2 4 8} (u/form form)))
+
+(defn parse-mem-args
+  [form]
+  {:pre [(seq form)]}
+  (let [[mem & [a b c d :as args]] form
+        arg-count (count args)]
+    (case arg-count
+      1 (cond
+         (disp-form? a) [mem nil nil nil a]
+         (register-form? a) [mem a nil nil nil]
+         :else (u/error mem "expects register or int, but was"
+                        (str (pr-str a) ":") (pr-str form)))
+      2 [mem a nil nil b]
+      3 (cond
+         (scale-form? b) [mem nil a b c]
+         (register-form? b) [mem a b nil c]
+         :else (u/error mem "expects register or scale, but was"
+                        (str (pr-str b) ":") (pr-str form)))
+      4 [mem a b c d]
+      (u/error (str mem) "expects between 1 and 4 arguments, but got"
+               (str arg-count ":") (pr-str form)))))
+
+(defn parse-mem
+  [form]
+  (let [[mem base index scale disp] (parse-mem-args form)]
+    (letfn
+        [(arg-type-error [arg-name expected-type actual]
+           (u/error mem "expects" (name arg-name) "to be"
+                    (str (name expected-type) ",") "but was"
+                    (str (pr-str (u/form actual)) ":") (pr-str form)))]
+      [(when base
+         (when-not (register-form? base)
+           (arg-type-error :base :register base))
+         (parse-register base))
+       (when index
+         (when-not (register-form? index)
+           (arg-type-error :index :register index))
+         (parse-register index))
+       (when scale
+         (when-not (scale-form? scale)
+           (arg-type-error :scale :scale scale))
+         (coerce-int scale))
+       (when disp
+         (when-not (disp-form? disp)
+           (arg-type-error :displacement :int disp))
+         (coerce-int disp))])))
+
+(def mem8-type (assoc mem-type :width 8))
+
+(defn mem8-form?
+  [form]
+  (u/tagged-list? '%mem8 form))
+
+(defn make-mem8
+  ([base index scale disp]
+     (make-mem mem8-type base index scale disp))
+  ([base index scale disp form]
+     {:pre [(mem8-form? form)]}
+     (assoc-form (make-mem8 base index scale disp) form)))
+
+(defn parse-mem8
+  [form]
+  (when-not (mem8-form? form)
+    (syntax-error :mem8 form))
+  (let [[base index scale disp] (parse-mem form)]
+    (make-mem8 base index scale disp form)))
+
+(defn mem8?
+  [exp]
+  (u/typed-map? mem8-type exp))
+
+(def mem16-type (assoc mem-type :width 16))
+
+(defn mem16-form?
+  [form]
+  (u/tagged-list? '%mem16 form))
+
+(defn make-mem16
+  ([base index scale disp]
+     (make-mem mem16-type base index scale disp))
+  ([base index scale disp form]
+     {:pre [(mem16-form? form)]}
+     (assoc-form (make-mem16 base index scale disp) form)))
+
+(defn parse-mem16
+  [form]
+  (when-not (mem16-form? form)
+    (syntax-error :mem16 form))
+  (let [[base index scale disp] (parse-mem form)]
+    (make-mem16 base index scale disp form)))
+
+(defn mem16?
+  [exp]
+  (u/typed-map? mem16-type exp))
+
+(def mem32-type (assoc mem-type :width 32))
+
+(defn mem32-form?
+  [form]
+  (u/tagged-list? '%mem32 form))
+
+(defn make-mem32
+  ([base index scale disp]
+     (make-mem mem32-type base index scale disp))
+  ([base index scale disp form]
+     {:pre [(mem32-form? form)]}
+     (assoc-form (make-mem32 base index scale disp) form)))
+
+(defn parse-mem32
+  [form]
+  (when-not (mem32-form? form)
+    (syntax-error :mem32 form))
+  (let [[base index scale disp] (parse-mem form)]
+    (make-mem32 base index scale disp form)))
+
+(defn mem32?
+  [exp]
+  (u/typed-map? mem32-type exp))
+
+(def mem64-type (assoc mem-type :width 64))
+
+(defn mem64-form?
+  [form]
+  (u/tagged-list? '%mem64 form))
+
+(defn make-mem64
+  ([base index scale disp]
+     (make-mem mem64-type base index scale disp))
+  ([base index scale disp form]
+     {:pre [(mem64-form? form)]}
+     (assoc-form (make-mem64 base index scale disp) form)))
+
+(defn parse-mem64
+  [form]
+  (when-not (mem64-form? form)
+    (syntax-error :mem64 form))
+  (let [[base index scale disp] (parse-mem form)]
+    (make-mem64 base index scale disp form)))
+
+(defn mem64?
+  [exp]
+  (u/typed-map? mem64-type exp))
