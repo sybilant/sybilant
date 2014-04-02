@@ -931,7 +931,7 @@
   [form]
   (contains? #{1 2 4 8} (u/form form)))
 
-(defn parse-mem-args
+(defn parse-mem-args*
   [form]
   {:pre [(seq form)]}
   (let [[mem & [a b c d :as args]] form
@@ -952,9 +952,9 @@
       (u/error (str mem) "expects between 1 and 4 arguments, but got"
                (str arg-count ":") (pr-str form)))))
 
-(defn parse-mem
+(defn parse-mem-args
   [form]
-  (let [[mem base index scale disp] (parse-mem-args form)]
+  (let [[mem base index scale disp] (parse-mem-args* form)]
     (letfn
         [(arg-type-error [arg-name expected-type actual]
            (u/error mem "expects" (name arg-name) "to be"
@@ -994,7 +994,7 @@
   [form]
   (when-not (mem8-form? form)
     (syntax-error :mem8 form))
-  (let [[base index scale disp] (parse-mem form)]
+  (let [[base index scale disp] (parse-mem-args form)]
     (make-mem8 base index scale disp form)))
 
 (defn mem8?
@@ -1018,7 +1018,7 @@
   [form]
   (when-not (mem16-form? form)
     (syntax-error :mem16 form))
-  (let [[base index scale disp] (parse-mem form)]
+  (let [[base index scale disp] (parse-mem-args form)]
     (make-mem16 base index scale disp form)))
 
 (defn mem16?
@@ -1042,7 +1042,7 @@
   [form]
   (when-not (mem32-form? form)
     (syntax-error :mem32 form))
-  (let [[base index scale disp] (parse-mem form)]
+  (let [[base index scale disp] (parse-mem-args form)]
     (make-mem32 base index scale disp form)))
 
 (defn mem32?
@@ -1066,9 +1066,33 @@
   [form]
   (when-not (mem64-form? form)
     (syntax-error :mem64 form))
-  (let [[base index scale disp] (parse-mem form)]
+  (let [[base index scale disp] (parse-mem-args form)]
     (make-mem64 base index scale disp form)))
 
 (defn mem64?
   [exp]
   (u/typed-map? mem64-type exp))
+
+(defn mem-form?
+  [form]
+  (or (mem8-form? form)
+      (mem16-form? form)
+      (mem32-form? form)
+      (mem64-form? form)))
+
+(defn parse-mem
+  [form]
+  (when-not (mem-form? form)
+    (syntax-error :mem form))
+  (cond
+   (mem8-form? form) (parse-mem8 form)
+   (mem16-form? form) (parse-mem16 form)
+   (mem32-form? form) (parse-mem32 form)
+   (mem64-form? form) (parse-mem64 form)))
+
+(defn mem?
+  [exp]
+  (or (mem8? exp)
+      (mem16? exp)
+      (mem32? exp)
+      (mem64? exp)))
