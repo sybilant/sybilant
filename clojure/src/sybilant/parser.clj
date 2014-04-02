@@ -761,10 +761,99 @@
 
 (def register-type (make-type :register))
 
+(defn reg-type?
+  [exp]
+  (and (type? exp)
+       (= :register (:name exp))))
+
+(def reg8-type (assoc register-type :width 8))
+
+(def reg16-type (assoc register-type :width 16))
+
+(def reg32-type (assoc register-type :width 32))
+
+(def reg64-type (assoc register-type :width 64))
+
 (def registers (-> (io/resource "sybilant/registers.clj")
                    slurp
                    read-string
                    eval))
+
+(defn reg8-form?
+  [form]
+  (= 8 (get-in registers [form :type :width])))
+
+(defn make-reg8
+  [form]
+  {:pre [(reg8-form? form)]}
+  (assoc-form (get registers form) form))
+
+(defn parse-reg8
+  [form]
+  (when-not (reg8-form? form)
+    (syntax-error :reg8 form))
+  (make-reg8 form))
+
+(defn reg8?
+  [exp]
+  (u/typed-map? reg8-type exp))
+
+(defn reg16-form?
+  [form]
+  (= 16 (get-in registers [form :type :width])))
+
+(defn make-reg16
+  [form]
+  {:pre [(reg16-form? form)]}
+  (assoc-form (get registers form) form))
+
+(defn parse-reg16
+  [form]
+  (when-not (reg16-form? form)
+    (syntax-error :reg16 form))
+  (make-reg16 form))
+
+(defn reg16?
+  [exp]
+  (u/typed-map? reg16-type exp))
+
+(defn reg32-form?
+  [form]
+  (= 32 (get-in registers [form :type :width])))
+
+(defn make-reg32
+  [form]
+  {:pre [(reg32-form? form)]}
+  (assoc-form (get registers form) form))
+
+(defn parse-reg32
+  [form]
+  (when-not (reg32-form? form)
+    (syntax-error :reg32 form))
+  (make-reg32 form))
+
+(defn reg32?
+  [exp]
+  (u/typed-map? reg32-type exp))
+
+(defn reg64-form?
+  [form]
+  (= 64 (get-in registers [form :type :width])))
+
+(defn make-reg64
+  [form]
+  {:pre [(reg64-form? form)]}
+  (assoc-form (get registers form) form))
+
+(defn parse-reg64
+  [form]
+  (when-not (reg64-form? form)
+    (syntax-error :reg64 form))
+  (make-reg64 form))
+
+(defn reg64?
+  [exp]
+  (u/typed-map? reg64-type exp))
 
 (defn register-form?
   [form]
@@ -783,7 +872,7 @@
 
 (defn register?
   [exp]
-  (u/typed-map? register-type exp))
+  (reg-type? (:type exp)))
 
 (def symbol-type (make-type :symbol))
 

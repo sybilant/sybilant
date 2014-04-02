@@ -6,82 +6,82 @@
 ;;;;
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
-{'%al {:type register-type :width 8 :name 'a}
- '%ax {:type register-type :width 16 :name 'a}
- '%eax {:type register-type :width 32 :name 'a}
- '%rax {:type register-type :width 64 :name 'a}
+{'%al {:type reg8-type :name 'a}
+ '%ax {:type reg16-type :name 'a}
+ '%eax {:type reg32-type :name 'a}
+ '%rax {:type reg64-type :name 'a}
 
- '%bl {:type register-type :width 8 :name 'b}
- '%bx {:type register-type :width 16 :name 'b}
- '%ebx {:type register-type :width 32 :name 'b}
- '%rbx {:type register-type :width 64 :name 'b}
+ '%bl {:type reg8-type :name 'b}
+ '%bx {:type reg16-type :name 'b}
+ '%ebx {:type reg32-type :name 'b}
+ '%rbx {:type reg64-type :name 'b}
 
- '%cl {:type register-type :width 8 :name 'c}
- '%cx {:type register-type :width 16 :name 'c}
- '%ecx {:type register-type :width 32 :name 'c}
- '%rcx {:type register-type :width 64 :name 'c}
+ '%cl {:type reg8-type :name 'c}
+ '%cx {:type reg16-type :name 'c}
+ '%ecx {:type reg32-type :name 'c}
+ '%rcx {:type reg64-type :name 'c}
 
- '%dl {:type register-type :width 8 :name 'd}
- '%dx {:type register-type :width 16 :name 'd}
- '%edx {:type register-type :width 32 :name 'd}
- '%rdx {:type register-type :width 64 :name 'd}
+ '%dl {:type reg8-type :name 'd}
+ '%dx {:type reg16-type :name 'd}
+ '%edx {:type reg32-type :name 'd}
+ '%rdx {:type reg64-type :name 'd}
 
- '%sil {:type register-type :width 8 :name 'si}
- '%si {:type register-type :width 16 :name 'si}
- '%esi {:type register-type :width 32 :name 'si}
- '%rsi {:type register-type :width 64 :name 'si}
+ '%sil {:type reg8-type :name 'si}
+ '%si {:type reg16-type :name 'si}
+ '%esi {:type reg32-type :name 'si}
+ '%rsi {:type reg64-type :name 'si}
 
- '%dil {:type register-type :width 8 :name 'di}
- '%di {:type register-type :width 16 :name 'di}
- '%edi {:type register-type :width 32 :name 'di}
- '%rdi {:type register-type :width 64 :name 'di}
+ '%dil {:type reg8-type :name 'di}
+ '%di {:type reg16-type :name 'di}
+ '%edi {:type reg32-type :name 'di}
+ '%rdi {:type reg64-type :name 'di}
 
- '%spl {:type register-type :width 8 :name 'sp}
- '%sp {:type register-type :width 16 :name 'sp}
- '%esp {:type register-type :width 32 :name 'sp}
- '%rsp {:type register-type :width 64 :name 'sp}
+ '%spl {:type reg8-type :name 'sp}
+ '%sp {:type reg16-type :name 'sp}
+ '%esp {:type reg32-type :name 'sp}
+ '%rsp {:type reg64-type :name 'sp}
 
- '%bpl {:type register-type :width 8 :name 'bp}
- '%bp {:type register-type :width 16 :name 'bp}
- '%ebp {:type register-type :width 32 :name 'bp}
- '%rbp {:type register-type :width 64 :name 'bp}
+ '%bpl {:type reg8-type :name 'bp}
+ '%bp {:type reg16-type :name 'bp}
+ '%ebp {:type reg32-type :name 'bp}
+ '%rbp {:type reg64-type :name 'bp}
 
- '%r8b {:type register-type :width 8 :name 'r8}
- '%r8w {:type register-type :width 16 :name 'r8}
- '%r8d {:type register-type :width 32 :name 'r8}
- '%r8 {:type register-type :width 64 :name 'r8}
+ '%r8b {:type reg8-type :name 'r8}
+ '%r8w {:type reg16-type :name 'r8}
+ '%r8d {:type reg32-type :name 'r8}
+ '%r8 {:type reg64-type :name 'r8}
 
- '%r9b {:type register-type :width 8 :name 'r9}
- '%r9w {:type register-type :width 16 :name 'r9}
- '%r9d {:type register-type :width 32 :name 'r9}
- '%r9 {:type register-type :width 64 :name 'r9}
+ '%r9b {:type reg8-type :name 'r9}
+ '%r9w {:type reg16-type :name 'r9}
+ '%r9d {:type reg32-type :name 'r9}
+ '%r9 {:type reg64-type :name 'r9}
 
- '%r10b {:type register-type :width 8 :name 'r10}
- '%r10w {:type register-type :width 16 :name 'r10}
- '%r10d {:type register-type :width 32 :name 'r10}
- '%r10 {:type register-type :width 64 :name 'r10}
+ '%r10b {:type reg8-type :name 'r10}
+ '%r10w {:type reg16-type :name 'r10}
+ '%r10d {:type reg32-type :name 'r10}
+ '%r10 {:type reg64-type :name 'r10}
 
- '%r11b {:type register-type :width 8 :name 'r11}
- '%r11w {:type register-type :width 16 :name 'r11}
- '%r11d {:type register-type :width 32 :name 'r11}
- '%r11 {:type register-type :width 64 :name 'r11}
+ '%r11b {:type reg8-type :name 'r11}
+ '%r11w {:type reg16-type :name 'r11}
+ '%r11d {:type reg32-type :name 'r11}
+ '%r11 {:type reg64-type :name 'r11}
 
- '%r12b {:type register-type :width 8 :name 'r12}
- '%r12w {:type register-type :width 16 :name 'r12}
- '%r12d {:type register-type :width 32 :name 'r12}
- '%r12 {:type register-type :width 64 :name 'r12}
+ '%r12b {:type reg8-type :name 'r12}
+ '%r12w {:type reg16-type :name 'r12}
+ '%r12d {:type reg32-type :name 'r12}
+ '%r12 {:type reg64-type :name 'r12}
 
- '%r13b {:type register-type :width 8 :name 'r13}
- '%r13w {:type register-type :width 16 :name 'r13}
- '%r13d {:type register-type :width 32 :name 'r13}
- '%r13 {:type register-type :width 64 :name 'r13}
+ '%r13b {:type reg8-type :name 'r13}
+ '%r13w {:type reg16-type :name 'r13}
+ '%r13d {:type reg32-type :name 'r13}
+ '%r13 {:type reg64-type :name 'r13}
 
- '%r14b {:type register-type :width 8 :name 'r14}
- '%r14w {:type register-type :width 16 :name 'r14}
- '%r14d {:type register-type :width 32 :name 'r14}
- '%r14 {:type register-type :width 64 :name 'r14}
+ '%r14b {:type reg8-type :name 'r14}
+ '%r14w {:type reg16-type :name 'r14}
+ '%r14d {:type reg32-type :name 'r14}
+ '%r14 {:type reg64-type :name 'r14}
 
- '%r15b {:type register-type :width 8 :name 'r15}
- '%r15w {:type register-type :width 16 :name 'r15}
- '%r15d {:type register-type :width 32 :name 'r15}
- '%r15 {:type register-type :width 64 :name 'r15}}
+ '%r15b {:type reg8-type :name 'r15}
+ '%r15w {:type reg16-type :name 'r15}
+ '%r15d {:type reg32-type :name 'r15}
+ '%r15 {:type reg64-type :name 'r15}}
