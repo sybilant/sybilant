@@ -7,7 +7,7 @@
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.parser
-  (:refer-clojure :exclude [< <= >= > symbol?])
+  (:refer-clojure :exclude [< <= >= > integer? symbol?])
   (:require [clojure.core :as clj]
             [clojure.java.io :as io]
             [clojure.string :as str]
@@ -731,6 +731,33 @@
       (uint32-form? form)
       (int64-form? form)
       (uint64-form? form)))
+
+(defn parse-integer
+  [form]
+  (when-not (integer-form? form)
+    (syntax-error :integer form))
+  (cond
+   (int-form? form) (parse-int form)
+   (int8-form? form) (parse-int8 form)
+   (int16-form? form) (parse-int16 form)
+   (int32-form? form) (parse-int32 form)
+   (int64-form? form) (parse-int64 form)
+   (uint8-form? form) (parse-uint8 form)
+   (uint16-form? form) (parse-uint16 form)
+   (uint32-form? form) (parse-uint32 form)
+   (uint64-form? form) (parse-uint64 form)))
+
+(defn integer?
+  [exp]
+  (or (int? exp)
+      (int8? exp)
+      (uint8? exp)
+      (int16? exp)
+      (uint16? exp)
+      (int32? exp)
+      (uint32? exp)
+      (int64? exp)
+      (uint64? exp)))
 
 (def register-type (make-type :register))
 
