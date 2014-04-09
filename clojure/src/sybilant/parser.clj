@@ -1327,3 +1327,31 @@
 (defn instruction?
   [exp]
   (u/typed-map? instruction-type exp))
+
+(def label-type (make-type :label))
+
+(defn label-form?
+  [form]
+  (and (list? form)
+       (= '%label (first form))))
+
+(defn make-label
+  ([name]
+     {:pre [(symbol? name)]}
+     {:type label-type :name name})
+  ([name form]
+     {:pre [(label-form? form)]}
+     (assoc-form (make-label name) form)))
+
+(defn parse-label
+  [form]
+  (when-not (label-form? form)
+    (syntax-error :label form))
+  (let [name-form (second form)]
+    (when-not (symbol-form? name-form)
+      (arg-type-error :label :name :symbol name-form form))
+    (make-label (parse-symbol name-form) form)))
+
+(defn label?
+  [exp]
+  (u/typed-map? label-type exp))
