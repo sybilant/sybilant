@@ -6,45 +6,45 @@
 ;;;;
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
-{'%al {:type reg8-type :name 'a}
- '%ax {:type reg16-type :name 'a}
- '%eax {:type reg32-type :name 'a}
- '%rax {:type reg64-type :name 'a}
+{'%al {:type reg8-type :name 'a :group "gen" :nr "0"}
+ '%ax {:type reg16-type :name 'a :group "gen" :nr "0"}
+ '%eax {:type reg32-type :name 'a :group "gen" :nr "0"}
+ '%rax {:type reg64-type :name 'a :group "gen" :nr "0"}
 
- '%bl {:type reg8-type :name 'b}
- '%bx {:type reg16-type :name 'b}
- '%ebx {:type reg32-type :name 'b}
- '%rbx {:type reg64-type :name 'b}
+ '%cl {:type reg8-type :name 'c :group "gen" :nr "1"}
+ '%cx {:type reg16-type :name 'c :group "gen" :nr "1"}
+ '%ecx {:type reg32-type :name 'c :group "gen" :nr "1"}
+ '%rcx {:type reg64-type :name 'c :group "gen" :nr "1"}
 
- '%cl {:type reg8-type :name 'c}
- '%cx {:type reg16-type :name 'c}
- '%ecx {:type reg32-type :name 'c}
- '%rcx {:type reg64-type :name 'c}
+ '%dl {:type reg8-type :name 'd :group "gen" :nr "2"}
+ '%dx {:type reg16-type :name 'd :group "gen" :nr "2"}
+ '%edx {:type reg32-type :name 'd :group "gen" :nr "2"}
+ '%rdx {:type reg64-type :name 'd :group "gen" :nr "2"}
 
- '%dl {:type reg8-type :name 'd}
- '%dx {:type reg16-type :name 'd}
- '%edx {:type reg32-type :name 'd}
- '%rdx {:type reg64-type :name 'd}
+ '%bl {:type reg8-type :name 'b :group "gen" :nr "3"}
+ '%bx {:type reg16-type :name 'b :group "gen" :nr "3"}
+ '%ebx {:type reg32-type :name 'b :group "gen" :nr "3"}
+ '%rbx {:type reg64-type :name 'b :group "gen" :nr "3"}
 
- '%sil {:type reg8-type :name 'si}
- '%si {:type reg16-type :name 'si}
- '%esi {:type reg32-type :name 'si}
- '%rsi {:type reg64-type :name 'si}
+ '%spl {:type reg8-type :name 'sp :group "gen" :nr "4"}
+ '%sp {:type reg16-type :name 'sp :group "gen" :nr "4"}
+ '%esp {:type reg32-type :name 'sp :group "gen" :nr "4"}
+ '%rsp {:type reg64-type :name 'sp :group "gen" :nr "4"}
 
- '%dil {:type reg8-type :name 'di}
- '%di {:type reg16-type :name 'di}
- '%edi {:type reg32-type :name 'di}
- '%rdi {:type reg64-type :name 'di}
+ '%bpl {:type reg8-type :name 'bp :group "gen" :nr "5"}
+ '%bp {:type reg16-type :name 'bp :group "gen" :nr "5"}
+ '%ebp {:type reg32-type :name 'bp :group "gen" :nr "5"}
+ '%rbp {:type reg64-type :name 'bp :group "gen" :nr "5"}
 
- '%spl {:type reg8-type :name 'sp}
- '%sp {:type reg16-type :name 'sp}
- '%esp {:type reg32-type :name 'sp}
- '%rsp {:type reg64-type :name 'sp}
+ '%sil {:type reg8-type :name 'si :group "gen" :nr "6"}
+ '%si {:type reg16-type :name 'si :group "gen" :nr "6"}
+ '%esi {:type reg32-type :name 'si :group "gen" :nr "6"}
+ '%rsi {:type reg64-type :name 'si :group "gen" :nr "6"}
 
- '%bpl {:type reg8-type :name 'bp}
- '%bp {:type reg16-type :name 'bp}
- '%ebp {:type reg32-type :name 'bp}
- '%rbp {:type reg64-type :name 'bp}
+ '%dil {:type reg8-type :name 'di :group "gen" :nr "7"}
+ '%di {:type reg16-type :name 'di :group "gen" :nr "7"}
+ '%edi {:type reg32-type :name 'di :group "gen" :nr "7"}
+ '%rdi {:type reg64-type :name 'di :group "gen" :nr "7"}
 
  '%r8b {:type reg8-type :name 'r8}
  '%r8w {:type reg16-type :name 'r8}

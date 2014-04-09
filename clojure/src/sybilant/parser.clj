@@ -12,7 +12,8 @@
             [clojure.java.io :as io]
             [clojure.string :as str]
             [sybilant.numbers :refer [< <= >= >]]
-            [sybilant.utils :as u]))
+            [sybilant.utils :as u]
+            [sybilant.x86db :as db]))
 
 (defn syntax-error
   [expected actual]
@@ -20,9 +21,14 @@
            (pr-str (u/form actual))))
 
 (defn arg-type-error
-  [type-name arg-name expected-type actual]
-  (u/error (name type-name) "expects" (name arg-name) "to be"
-           (str (name expected-type) ",") "but was" (pr-str (u/form actual))))
+  ([type-name arg-name expected-type actual]
+     (u/error (name type-name) "expects" (name arg-name) "to be"
+              (str (name expected-type) ",") "but was"
+              (pr-str (u/form actual))))
+  ([type-name arg-name expected-type actual form]
+     (u/error (name type-name) "expects" (name arg-name) "to be"
+              (str (name expected-type) ",") "but was"
+              (str (pr-str (u/form actual)) ":") (pr-str (u/form form)))))
 
 (defn assoc-form
   [exp form]
@@ -1096,3 +1102,228 @@
       (mem16? exp)
       (mem32? exp)
       (mem64? exp)))
+
+(defn all-mnemonics
+  []
+  (set (db/mnemonics db/db)))
+
+(alter-var-root #'all-mnemonics memoize)
+
+(defn mnemonic
+  [form]
+  (if (symbol-form? form)
+    (str/upper-case (subs (name form) 1))))
+
+(def operator-type (make-type :operator))
+
+(defn operator-form?
+  [form]
+  (and (symbol-form? form)
+       (contains? (all-mnemonics) (mnemonic form))))
+
+(defn make-operator
+  [form]
+  {:pre [(operator-form? form)]}
+  (assoc-form {:type operator-type :mnemonic (mnemonic form)} form))
+
+(defn parse-operator
+  [form]
+  (when-not (operator-form? form)
+    (syntax-error :operator form))
+  (make-operator form))
+
+(defn operator?
+  [exp]
+  (u/typed-map? operator-type exp))
+
+(defn operand-form?
+  [form]
+  (or (integer-form? form)
+      (register-form? form)
+      (mem-form? form)))
+
+(defn parse-operand
+  [form]
+  (when-not (operand-form? form)
+    (syntax-error :operand form))
+  (cond
+   (integer-form? form) (parse-integer form)
+   (register-form? form) (parse-register form)
+   (mem-form? form) (parse-mem form)))
+
+(defn operand?
+  [exp]
+  (or (integer? exp)
+      (register? exp)
+      (mem? exp)))
+
+(def instruction-type (make-type :instruction))
+
+(defn instruction-form?
+  [form]
+  (and (list? form)
+       (operator-form? (first form))))
+
+(defn operand-addressing?
+  [operand {:keys [group nr address]}]
+  (if (and group nr)
+    (and (= group (:group operand))
+         (= nr (:nr operand)))
+    (case address
+      "C" nil ; control register
+      "D" nil ; debug register
+      "E" (or (register? operand) (mem? operand))
+      ("G" "R" "H" "Z") (register? operand)
+      "I" (integer? operand)
+      "M" (mem? operand)
+      "O" (and (mem? operand)
+               (:disp operand)
+               (not (or (:base operand)
+                        (:index operand)
+                        (:scale operand))))
+      "S" nil ; segment register
+      "T" nil ; test register
+      nil true)))
+
+(defn byte?
+  [operand]
+  (or (reg8? operand) (mem8? operand) (int8? operand) (uint8? operand)
+      (and (int? operand)
+           (<= Byte/MIN_VALUE (u/form operand) +uint8-max-value+))))
+
+(defn signed-byte?
+  [operand]
+  (or (reg8? operand) (mem8? operand) (int8? operand)
+      (and (int? operand)
+           (<= Byte/MIN_VALUE (u/form operand) Byte/MAX_VALUE))))
+
+(defn word?
+  [operand]
+  (or (reg16? operand) (mem16? operand) (int16? operand) (uint16? operand)
+      (and (int? operand)
+           (<= Short/MIN_VALUE (u/form operand) +uint16-max-value+))))
+
+(defn signed-word?
+  [operand]
+  (or (reg16? operand) (mem16? operand) (int16? operand)
+      (and (int? operand)
+           (<= Short/MIN_VALUE (u/form operand) Short/MAX_VALUE))))
+
+(defn doubleword?
+  [operand]
+  (or (reg32? operand) (mem32? operand) (int32? operand) (uint32? operand)
+      (and (int? operand)
+           (<= Integer/MIN_VALUE (u/form operand) +uint32-max-value+))))
+
+(defn signed-doubleword?
+  [operand]
+  (or (reg32? operand) (mem32? operand) (int32? operand)
+      (and (int? operand)
+           (<= Integer/MIN_VALUE (u/form operand) Integer/MAX_VALUE))))
+
+(defn quadword?
+  [operand]
+  (or (reg64? operand) (mem64? operand) (int64? operand) (uint64? operand)
+      (and (int? operand)
+           (<= Long/MIN_VALUE (u/form operand) +uint64-max-value+))))
+
+(defn signed?
+  [operand]
+  (not (get-in operand [:type :unsigned])))
+
+(defn operand-type?
+  [operand {:keys [type width]}]
+  (and (u/implies width (or (integer? operand)
+                            (= width (u/width operand))))
+       (case type
+         "b" (byte? operand)
+         "bs" (signed-byte? operand)
+         "w" (word? operand)
+         "d" (doubleword? operand)
+         "q" (quadword? operand)
+         "vqp" (and (or (word? operand) (doubleword? operand)
+                        (quadword? operand))
+                    (u/implies (not= width (u/width operand))
+                               (signed? operand)))
+         "vds" (and (or (word? operand) (doubleword? operand))
+                    (u/implies (not= width (u/width operand))
+                               (signed? operand)))
+         nil true)))
+
+(defn operand-syntax?
+  [operand operand-syntax]
+  (and (operand-addressing? operand operand-syntax)
+       (operand-type? operand operand-syntax)))
+
+(defn infer-width
+  [operands syntax-schema]
+  (let [[[_ dst-index]] (filter #(= "dst" (:mode (first %)))
+                                (map vector
+                                     (:operands syntax-schema)
+                                     (range)))]
+    (if dst-index
+      (let [operand (nth operands dst-index nil)
+            operand-syntax (nth (:operands syntax-schema) dst-index nil)]
+        (if (operand-syntax? operand operand-syntax)
+          (if-let [width (u/width operand)]
+            (update-in syntax-schema [:operands]
+                       #(mapv (fn [o] (assoc o :width width)) %))
+            syntax-schema)
+          syntax-schema))
+      syntax-schema)))
+
+(defn filter-syntaxes
+  [arg operands syntaxes]
+  (let [operand (nth operands arg)]
+    (filter (fn [syntax]
+              (and (= (count operands) (count (:operands syntax)))
+                   (operand-syntax? operand (nth (:operands syntax) arg nil))))
+            syntaxes)))
+
+(defn operator-syntax
+  [operator]
+  (set (db/mnemonic-syntax (:mnemonic operator) db/db)))
+
+(defn validate-instruction
+  [operator operands]
+  (let [syntaxes (operator-syntax operator)
+        syntaxes (map (partial infer-width operands) syntaxes)]
+    (loop [arg 0
+           syntaxes syntaxes]
+      (if (< arg (count operands))
+        (let [new-syntaxes (filter-syntaxes arg operands syntaxes)]
+          (if (seq new-syntaxes)
+            (recur (inc arg) new-syntaxes)
+            false))
+        true))))
+
+(defn make-instruction
+  ([operator operands]
+     {:pre [(operator? operator) (every? operand? operands)]}
+     (when-not (validate-instruction operator operands)
+       (u/error "invalid syntax"))
+     {:type instruction-type :operator operator :operands operands})
+  ([operator operands form]
+     (when-not (validate-instruction operator operands)
+       (u/error "invalid syntax for" (u/form form)))
+     (assoc-form (make-instruction operator operands) form)))
+
+(defn parse-instruction
+  [form]
+  (when-not (instruction-form? form)
+    (syntax-error :instruction form))
+  (let [[operator-form & operand-forms] form]
+    (when-not (operator-form? operator-form)
+      (arg-type-error :instruction :operator operator-form form))
+    (doseq [operand-form operand-forms]
+      (when-not (operand-form? operand-form)
+        (arg-type-error :instruction :operand
+                        "integer, register, or memory reference"
+                        operand-form form)))
+    (make-instruction (parse-operator operator-form)
+                      (map parse-operand operand-forms)
+                      form)))
+
+(defn instruction?
+  [exp]
+  (u/typed-map? instruction-type exp))
