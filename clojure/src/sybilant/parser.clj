@@ -20,15 +20,27 @@
   (u/error "expected" (str (name expected) ",") "but was"
            (pr-str (u/form actual))))
 
-(defn arity-error
-  [type-name expected-count actual-count form]
-  (u/error (name type-name) "expects" expected-count "arguments, but got"
-           (str actual-count ":") (pr-str (u/form form))))
+(defn arguments-str
+  [expected-count]
+  (if (= 1 expected-count)
+    "argument,"
+    "arguments,"))
 
-(defn arity-error-at-least
-  [type-name expected-count actual-count form]
-  (u/error (name type-name) "expects at least" expected-count "arguments, but"
-           "got" (str actual-count ":") (pr-str (u/form form))))
+(defn check-arity
+  [type-name expected-count form]
+  (let [actual-count (dec (count form))]
+    (when-not (= expected-count actual-count)
+      (u/error (name type-name) "expects" expected-count
+               (arguments-str expected-count) "but got"
+               (str actual-count ":") (pr-str (u/form form))))))
+
+(defn check-arity-at-least
+  [type-name expected-count form]
+  (let [actual-count (dec (count form))]
+    (when-not (<= expected-count actual-count)
+      (u/error (name type-name) "expects at least" expected-count
+               (arguments-str expected-count) "but got"
+               (str actual-count ":") (pr-str (u/form form))))))
 
 (defn arg-type-error
   ([type-name arg-name expected-type actual]
@@ -117,10 +129,8 @@
   ([type-name type form]
      (check-int-type-form* type-name (:min type) (:max type) form))
   ([type-name type-min type-max form]
-     (let [form-count (dec (count form))
-           [_ min max] form]
-       (when-not (= 2 form-count)
-         (u/error (name type-name) "expects 2 arguments, but got" form-count))
+     (check-arity type-name 2 form)
+     (let [[_ min max] form]
        (when-not (int-form? min)
          (arg-type-error type-name :min :int min))
        (when-not (int-form? max)
@@ -1356,9 +1366,7 @@
   [form]
   (when-not (label-form? form)
     (syntax-error :label form))
-  (let [form-count (dec (count form))]
-    (when-not (= 1 form-count)
-      (arity-error :label 1 form-count form)))
+  (check-arity :label 1 form)
   (let [name-form (second form)]
     (when-not (symbol-form? name-form)
       (arg-type-error :label :name :symbol name-form form))
@@ -1406,9 +1414,7 @@
   [form]
   (when-not (defasm-form? form)
     (syntax-error :defasm form))
-  (let [form-count (dec (count form))]
-    (when-not (<= 2 form-count)
-      (arity-error-at-least :defasm 2 form-count form)))
+  (check-arity-at-least :defasm 2 form)
   (let [[_ name-form instruction-form & statement-forms] form]
     (when-not (symbol-form? name-form)
       (arg-type-error :defasm :name :symbol name-form))
@@ -1490,9 +1496,7 @@
   [form]
   (when-not (defdata-form? form)
     (syntax-error :defdata form))
-  (let [form-count (dec (count form))]
-    (when-not (<= 2 form-count)
-      (arity-error-at-least :defdata 2 form-count form)))
+  (check-arity-at-least :defdata 2 form)
   (let [[_ name-form & value-forms] form]
     (when-not (symbol-form? name-form)
       (arg-type-error :defdata :name :symbol name-form))
@@ -1523,9 +1527,7 @@
   [form]
   (when-not (defimport-form? form)
     (syntax-error :defimport form))
-  (let [form-count (dec (count form))]
-    (when-not (= 1 form-count)
-      (arity-error :defdata 1 form-count form)))
+  (check-arity :defdata 1 form)
   (let [[_ name-form] form]
     (make-defimport (parse-symbol name-form))))
 
