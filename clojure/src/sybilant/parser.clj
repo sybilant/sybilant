@@ -1504,3 +1504,31 @@
 (defn defdata?
   [exp]
   (u/typed-map? defdata-type exp))
+
+(def defimport-type (make-type :defimport))
+
+(defn defimport-form?
+  [form]
+  (u/tagged-list? 'defimport form))
+
+(defn make-defimport
+  ([name]
+     {:pre [(symbol? name)]}
+     {:type defimport-type :name name})
+  ([name form]
+     {:pre [(defimport-form? form)]}
+     (assoc-form (make-defimport name) form)))
+
+(defn parse-defimport
+  [form]
+  (when-not (defimport-form? form)
+    (syntax-error :defimport form))
+  (let [form-count (dec (count form))]
+    (when-not (= 1 form-count)
+      (arity-error :defdata 1 form-count form)))
+  (let [[_ name-form] form]
+    (make-defimport (parse-symbol name-form))))
+
+(defn defimport?
+  [exp]
+  (u/typed-map? defimport-type exp))
