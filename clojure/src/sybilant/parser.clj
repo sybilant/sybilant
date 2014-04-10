@@ -1342,8 +1342,7 @@
 
 (defn label-form?
   [form]
-  (and (list? form)
-       (= '%label (first form))))
+  (u/tagged-list? '%label form))
 
 (defn make-label
   ([name]
@@ -1390,8 +1389,7 @@
 
 (defn defasm-form?
   [form]
-  (and (list? form)
-       (= 'defasm (first form))))
+  (u/tagged-list? 'defasm form))
 
 (defn make-defasm
   ([name instruction statements]
@@ -1478,8 +1476,7 @@
 
 (defn defdata-form?
   [form]
-  (and (list? form)
-       (= 'defdata (first form))))
+  (u/tagged-list? 'defdata form))
 
 (defn make-defdata
   ([name values]
