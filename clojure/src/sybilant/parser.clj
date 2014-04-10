@@ -20,6 +20,16 @@
   (u/error "expected" (str (name expected) ",") "but was"
            (pr-str (u/form actual))))
 
+(defn arity-error
+  [type-name expected-count actual-count form]
+  (u/error (name type-name) "expects" expected-count "arguments, but got"
+           (str actual-count ":") (pr-str (u/form form))))
+
+(defn arity-error-at-least
+  [type-name expected-count actual-count form]
+  (u/error (name type-name) "expects at least" expected-count "arguments, but"
+           "got" (str actual-count ":") (pr-str (u/form form))))
+
 (defn arg-type-error
   ([type-name arg-name expected-type actual]
      (u/error (name type-name) "expects" (name arg-name) "to be"
@@ -1347,6 +1357,9 @@
   [form]
   (when-not (label-form? form)
     (syntax-error :label form))
+  (let [form-count (dec (count form))]
+    (when (not= 1 form-count)
+      (arity-error :label 1 form-count form)))
   (let [name-form (second form)]
     (when-not (symbol-form? name-form)
       (arg-type-error :label :name :symbol name-form form))
@@ -1355,3 +1368,72 @@
 (defn label?
   [exp]
   (u/typed-map? label-type exp))
+
+(defn statement-form?
+  [form]
+  (or (instruction-form? form) (label-form? form)))
+
+(defn parse-statement
+  [form]
+  (when-not (statement-form? form)
+    (syntax-error :statement form))
+  (cond
+   (instruction-form? form) (parse-instruction form)
+   (label-form? form) (parse-label form)))
+
+(defn statement?
+  [exp]
+  (or (instruction? exp)
+      (label? exp)))
+
+(def defasm-type (make-type :defasm))
+
+(defn defasm-form?
+  [form]
+  (and (list? form)
+       (= 'defasm (first form))))
+
+(defn make-defasm
+  ([name instruction statements]
+     {:pre [(symbol? name) (instruction? instruction)
+            (every? statement? statements)]}
+     (merge {:type defasm-type :name name :instruction instruction}
+            (when (seq statements)
+              {:statements statements})))
+  ([name instruction statements form]
+     {:pre [(defasm-form? form)]}
+     (assoc-form (make-defasm name instruction statements) form)))
+
+(defn parse-defasm
+  [form]
+  (when-not (defasm-form? form)
+    (syntax-error :defasm form))
+  (let [form-count (dec (count form))]
+    (when-not (<= 2 form-count)
+      (arity-error-at-least :defasm 2 form-count form)))
+  (let [[_ name-form instruction-form & statement-forms] form]
+    (when-not (symbol-form? name-form)
+      (arg-type-error :defasm :name :symbol name-form))
+    (when-not (instruction-form? instruction-form)
+      (u/error "defasm" name-form "expects first statement to be instruction,"
+               "but was" (pr-str instruction-form)))
+    (loop [label-form nil
+           [statement-form & statement-forms] statement-forms]
+      (when statement-form
+        (when-not (statement-form? statement-form)
+          (u/error "defasm" name-form "expects statement, but was"
+                   (pr-str statement-form)))
+        (when (and label-form (label-form? statement-form))
+          (u/error "defasm" name-form "expects label to be followed by"
+                   "instruction, but was" (pr-str label-form) "followed by"
+                   (pr-str statement-form)))
+        (recur (when (label-form? statement-form)
+                 statement-form)
+               statement-forms)))
+    (make-defasm (parse-symbol name-form)
+                 (parse-instruction instruction-form)
+                 (map parse-statement statement-forms))))
+
+(defn defasm?
+  [exp]
+  (u/typed-map? defasm-type exp))
