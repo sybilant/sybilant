@@ -1358,7 +1358,7 @@
   (when-not (label-form? form)
     (syntax-error :label form))
   (let [form-count (dec (count form))]
-    (when (not= 1 form-count)
+    (when-not (= 1 form-count)
       (arity-error :label 1 form-count form)))
   (let [name-form (second form)]
     (when-not (symbol-form? name-form)
@@ -1437,3 +1437,73 @@
 (defn defasm?
   [exp]
   (u/typed-map? defasm-type exp))
+
+(defn immediate-form?
+  [form]
+  (or (int8-form? form)
+      (int16-form? form)
+      (int32-form? form)
+      (int64-form? form)
+      (uint8-form? form)
+      (uint16-form? form)
+      (uint32-form? form)
+      (uint64-form? form)))
+
+(defn parse-immediate
+  [form]
+  (when-not (immediate-form? form)
+    (syntax-error :immediate form))
+  (cond
+   (int8-form? form) (parse-int8 form)
+   (int16-form? form) (parse-int16 form)
+   (int32-form? form) (parse-int32 form)
+   (int64-form? form) (parse-int64 form)
+   (uint8-form? form) (parse-uint8 form)
+   (uint16-form? form) (parse-uint16 form)
+   (uint32-form? form) (parse-uint32 form)
+   (uint64-form? form) (parse-uint64 form)))
+
+(defn immediate?
+  [exp]
+  (or (int8? exp)
+      (int16? exp)
+      (int32? exp)
+      (int64? exp)
+      (uint8? exp)
+      (uint16? exp)
+      (uint32? exp)
+      (uint64? exp)))
+
+(def defdata-type (make-type :defdata))
+
+(defn defdata-form?
+  [form]
+  (and (list? form)
+       (= 'defdata (first form))))
+
+(defn make-defdata
+  ([name values]
+     {:pre [(symbol? name) (every? immediate? values)]}
+     {:type defdata-type :name name :values values})
+  ([name values form]
+     {:pre [(defdata-form? form)]}
+     (assoc-form (make-defdata name values) form)))
+
+(defn parse-defdata
+  [form]
+  (when-not (defdata-form? form)
+    (syntax-error :defdata form))
+  (let [form-count (dec (count form))]
+    (when-not (<= 2 form-count)
+      (arity-error-at-least :defdata 2 form-count form)))
+  (let [[_ name-form & value-forms] form]
+    (when-not (symbol-form? name-form)
+      (arg-type-error :defdata :name :symbol name-form))
+    (doseq [value-form value-forms]
+      (when-not (immediate-form? value-form)
+        (arg-type-error :defdata :value :immediate value-form)))
+    (make-defdata (parse-symbol name-form) (map parse-immediate value-forms))))
+
+(defn defdata?
+  [exp]
+  (u/typed-map? defdata-type exp))
