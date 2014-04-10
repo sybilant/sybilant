@@ -1534,3 +1534,29 @@
 (defn defimport?
   [exp]
   (u/typed-map? defimport-type exp))
+
+(def defconst-type (make-type :defconst))
+
+(defn defconst-form?
+  [form]
+  (u/tagged-list? 'defconst form))
+
+(defn make-defconst
+  ([name value]
+     {:pre [(symbol? name) (immediate? value)]}
+     {:type defconst-type :name name :value value})
+  ([name value form]
+     {:pre [(defconst-form? form)]}
+     (assoc-form (make-defconst name value) form)))
+
+(defn parse-defconst
+  [form]
+  (when-not (defconst-form? form)
+    (syntax-error :defconst form))
+  (check-arity :defconst 2 form)
+  (let [[_ name-form value-form] form]
+    (make-defconst (parse-symbol name-form) (parse-immediate value-form))))
+
+(defn defconst?
+  [exp]
+  (u/typed-map? defconst-type exp))
