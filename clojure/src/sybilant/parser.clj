@@ -156,7 +156,7 @@
     (syntax-error :int-type form))
   (cond
    (= 'int form)
-   int-type
+   (assoc-form int-type form)
    (int-form? form)
    (let [exp (parse-int form)]
      (assoc-form (make-int-type exp exp) form))
@@ -223,7 +223,7 @@
     (syntax-error :int8-type form))
   (cond
    (= 'int8 form)
-   int8-type
+   (assoc-form int8-type form)
    (int8-form? form)
    (let [exp (coerce-int form)]
      (make-int8-type exp exp form))
@@ -290,7 +290,7 @@
     (syntax-error :int16-type form))
   (cond
    (= 'int16 form)
-   int16-type
+   (assoc-form int16-type form)
    (int16-form? form)
    (let [exp (coerce-int form)]
      (make-int16-type exp exp form))
@@ -357,7 +357,7 @@
     (syntax-error :int32-type form))
   (cond
    (= 'int32 form)
-   int32-type
+   (assoc-form int32-type form)
    (int32-form? form)
    (let [exp (coerce-int form)]
      (make-int32-type exp exp form))
@@ -431,7 +431,7 @@
     (syntax-error :int64-type form))
   (cond
    (= 'int64 form)
-   int64-type
+   (assoc-form int64-type form)
    (int64-form? form)
    (let [exp (coerce-int form)]
      (make-int64-type exp exp form))
@@ -515,7 +515,7 @@
     (syntax-error :uint8-type form))
   (cond
    (= 'uint8 form)
-   uint8-type
+   (assoc-form uint8-type form)
    (uint8-form? form)
    (let [exp (coerce-int form)]
      (make-uint8-type exp exp form))
@@ -590,7 +590,7 @@
     (syntax-error :uint16-type form))
   (cond
    (= 'uint16 form)
-   uint16-type
+   (assoc-form uint16-type form)
    (uint16-form? form)
    (let [exp (coerce-int form)]
      (make-uint16-type exp exp form))
@@ -665,7 +665,7 @@
     (syntax-error :uint32-type form))
   (cond
    (= 'uint32 form)
-   uint32-type
+   (assoc-form uint32-type form)
    (uint32-form? form)
    (let [exp (coerce-int form)]
      (make-uint32-type exp exp form))
@@ -738,7 +738,7 @@
     (syntax-error :uint64-type form))
   (cond
    (= 'uint64 form)
-   uint64-type
+   (assoc-form uint64-type form)
    (uint64-form? form)
    (let [exp (coerce-int form)]
      (make-uint64-type exp exp form))
