@@ -28,6 +28,13 @@
   [t obj]
   (and (map? obj) (= t (:type obj))))
 
+(defn type?
+  ([obj]
+     (typed-map? :type obj))
+  ([name obj]
+     (and (type? obj)
+          (= name (:name obj)))))
+
 (defn tagged-list?
   [t obj]
   (and (list? obj) (= t (first obj))))

@@ -75,10 +75,6 @@
   [name]
   {:type :type :name name})
 
-(defn type?
-  [obj]
-  (u/typed-map? :type obj))
-
 (def int-type (make-type :int))
 
 (def ^:const +uint64-max-value+ (inc' (*' 2 Long/MAX_VALUE)))
@@ -164,6 +160,13 @@
    (let [[min max] (check-int-type-form form)]
      (assoc-form (make-int-type (parse-int min) (parse-int max)) form))))
 
+(defn int-type?
+  ([exp]
+     (u/type? :int exp))
+  ([width exp]
+     (and (int-type? exp)
+          (= width (u/width exp)))))
+
 (def int8-type (-> (make-int-type (coerce-int Byte/MIN_VALUE)
                                   (coerce-int Byte/MAX_VALUE))
                    (assoc-form 'int8)
@@ -230,6 +233,8 @@
    :else
    (let [[min max] (check-int8-type-form form)]
      (make-int8-type (parse-int min) (parse-int max) form))))
+
+(def int8-type? (partial int-type? 8))
 
 (def int16-type (-> (make-int-type (coerce-int Short/MIN_VALUE)
                                    (coerce-int Short/MAX_VALUE))
@@ -298,6 +303,8 @@
    (let [[min max] (check-int16-type-form form)]
      (make-int16-type (parse-int min) (parse-int max) form))))
 
+(def int16-type? (partial int-type? 16))
+
 (def int32-type (-> (make-int-type (coerce-int Integer/MIN_VALUE)
                                    (coerce-int Integer/MAX_VALUE))
                     (assoc :width 32)
@@ -364,6 +371,8 @@
    :else
    (let [[min max] (check-int32-type-form form)]
      (make-int32-type (parse-int min) (parse-int max) form))))
+
+(def int32-type? (partial int-type? 32))
 
 (defrecord Int64
     [form]
@@ -439,7 +448,14 @@
    (let [[min max] (check-int64-type-form form)]
      (make-int64-type (parse-int min) (parse-int max) form))))
 
+(def int64-type? (partial int-type? 64))
+
 (def uint-type (assoc int-type :unsigned true))
+
+(defn uint-type?
+  [width exp]
+  (and (int-type? width exp)
+       (:unsigned exp)))
 
 (defn make-uint-type
   [min max]
@@ -523,6 +539,8 @@
    (let [[min max] (check-uint8-type-form form)]
      (make-uint8-type (parse-int min) (parse-int max) form))))
 
+(def uint8-type? (partial uint-type? 8))
+
 (defrecord Uint16
     [form]
   Object
@@ -597,6 +615,8 @@
    :else
    (let [[min max] (check-uint16-type-form form)]
      (make-uint16-type (parse-int min) (parse-int max) form))))
+
+(def uint16-type? (partial uint-type? 16))
 
 (defrecord Uint32
     [form]
@@ -673,6 +693,8 @@
    (let [[min max] (check-uint32-type-form form)]
      (make-uint32-type (parse-int min) (parse-int max) form))))
 
+(def uint32-type? (partial uint-type? 32))
+
 (defrecord Uint64
     [form]
   Object
@@ -746,6 +768,8 @@
    (let [[min max] (check-uint64-type-form form)]
      (make-uint64-type (parse-int min) (parse-int max) form))))
 
+(def uint64-type? (partial uint-type? 64))
+
 (defn integer-form?
   [form]
   (or (int-form? form)
@@ -787,10 +811,7 @@
 
 (def register-type (make-type :register))
 
-(defn reg-type?
-  [exp]
-  (and (type? exp)
-       (= :register (:name exp))))
+(def reg-type? (partial u/type? :register))
 
 (def reg8-type (assoc register-type :width 8))
 
@@ -923,10 +944,7 @@
 
 (def mem-type (make-type :mem))
 
-(defn mem-type?
-  [exp]
-  (and (type? exp)
-       (= :mem (:name exp))))
+(def mem-type? (partial u/type? :mem))
 
 (defn make-mem
   [type base index scale disp]
