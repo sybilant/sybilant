@@ -7,21 +7,26 @@
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.compiler
-  (:refer-clojure :exclude [compile])
+  (:refer-clojure :exclude [compile read])
   (:require [clojure.java.io :as io]
+            [clojure.tools.reader :refer [read]]
+            [clojure.tools.reader.reader-types :refer
+             [indexing-push-back-reader]]
             [sybilant.analyzer :refer [analyze]]
             [sybilant.emitter :refer [emit]]
             [sybilant.optimizer :refer [optimize]]
             [sybilant.parser :refer [parse]])
-  (:import (clojure.lang LineNumberingPushbackReader)))
+  (:import (java.io FileInputStream InputStreamReader PushbackReader)))
 
 (defn read-all
   [infile options]
   (with-open [in (-> infile
-                     (io/reader :encoding "UTF-8")
-                     LineNumberingPushbackReader.)]
-    (doall (take-while (complement (partial = ::eof))
-                       (repeatedly #(read in false ::eof))))))
+                     FileInputStream.
+                     (InputStreamReader. "UTF-8")
+                     PushbackReader.)]
+    (let [in (indexing-push-back-reader in 1 infile)]
+      (doall (take-while (complement (partial = ::eof))
+                         (repeatedly #(read in false ::eof)))))))
 
 (defn compile
   [form options]

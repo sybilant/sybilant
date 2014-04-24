@@ -4,7 +4,8 @@
   :url "http://github.com/sybilant/sybilant/"
   :license {:name "Mozilla Public License, v. 2.0"
             :url "http://mozilla.org/MPL/2.0/"}
-  :dependencies [[org.clojure/clojure "1.6.0"]]
+  :dependencies [[org.clojure/clojure "1.6.0"]
+                 [org.clojure/tools.reader "0.8.4"]]
   :source-paths ["clojure/src"]
   :test-paths ["clojure/test"]
   :aot [sybilant.compile])
