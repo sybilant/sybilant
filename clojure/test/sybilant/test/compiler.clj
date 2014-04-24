@@ -33,6 +33,7 @@
 (deftest test-compile-and-emit-all
   (let [forms [(defasm foo
                  (%mov %rax (%mem64 1))
+                 (%jmp bar)
                  (%label bar)
                  (%add %rax 1))]]
     (is (= (map pr-str forms)
