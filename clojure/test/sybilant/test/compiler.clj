@@ -9,7 +9,8 @@
 (ns sybilant.test.compiler
   (:refer-clojure :exclude [compile])
   (:require [clojure.test :refer :all]
-            [sybilant.compiler :refer :all]))
+            [sybilant.compiler :refer :all]
+            [sybilant.parser :refer [parse-top-level]]))
 
 (defn compile-and-emit-all
   [forms]
@@ -17,24 +18,38 @@
       (compile-all {})
       (emit-all {})))
 
-(defmacro defasm [& body]
-  `(list '~'defasm
+(defmacro %deftext [& body]
+  `(list '~'%deftext
          ~@(for [exp body]
              `'~exp)))
 
-(deftest test-defasm-macro
-  (is (= '(defasm foo
-            (%add %rax 1)
-            (%sub %rax 1))
-         (defasm foo
-           (%add %rax 1)
-           (%sub %rax 1)))))
+(deftest test-deftext-macro
+  (is (= '(%deftext (%label foo)
+            (%mov %rax (%mem64 1))
+            (%jmp bar)
+            (%label bar)
+            (%add %rax 1))
+         (%deftext (%label foo)
+           (%mov %rax (%mem64 1))
+           (%jmp bar)
+           (%label bar)
+           (%add %rax 1)))))
+
+(defmacro %defdata [name & values]
+  `(list '~'%defdata '~name ~@(for [value values] `'~value)))
+
+(deftest test-defdata-macro
+  (is (= '(%defdata (%label foo) #sint8 1 #sint8 2)
+         (%defdata (%label foo) #sint8 1 #sint8 2))))
 
 (deftest test-compile-and-emit-all
-  (let [forms [(defasm foo
+  (let [forms [(%deftext (%label malloc))
+               (%defdata (%label PI))
+               (%deftext (%label foo)
                  (%mov %rax (%mem64 1))
                  (%jmp bar)
                  (%label bar)
-                 (%add %rax 1))]]
-    (is (= (map pr-str forms)
+                 (%add %rax 1))
+               (%defdata (%label foo) #sint8 1 #sint8 2)]]
+    (is (= (map (comp pr-str parse-top-level) forms)
            (compile-and-emit-all forms)))))
