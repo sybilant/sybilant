@@ -36,7 +36,9 @@
        "")))
 
 (defn compiling [form]
-  (format " (compiling %s)" (loc form)))
+  (if-let [loc (not-empty (loc form))]
+    (format " (compiling %s)" loc)
+    ""))
 
 (defn syntax-error
   [expected actual]
