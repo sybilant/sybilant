@@ -10,13 +10,8 @@
   (:refer-clojure :exclude [symbol?])
   (:require [clojure.core :as clj]
             [clojure.java.io :as io]
-            [sybilant.types :refer :all]))
-
-(defn maybe [pred]
-  (fn [x] (or (nil? x) (pred x))))
-
-(defn implies [p q]
-  (or (not p) q))
+            [sybilant.types :refer :all]
+            [sybilant.utils :refer :all]))
 
 (defn merge-form
   [exp form]
@@ -36,26 +31,6 @@
 
 (defn form= [f exp]
   (= f (form exp)))
-
-(defn error
-  [msg & args]
-  (throw (Exception. (apply format msg args))))
-
-(defn loc
-  ([form]
-     (let [{:keys [file line column]} (meta form)]
-       (loc file line column)))
-  ([file line column]
-     (if (and file line)
-       (if column
-         (format " (compiling %s at %s:%s)" file line column)
-         (format " (compiling %s at %s)" file line))
-       "")))
-
-(defn syntax-error
-  [expected actual]
-  (error "Expected %s, but was %s%s" (name expected) (pr-str (form actual))
-         (loc actual)))
 
 (defn symbol-form?
   [form]
@@ -94,7 +69,8 @@
   (let [[_ symbol-form] form
         form-count (dec (count form))]
     (when (not= form-count 1)
-      (error "%%label expects 1 argument, but got %s%s" form-count (loc form)))
+      (error "%%label expects 1 argument, but got %s%s" form-count
+             (compiling form)))
     (when-not (symbol-form? symbol-form)
       (syntax-error :symbol symbol-form))
     (make-label (parse-symbol symbol-form) form)))
@@ -487,7 +463,7 @@
          [a b c d])
      :else
      (error "%s expects between 1 to 4 arguments, but got %s%s" (name form-name)
-            form-count (loc form)))))
+            form-count (compiling form)))))
 
 (defn parse-mem-args
   [form]
@@ -617,7 +593,7 @@
         form-count (dec (count form))]
     (when-not (>= form-count 1)
       (error "instruction expects at least 1 argument, but got %s%s" form-count
-             (loc form)))
+             (compiling form)))
     (when-not (operator-form? operator-form)
       (syntax-error :operator operator-form))
     (doseq [operand-form operand-forms]
@@ -671,7 +647,7 @@
         form-count (dec (count form))]
     (when-not (>= form-count 1)
       (error "%%deftext expects at least 1 argument, but got %s%s" form-count
-             (loc form)))
+             (compiling form)))
     (when-not (label-form? label-form)
       (syntax-error :label label-form))
     (when (seq statement-forms)
@@ -683,14 +659,14 @@
           (error (str "%%deftext expects an instruction to follow a label,"
                       " but got %s%s")
                  (pr-str statement-form)
-                 (loc statement-form)))
+                 (compiling statement-form)))
         (if (seq statement-forms)
           (recur statement-forms (label-form? statement-form))
           (when-not (instruction-form? statement-form)
             (error (str "%%deftext expects instruction as last statement,"
                         " but got %s%s")
                    (pr-str statement-form)
-                   (loc statement-form))))))
+                   (compiling statement-form))))))
     (make-deftext (parse-label label-form)
                   (map parse-statement statement-forms)
                   form)))
@@ -716,7 +692,7 @@
         form-count (dec (count form))]
     (when-not (>= form-count 1)
       (error "%%defdata expects at least 1 argument, but got %s%s" form-count
-             (loc form)))
+             (compiling form)))
     (when-not (label-form? label-form)
       (syntax-error :label label-form))
     (doseq [value-form value-forms]

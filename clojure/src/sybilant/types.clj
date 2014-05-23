@@ -7,13 +7,8 @@
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.types
-  (:refer-clojure :exclude [symbol?]))
-
-(defn form
-  [obj]
-  (or (:form (meta obj))
-      (:form obj)
-      obj))
+  (:refer-clojure :exclude [symbol?])
+  (:require [sybilant.utils :refer :all]))
 
 (defn type?
   ([obj]
