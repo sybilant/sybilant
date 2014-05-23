@@ -9,7 +9,8 @@
 (ns sybilant.parser
   (:refer-clojure :exclude [symbol?])
   (:require [clojure.core :as clj]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [sybilant.types :refer :all]))
 
 (defn maybe [pred]
   (fn [x] (or (nil? x) (pred x))))
@@ -32,28 +33,6 @@
   [obj tag]
   (and (list? obj)
        (= tag (first obj))))
-
-(defn make-type
-  [name]
-  {:type :type :name name})
-
-(defn type?
-  ([obj]
-     (= :type (:type obj)))
-  ([obj name]
-     (and (type? obj)
-          (= name (:name obj)))))
-
-(defn typed-map?
-  [obj t]
-  (and (type? t)
-       (= t (:type obj))))
-
-(defn form
-  [obj]
-  (or (:form (meta obj))
-      (:form obj)
-      obj))
 
 (defn form= [f exp]
   (= f (form exp)))
@@ -78,15 +57,9 @@
   (error "Expected %s, but was %s%s" (name expected) (pr-str (form actual))
          (loc actual)))
 
-(def symbol-type (make-type :symbol))
-
 (defn symbol-form?
   [form]
   (and (clj/symbol? form) (not= \% (first (name form)))))
-
-(defn symbol?
-  [exp]
-  (typed-map? exp symbol-type))
 
 (defn make-symbol
   [form]
@@ -100,15 +73,9 @@
    :post [(symbol? %) (form= form %)]}
   (make-symbol form))
 
-(def label-type (make-type :label))
-
 (defn label-form?
   [form]
   (tagged-list? form '%label))
-
-(defn label?
-  [exp]
-  (typed-map? exp label-type))
 
 (defn make-label
   ([name]
@@ -138,8 +105,6 @@
 
 (declare reg-form?)
 
-(def operator-type (make-type :operator))
-
 (defn operator-form?
   [form]
   (and (asm-symbol-form? form)
@@ -147,10 +112,6 @@
        (not= '%label form)
        (not= '%deftext form)
        (not= '%defdata form)))
-
-(defn operator?
-  [exp]
-  (typed-map? exp operator-type))
 
 (defn make-operator
   [form]
@@ -164,40 +125,11 @@
    :post [(operator? %) (form= form %)]}
   (make-operator form))
 
-(def ^:const +uint64-max-value+ (inc' (*' Long/MAX_VALUE 2)))
-
-(def int-type (assoc (make-type :int)
-                :min Long/MIN_VALUE
-                :max +uint64-max-value+))
-
-(defn int-form?
-  [form]
-  (and (or (instance? Long form)
-           (instance? clojure.lang.BigInt form)
-           (instance? BigInteger form))
-       (<= Long/MIN_VALUE form +uint64-max-value+)))
-
-(defn int-type?
-  [exp]
-  (type? exp :int))
-
-(defn make-int-type
-  [min max]
-  {:pre [(int-form? (long min)) (int-form? (long max))]
-   :post [(int-type? %)]}
-  (assoc int-type :min min :max max))
-
-(defn int?
-  [exp]
-  (typed-map? exp int-type))
-
 (defn parse-int
   [form]
   {:pre [(int-form? form)]
    :post [(int? %)]}
   {:type int-type :form form})
-
-(def sint-type (make-type :sint))
 
 (defn read-sint8
   [form]
@@ -210,12 +142,6 @@
 (defn sint8-form?
   [form]
   (instance? Byte form))
-
-(def sint8-type (assoc sint-type :min Byte/MIN_VALUE :max Byte/MAX_VALUE))
-
-(defn sint8?
-  [exp]
-  (typed-map? exp sint8-type))
 
 (defn parse-sint8
   [form]
@@ -235,12 +161,6 @@
   [form]
   (instance? Short form))
 
-(def sint16-type (assoc sint-type :min Short/MIN_VALUE :max Short/MAX_VALUE))
-
-(defn sint16?
-  [exp]
-  (typed-map? exp sint16-type))
-
 (defn parse-sint16
   [form]
   {:pre [(sint16-form? form)]
@@ -258,14 +178,6 @@
 (defn sint32-form?
   [form]
   (instance? Integer form))
-
-(def sint32-type (assoc sint-type
-                   :min Integer/MIN_VALUE
-                   :max Integer/MAX_VALUE))
-
-(defn sint32?
-  [exp]
-  (typed-map? exp sint32-type))
 
 (defn parse-sint32
   [form]
@@ -290,12 +202,6 @@
   [form]
   (instance? Sint64 form))
 
-(def sint64-type (assoc sint-type :min Long/MIN_VALUE :max Long/MAX_VALUE))
-
-(defn sint64?
-  [exp]
-  (typed-map? exp sint64-type))
-
 (defn parse-sint64
   [form]
   {:pre [(sint64-form? form)]
@@ -307,10 +213,6 @@
   (or (sint8-form? form) (sint16-form? form) (sint32-form? form)
       (sint64-form? form)))
 
-(defn sint?
-  [exp]
-  (or (sint8? exp) (sint16? exp) (sint32? exp) (sint64? exp)))
-
 (defn parse-sint
   [form]
   {:pre [(sint-form? form)]
@@ -320,10 +222,6 @@
    (sint16-form? form) (parse-sint16 form)
    (sint32-form? form) (parse-sint32 form)
    (sint64-form? form) (parse-sint64 form)))
-
-(def uint-type (assoc (make-type :uint) :min 0))
-
-(def ^:const +uint8-max-value+ (inc' (*' Byte/MAX_VALUE 2)))
 
 (defrecord Uint8 [form]
   Object
@@ -342,19 +240,11 @@
   [form]
   (instance? Uint8 form))
 
-(def uint8-type (assoc uint-type :max +uint8-max-value+))
-
-(defn uint8?
-  [exp]
-  (typed-map? exp uint8-type))
-
 (defn parse-uint8
   [form]
   {:pre [(uint8-form? form)]
    :post [(uint8? %)]}
   {:type uint8-type :form (:form form)})
-
-(def ^:const +uint16-max-value+ (inc' (*' Short/MAX_VALUE 2)))
 
 (defrecord Uint16 [form]
   Object
@@ -373,19 +263,11 @@
   [form]
   (instance? Uint16 form))
 
-(def uint16-type (assoc uint-type :max +uint16-max-value+))
-
-(defn uint16?
-  [exp]
-  (typed-map? exp uint16-type))
-
 (defn parse-uint16
   [form]
   {:pre [(uint16-form? form)]
    :post [(uint16? %)]}
   {:type uint16-type :form (:form form)})
-
-(def ^:const +uint32-max-value+ (inc' (*' Integer/MAX_VALUE 2)))
 
 (defrecord Uint32 [form]
   Object
@@ -403,12 +285,6 @@
 (defn uint32-form?
   [form]
   (instance? Uint32 form))
-
-(def uint32-type (assoc uint-type :max +uint32-max-value+))
-
-(defn uint32?
-  [exp]
-  (typed-map? exp uint32-type))
 
 (defn parse-uint32
   [form]
@@ -433,12 +309,6 @@
   [form]
   (instance? Uint64 form))
 
-(def uint64-type (assoc uint-type :max +uint64-max-value+))
-
-(defn uint64?
-  [exp]
-  (typed-map? exp uint64-type))
-
 (defn parse-uint64
   [form]
   {:pre [(uint64-form? form)]
@@ -449,10 +319,6 @@
   [form]
   (or (uint8-form? form) (uint16-form? form) (uint32-form? form)
       (uint64-form? form)))
-
-(defn uint?
-  [exp]
-  (or (uint8? exp) (uint16? exp) (uint32? exp) (uint64? exp)))
 
 (defn parse-uint
   [form]
@@ -468,10 +334,6 @@
   [form]
   (or (sint-form? form) (uint-form? form)))
 
-(defn precise-literal?
-  [exp]
-  (or (sint? exp) (uint? exp)))
-
 (defn parse-precise-literal
   [form]
   {:pre [(precise-literal-form? form)]
@@ -484,10 +346,6 @@
   [form]
   (or (int-form? form) (precise-literal-form? form)))
 
-(defn literal?
-  [exp]
-  (or (int? exp) (precise-literal? exp)))
-
 (defn parse-literal
   [form]
   {:pre [(literal-form? form)]
@@ -495,36 +353,6 @@
   (cond
    (int-form? form) (parse-int form)
    (precise-literal-form? form) (parse-precise-literal form)))
-
-(def reg-type (make-type :reg))
-
-(def reg8-type (merge reg-type {:sint sint8-type :uint uint8-type
-                                :int (make-int-type 0 (:max sint8-type))}))
-
-(defn reg8?
-  [exp]
-  (typed-map? exp reg8-type))
-
-(def reg16-type (merge reg-type {:sint sint16-type :uint uint16-type
-                                 :int (make-int-type 0 (:max sint16-type))}))
-
-(defn reg16?
-  [exp]
-  (typed-map? exp reg16-type))
-
-(def reg32-type (merge reg-type {:sint sint32-type :uint uint32-type
-                                 :int (make-int-type 0 (:max sint32-type))}))
-
-(defn reg32?
-  [exp]
-  (typed-map? exp reg32-type))
-
-(def reg64-type (merge reg-type {:sint sint64-type :uint uint64-type
-                                 :int (make-int-type 0 (:max sint64-type))}))
-
-(defn reg64?
-  [exp]
-  (typed-map? exp reg64-type))
 
 (def registers (-> (io/resource "sybilant/registers.clj")
                    slurp
@@ -535,29 +363,15 @@
   [form]
   (contains? registers form))
 
-(defn reg?
-  [exp]
-  (or (reg8? exp) (reg16? exp) (reg32? exp) (reg64? exp)))
-
 (defn parse-reg
   [form]
   {:pre [(reg-form? form)]
    :post [(reg? %)]}
   (assoc-form (get registers form) form))
 
-(def mem-type (make-type :mem))
-
-(defn mem-type?
-  [exp]
-  (type? exp :mem))
-
 (defn base-form?
   [form]
   (reg-form? form))
-
-(defn base?
-  [exp]
-  (reg? exp))
 
 (defn parse-base
   [form]
@@ -569,23 +383,11 @@
   [form]
   (reg-form? form))
 
-(defn index?
-  [exp]
-  (reg? exp))
-
 (defn parse-index
   [form]
   {:pre [(index-form? form)]
    :post [(index? %)]}
   (parse-reg form))
-
-(defn scale-form?
-  [form]
-  (contains? #{1 2 4 8} form))
-
-(defn scale?
-  [exp]
-  (scale-form? (form exp)))
 
 (defn parse-scale
   [form]
@@ -597,17 +399,13 @@
   [form]
   (literal-form? form))
 
-(defn disp?
-  [exp]
-  (literal? exp))
-
 (defn parse-disp
   [form]
   {:pre [(disp-form? form)]
    :post [(disp? %)]}
   (parse-literal form))
 
-(declare mem-form? mem?)
+(declare mem-form?)
 
 (defn verify-args
   [base index scale disp]
@@ -636,13 +434,6 @@
 (defn mem8-form?
   [form]
   (tagged-list? form '%mem8))
-
-(def mem8-type (merge mem-type {:sint sint8-type :uint uint8-type
-                                :int (make-int-type 0 (:max sint8-type))}))
-
-(defn mem8?
-  [exp]
-  (typed-map? exp mem8-type))
 
 (defn make-mem8
   [base index scale disp form]
@@ -723,13 +514,6 @@
   [form]
   (tagged-list? form '%mem16))
 
-(def mem16-type (merge mem-type {:sint sint16-type :uint uint16-type
-                                 :int (make-int-type 0 (:max sint16-type))}))
-
-(defn mem16?
-  [exp]
-  (typed-map? exp mem16-type))
-
 (defn make-mem16
   [base index scale disp form]
   {:pre [(verify-args base index scale disp) (mem16-form? form)]
@@ -747,13 +531,6 @@
   [form]
   (tagged-list? form '%mem32))
 
-(def mem32-type (merge mem-type {:sint sint32-type :uint uint32-type
-                                 :int (make-int-type 0 (:max sint32-type))}))
-
-(defn mem32?
-  [exp]
-  (typed-map? exp mem32-type))
-
 (defn make-mem32
   [base index scale disp form]
   {:pre [(verify-args base index scale disp) (mem32-form? form)]
@@ -770,13 +547,6 @@
 (defn mem64-form?
   [form]
   (tagged-list? form '%mem64))
-
-(def mem64-type (merge mem-type {:sint sint64-type :uint uint64-type
-                                 :int (make-int-type 0 (:max sint64-type))}))
-
-(defn mem64?
-  [exp]
-  (typed-map? exp mem64-type))
 
 (defn make-mem64
   [base index scale disp form]
@@ -796,10 +566,6 @@
   (or (mem8-form? form) (mem16-form? form) (mem32-form? form)
       (mem64-form? form)))
 
-(defn mem?
-  [exp]
-  (or (mem8? exp) (mem16? exp) (mem32? exp) (mem64? exp)))
-
 (defn parse-mem
   [form]
   {:pre [(mem-form? form)]
@@ -815,10 +581,6 @@
   (or (literal-form? form) (symbol-form? form) (reg-form? form)
       (mem-form? form)))
 
-(defn operand?
-  [exp]
-  (or (literal? exp) (symbol? exp) (reg? exp) (mem? exp)))
-
 (defn parse-operand
   [form]
   {:pre [(operand-form? form)]
@@ -831,8 +593,6 @@
 
 (declare deftext-form? defdata-form?)
 
-(def instruction-type (make-type :instruction))
-
 (defn instruction-form?
   [form]
   (and (list? form)
@@ -840,10 +600,6 @@
        (not (mem-form? form))
        (not (deftext-form? form))
        (not (defdata-form? form))))
-
-(defn instruction?
-  [exp]
-  (typed-map? exp instruction-type))
 
 (defn make-instruction
   [operator operands form]
@@ -875,10 +631,6 @@
   [form]
   (or (label-form? form) (instruction-form? form)))
 
-(defn statement?
-  [exp]
-  (or (label? exp) (instruction? exp)))
-
 (defn parse-statement
   [form]
   {:pre [(statement-form? form)]
@@ -887,15 +639,9 @@
     (parse-label form)
     (parse-instruction form)))
 
-(def deftext-type (make-type :deftext))
-
 (defn deftext-form?
   [form]
   (tagged-list? form '%deftext))
-
-(defn deftext?
-  [exp]
-  (typed-map? exp deftext-type))
 
 (defn valid-statements
   [statements]
@@ -953,12 +699,6 @@
   [form]
   (tagged-list? form '%defdata))
 
-(def defdata-type (make-type :defdata))
-
-(defn defdata?
-  [exp]
-  (typed-map? exp defdata-type))
-
 (defn make-defdata
   [label values form]
   {:pre [(label? label) (every? precise-literal? values) (defdata-form? form)]
@@ -989,10 +729,6 @@
 (defn top-level-form?
   [form]
   (or (deftext-form? form) (defdata-form? form)))
-
-(defn top-level?
-  [exp]
-  (or (deftext? exp) (defdata? exp)))
 
 (defn parse-top-level
   [form]
