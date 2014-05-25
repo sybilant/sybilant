@@ -149,28 +149,32 @@
 
 (def reg-type (make-type :reg))
 
-(def reg8-type (merge reg-type {:sint sint8-type :uint uint8-type
+(def reg8-type (merge reg-type {:width 8
+                                :sint sint8-type :uint uint8-type
                                 :int (make-int-type 0 (:max sint8-type))}))
 
 (defn reg8?
   [exp]
   (typed-map? exp reg8-type))
 
-(def reg16-type (merge reg-type {:sint sint16-type :uint uint16-type
+(def reg16-type (merge reg-type {:width 16
+                                 :sint sint16-type :uint uint16-type
                                  :int (make-int-type 0 (:max sint16-type))}))
 
 (defn reg16?
   [exp]
   (typed-map? exp reg16-type))
 
-(def reg32-type (merge reg-type {:sint sint32-type :uint uint32-type
+(def reg32-type (merge reg-type {:width 32
+                                 :sint sint32-type :uint uint32-type
                                  :int (make-int-type 0 (:max sint32-type))}))
 
 (defn reg32?
   [exp]
   (typed-map? exp reg32-type))
 
-(def reg64-type (merge reg-type {:sint sint64-type :uint uint64-type
+(def reg64-type (merge reg-type {:width 64
+                                 :sint sint64-type :uint uint64-type
                                  :int (make-int-type 0 (:max sint64-type))}))
 
 (defn reg64?
@@ -207,28 +211,32 @@
   [exp]
   (type? exp :mem))
 
-(def mem8-type (merge mem-type {:sint sint8-type :uint uint8-type
+(def mem8-type (merge mem-type {:width 8
+                                :sint sint8-type :uint uint8-type
                                 :int (make-int-type 0 (:max sint8-type))}))
 
 (defn mem8?
   [exp]
   (typed-map? exp mem8-type))
 
-(def mem16-type (merge mem-type {:sint sint16-type :uint uint16-type
+(def mem16-type (merge mem-type {:width 16
+                                 :sint sint16-type :uint uint16-type
                                  :int (make-int-type 0 (:max sint16-type))}))
 
 (defn mem16?
   [exp]
   (typed-map? exp mem16-type))
 
-(def mem32-type (merge mem-type {:sint sint32-type :uint uint32-type
+(def mem32-type (merge mem-type {:width 32
+                                 :sint sint32-type :uint uint32-type
                                  :int (make-int-type 0 (:max sint32-type))}))
 
 (defn mem32?
   [exp]
   (typed-map? exp mem32-type))
 
-(def mem64-type (merge mem-type {:sint sint64-type :uint uint64-type
+(def mem64-type (merge mem-type {:width 64
+                                 :sint sint64-type :uint uint64-type
                                  :int (make-int-type 0 (:max sint64-type))}))
 
 (defn mem64?

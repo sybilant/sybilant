@@ -53,4 +53,5 @@
            exps (doall (compile-all forms options))]
        (with-open [out (io/writer outfile :encoding "UTF-8")]
          (doseq [str (emit-all exps options)]
-           (.write out str))))))
+           (.write out str)
+           (.write out "\n"))))))

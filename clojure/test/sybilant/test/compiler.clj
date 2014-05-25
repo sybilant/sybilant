@@ -8,15 +8,17 @@
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.test.compiler
   (:refer-clojure :exclude [compile])
-  (:require [clojure.test :refer :all]
+  (:require [clojure.string :as str]
+            [clojure.test :refer :all]
             [sybilant.compiler :refer :all]
             [sybilant.parser :refer [parse-top-level]]))
 
 (defn compile-and-emit-all
   [forms]
-  (-> forms
-      (compile-all {})
-      (emit-all {})))
+  (str/join "\n"
+            (-> forms
+                (compile-all {})
+                (emit-all {}))))
 
 (defmacro %deftext [& body]
   `(list '~'%deftext
@@ -50,6 +52,17 @@
                  (%jmp bar)
                  (%label bar)
                  (%add %rax 1))
-               (%defdata (%label foo) #sint8 1 #sint8 2)]]
-    (is (= (map (comp pr-str parse-top-level) forms)
+               (%defdata (%label bar) #sint8 1 #uint8 2)]]
+    (is (= "extern malloc
+extern PI
+global foo
+foo:
+mov rax, qword [1]
+jmp bar
+.bar:
+add rax, 1
+global bar
+bar:
+db 1
+db 2"
            (compile-and-emit-all forms)))))
