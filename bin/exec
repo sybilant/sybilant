@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+basedir=$(dirname $0)
+$basedir/build $1 &&
+exec $basedir/../target/sybilant.exe

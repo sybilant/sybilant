@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+lein compile
+bin_file=$(dirname $0)/../target/sybilant
+asm_file=$bin_file.asm
+object_file=$bin_file.o
+bin_file=$bin_file.exe
+if [ ! -z "$debug" ]; then
+    debug=-d
+fi
+lein trampoline run -m sybilant.compile -f $debug -o $asm_file $@ &&
+yasm -g dwarf2 -f elf64 -o $object_file $asm_file &&
+ld -dynamic-linker /lib64/ld-linux-x86-64.so.2 -lc -o $bin_file $object_file
