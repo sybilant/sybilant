@@ -111,7 +111,7 @@
   [form]
   (unchecked-byte form))
 
-(defmethod print-method Byte [exp writer]
+(defmethod print-method Byte [exp ^java.io.Writer writer]
   (.write writer "#sint8 ")
   (.write writer (str exp)))
 
@@ -129,7 +129,7 @@
   [form]
   (unchecked-short form))
 
-(defmethod print-method Short [exp writer]
+(defmethod print-method Short [exp ^java.io.Writer writer]
   (.write writer "#sint16 ")
   (.write writer (str exp)))
 
@@ -147,7 +147,7 @@
   [form]
   (unchecked-int form))
 
-(defmethod print-method Integer [exp writer]
+(defmethod print-method Integer [exp ^java.io.Writer writer]
   (.write writer "#sint32 ")
   (.write writer (str exp)))
 
@@ -170,7 +170,7 @@
   [form]
   (Sint64. (unchecked-long form)))
 
-(defmethod print-method Sint64 [exp writer]
+(defmethod print-method Sint64 [exp ^java.io.Writer writer]
   (.write writer "#sint64 ")
   (.write writer (str exp)))
 
@@ -208,7 +208,7 @@
   [form]
   (Uint8. (mod form (inc' +uint8-max-value+))))
 
-(defmethod print-method Uint8 [exp writer]
+(defmethod print-method Uint8 [exp ^java.io.Writer writer]
   (.write writer "#uint8 ")
   (.write writer (str exp)))
 
@@ -231,7 +231,7 @@
   [form]
   (Uint16. (mod form (inc' +uint16-max-value+))))
 
-(defmethod print-method Uint16 [exp writer]
+(defmethod print-method Uint16 [exp ^java.io.Writer writer]
   (.write writer "#uint16 ")
   (.write writer (str exp)))
 
@@ -254,7 +254,7 @@
   [form]
   (Uint32. (mod form (inc' +uint32-max-value+))))
 
-(defmethod print-method Uint32 [exp writer]
+(defmethod print-method Uint32 [exp ^java.io.Writer writer]
   (.write writer "#uint32 ")
   (.write writer (str exp)))
 
@@ -277,7 +277,7 @@
   [form]
   (Uint64. (mod form (inc' +uint64-max-value+))))
 
-(defmethod print-method Uint64 [exp writer]
+(defmethod print-method Uint64 [exp ^java.io.Writer writer]
   (.write writer "#uint64 ")
   (.write writer (str exp)))
 

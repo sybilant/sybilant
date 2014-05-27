@@ -16,7 +16,7 @@
 
 (defn error
   [msg & args]
-  (throw (Exception. (apply format msg args))))
+  (throw (Exception. ^String (apply format msg args))))
 
 (defn form
   [obj]
