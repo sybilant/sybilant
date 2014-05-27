@@ -1,0 +1,6 @@
+;; -*- mode: clojure -*-
+(%deftext (%label exit))
+
+(%deftext (%label _start)
+  (%mov %rdi 0)
+  (%jmp exit))

@@ -10,15 +10,7 @@
   (:refer-clojure :exclude [compile])
   (:require [clojure.string :as str]
             [clojure.test :refer :all]
-            [sybilant.compiler :refer :all]
-            [sybilant.parser :refer [parse-top-level]]))
-
-(defn compile-and-emit-all
-  [forms]
-  (str/join "\n"
-            (-> forms
-                (compile-all {})
-                (emit-all {}))))
+            [sybilant.compiler :refer :all]))
 
 (defmacro %deftext [& body]
   `(list '~'%deftext
@@ -65,4 +57,4 @@ global bar
 bar:
 db 1
 db 2"
-           (compile-and-emit-all forms)))))
+           (str/join "\n" (compile-and-emit-all forms {}))))))
