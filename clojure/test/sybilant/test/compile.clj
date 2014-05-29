@@ -25,7 +25,8 @@ mov rdi, 0
 jmp exit
 ")
 
-(defmacro with-output [result out err exp & body]
+(defmacro with-output
+  [result out err exp & body]
   `(let [old-out# System/out
          old-err# System/err]
      (try
