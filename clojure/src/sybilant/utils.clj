@@ -6,7 +6,8 @@
 ;;;;
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
-(ns sybilant.utils)
+(ns sybilant.utils
+  (:require [slingshot.slingshot :refer [throw+]]))
 
 (defn maybe [pred]
   (fn [x] (or (nil? x) (pred x))))
@@ -14,9 +15,13 @@
 (defn implies [p q]
   (or (not p) q))
 
-(defn error
+(defmacro die
+  [exit-code format-str & args]
+  `(throw+ {:exit-code ~exit-code} ~format-str ~@args))
+
+(defmacro error
   [msg & args]
-  (throw (Exception. ^String (apply format msg args))))
+  `(die 1 ~msg ~@args))
 
 (defn form
   [obj]

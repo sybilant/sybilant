@@ -12,14 +12,10 @@
             [clojure.tools.reader :refer [read]]
             [clojure.tools.reader.reader-types :refer
              [indexing-push-back-reader]]
-            [slingshot.slingshot :refer [throw+ try+]])
   (:import (java.io FileInputStream InputStreamReader PushbackReader))
+            [slingshot.slingshot :refer [try+]]
+            [sybilant.utils :refer :all])
   (:gen-class))
-
-(defn die
-  [exit-code format-str & args]
-  (throw+ {:exit-code exit-code
-           :message (apply format format-str args)}))
 
 (def usage
   "Compiles Sybilant source into x86-64 assembly source. If no source files
