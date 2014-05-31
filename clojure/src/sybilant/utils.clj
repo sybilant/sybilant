@@ -36,8 +36,8 @@
   ([file line column]
      (if (and file line)
        (if column
-         (format "%s at %s:%s" file line column)
-         (format "%s at %s" file line))
+         (format "%s:%s:%s" file line column)
+         (format "%s:%s" file line))
        "")))
 
 (defn compiling [form]
