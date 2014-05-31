@@ -10,4 +10,5 @@
   :source-paths ["clojure/src"]
   :test-paths ["clojure/test"]
   :aot [sybilant.compile]
-  :main sybilant.compile)
+  :main sybilant.compile
+  :profiles {:dev {:dependencies [[robert/hooke "1.3.0"]]}})

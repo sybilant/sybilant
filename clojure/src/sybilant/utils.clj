@@ -9,6 +9,10 @@
 (ns sybilant.utils
   (:require [slingshot.slingshot :refer [throw+]]))
 
+(defn atom?
+  [obj]
+  (instance? clojure.lang.Atom obj))
+
 (defn maybe
   [pred]
   (fn [x] (or (nil? x) (pred x))))

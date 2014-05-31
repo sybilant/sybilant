@@ -9,13 +9,25 @@
 (ns sybilant.test.compile
   (:require [clojure.java.io :as io]
             [clojure.test :refer :all]
-            [sybilant.compile :refer :all])
+            [robert.hooke :refer [prepend with-scope]]
+            [sybilant.compile :refer :all]
+            [sybilant.environment :refer [global-env]])
   (:import (java.io ByteArrayOutputStream File PrintStream PrintWriter)))
 
+(defn main-with-fresh-env
+  [f]
+  (with-scope
+    (prepend -main (reset! global-env {}))
+    (f)))
+
+(defn redef-exit
+  [f]
+  (with-redefs [exit (fn [exit-code] exit-code)]
+    (f)))
+
 (use-fixtures :each
-  (fn redef-exit [f]
-    (with-redefs [exit (fn [exit-code] exit-code)]
-      (f))))
+  main-with-fresh-env
+  redef-exit)
 
 (def expected-output
   "extern exit
