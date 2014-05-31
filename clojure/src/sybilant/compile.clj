@@ -12,9 +12,10 @@
             [clojure.tools.reader :refer [read]]
             [clojure.tools.reader.reader-types :refer
              [indexing-push-back-reader]]
-  (:import (java.io FileInputStream InputStreamReader PushbackReader))
             [slingshot.slingshot :refer [try+]]
             [sybilant.utils :refer :all])
+  (:import (java.io FileInputStream InputStreamReader PrintWriter PushbackReader
+                    Writer))
   (:gen-class))
 
 (def usage
@@ -34,15 +35,15 @@ Option        Default  Description
 ")
 
 (defn option?
-  [arg]
+  [^String arg]
   (and arg (.startsWith arg "-")))
 
 (defn long-option?
-  [arg]
+  [^String arg]
   (and arg (.startsWith arg "--")))
 
 (defn parse-long-option
-  [arg]
+  [^String arg]
   (and arg (seq (.split arg "="))))
 
 (defn prep-args
@@ -94,7 +95,7 @@ Option        Default  Description
               (repeatedly #(read in false EOF))))
 
 (defn read-file
-  [infile options]
+  [^String infile options]
   (with-open [in (FileInputStream. infile)
               in (InputStreamReader. in "UTF-8")
               in (PushbackReader. in)]
