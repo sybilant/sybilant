@@ -105,56 +105,59 @@ Option        Default  Description
   [infiles options]
   (doall (mapcat #(read-file % options) infiles)))
 
-(defn write-strs
-  [strs out]
-  (doseq [str strs]
+(defn write-to-stream
+  [strs ^Writer out]
+  (doseq [^String str strs]
     (.write out str)
     (.write out "\n")))
 
+(defn write-to-file
+  [strs outfile force?]
+  (if (and (.exists (io/file outfile)) (not force?))
+    (die 1 "%s already exists" outfile)
+    (with-open [out (io/writer outfile :encoding "UTF-8")]
+      (write-to-stream strs out))))
+
+(defn print-error
+  [message ^Throwable t print-stack-trace?]
+  (binding [*out* *err*]
+    (print "An error occurred: ")
+    (if print-stack-trace?
+      (.printStackTrace t ^PrintWriter *out*)
+      (println message))
+    (flush)))
+
 (defn -main [& args]
   (require 'sybilant.compiler)
-  (try+
-    (let [{:keys [infiles outfile force? debug?]} (-> args prep-args parse-args)
-          options {:force? force? :debug? debug?}]
-      (if (seq infiles)
-        (let [forms (read-files infiles options)
-              compile-and-emit-all (resolve
-                                    'sybilant.compiler/compile-and-emit-all)
-              strs (compile-and-emit-all forms options)]
-          (try+
+  (let [compile-and-emit-all (resolve 'sybilant.compiler/compile-and-emit-all)
+        print-stack-trace? (atom false)]
+    (try+
+      (let [{:keys [infiles outfile force? debug?]} (-> args
+                                                        prep-args
+                                                        parse-args)
+            options {:force? force? :debug? debug?}]
+        (reset! print-stack-trace? debug?)
+        (if (seq infiles)
+          (let [strs (-> infiles
+                         (read-files options)
+                         (compile-and-emit-all options))]
             (if outfile
-              (if (and (.exists (io/file outfile)) (not force?))
-                (die 1 "%s already exists" outfile)
-                (with-open [out (io/writer outfile :encoding "UTF-8")]
-                  (write-strs strs out)))
-              (write-strs strs *out*))
-            (exit 0)
-            (catch Throwable t
-              (binding [*out* *err*]
-                (print "An error occurred: ")
-                (if debug?
-                  (.printStackTrace t *out*)
-                  (println (.getMessage t)))
-                (flush))
-              (exit 1))))
-        (die 1 "expected at least one input file")))
-    (catch :exit-code {:keys [exit-code message]}
-      (if (pos? exit-code)
+              (write-to-file strs outfile force?)
+              (write-to-stream strs *out*))
+            (exit 0))
+          (die 1 "expected at least one input file")))
+      (catch :exit-code {:keys [exit-code]}
+        (let [{:keys [message wrapper]} &throw-context]
+          (if (pos? exit-code)
+            (print-error message wrapper @print-stack-trace?)
+            (println message)))
+        (exit exit-code))
+      (catch Throwable t
+        (print-error (.getMessage ^Throwable t) t @print-stack-trace?)
+        (exit 1))
+      (catch Object o
         (binding [*out* *err*]
-          (print "An error occurred: ")
-          (println message)
+          (print "Unexpectedly thrown object: ")
+          (prn o)
           (flush))
-        (println message))
-      (exit exit-code))
-    (catch Throwable t
-      (binding [*out* *err*]
-        (print "An error occurred: ")
-        (.printStackTrace t *out*)
-        (flush))
-      (exit 1))
-    (catch Object o
-      (binding [*out* *err*]
-        (print "Unexpectedly thrown object: ")
-        (prn o)
-        (flush))
-      (exit 1))))
+        (exit 1)))))
