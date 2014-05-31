@@ -8,8 +8,11 @@
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.analyzer
   (:refer-clojure :exclude [symbol?])
-  (:require [sybilant.environment :refer :all]
-            [sybilant.types :refer :all]))
+  (:require [clojure.set :as set]
+            [sybilant.environment :refer :all]
+            [sybilant.types :refer :all]
+            [sybilant.utils :refer :all]
+            [sybilant.visitor :refer [dfs-visit]]))
 
 (defn define-local-labels
   [exp]
@@ -26,9 +29,38 @@
         exp))
     exp))
 
+(defn free-symbols
+  [exp]
+  {:pre [(top-level? exp)]}
+  (let [local-symbols (set (keys (:local-labels exp)))
+        global-symbols (set (keys @global-env))
+        free-symbol? (complement (set/union local-symbols global-symbols))
+        free-symbols (atom [])]
+    (dfs-visit exp (fn [exp]
+                     (when (and (symbol? exp) (free-symbol? exp))
+                       (swap! free-symbols conj exp))
+                     exp))
+    (if-let [free-symbols (not-empty (distinct @free-symbols))]
+      (assoc exp :free-symbols free-symbols)
+      exp)))
+
+(defn verify-deftext-closed
+  [exp]
+  {:pre [(top-level? exp)]}
+  (when (deftext? exp)
+    (when-let [free-symbols (seq (:free-symbols exp))]
+      (error "undefined symbol%s: %s%s"
+             (str (when (> (count free-symbols) 1) "s"))
+             (apply oxford (map form free-symbols))
+             (compiling (first free-symbols)))))
+  exp)
+
 (defn analyze
   [exp options]
   {:pre [(top-level? exp)]}
-  (let [exp (define-local-labels exp)]
+  (let [exp (-> exp
+                define-local-labels
+                free-symbols
+                verify-deftext-closed)]
     (define-label global-env (:label exp))
     exp))

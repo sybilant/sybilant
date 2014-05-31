@@ -10,7 +10,13 @@
   (:refer-clojure :exclude [compile])
   (:require [clojure.string :as str]
             [clojure.test :refer :all]
-            [sybilant.compiler :refer :all]))
+            [sybilant.compiler :refer :all]
+            [sybilant.environment :refer [global-env]]))
+
+(use-fixtures :each
+  (fn reset-global-env [f]
+    (reset! global-env {})
+    (f)))
 
 (defmacro %deftext [& body]
   `(list '~'%deftext

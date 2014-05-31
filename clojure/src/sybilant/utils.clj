@@ -7,7 +7,8 @@
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.utils
-  (:require [slingshot.slingshot :refer [throw+]]))
+  (:require [clojure.string :as str]
+            [slingshot.slingshot :refer [throw+]]))
 
 (defn atom?
   [obj]
@@ -55,3 +56,12 @@
   [expected actual]
   (error "Expected %s, but was %s%s" (name expected) (pr-str (form actual))
          (compiling actual)))
+
+(defn oxford
+  ([] "")
+  ([a] (str a))
+  ([a b] (format "%s and %s" (str a) (str b)))
+  ([a b & more]
+     (format "%s, and %s"
+             (str/join ", " (map str (list* a b (butlast more))))
+             (str (last more)))))
