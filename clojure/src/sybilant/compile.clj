@@ -19,8 +19,7 @@
   (:gen-class))
 
 (def usage
-  "Compiles Sybilant source into x86-64 assembly source. If no source files
-are specified, then the source is read from standard input.
+  "Compiles Sybilant source into x86-64 assembly source.
 
 
 Usage: [OPTIONS] [FILE]...
