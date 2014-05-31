@@ -21,7 +21,6 @@
 (def usage
   "Compiles Sybilant source into x86-64 assembly source.
 
-
 Usage: [OPTIONS] [FILE]...
 
 Option        Default  Description
@@ -77,7 +76,7 @@ Option        Default  Description
         ("-f" "--force")
         (recur args (assoc options :force? true) infiles)
         (if (option? arg)
-          (die 1 "unknown option: %s" arg)
+          (die 1 "unknown option: %s\n\n%s" arg usage)
           (recur args options (conj infiles arg))))
       (assoc options :infiles infiles))))
 
