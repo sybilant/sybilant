@@ -9,10 +9,12 @@
 (ns sybilant.utils
   (:require [slingshot.slingshot :refer [throw+]]))
 
-(defn maybe [pred]
+(defn maybe
+  [pred]
   (fn [x] (or (nil? x) (pred x))))
 
-(defn implies [p q]
+(defn implies
+  [p q]
   (or (not p) q))
 
 (defmacro die

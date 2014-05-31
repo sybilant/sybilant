@@ -127,7 +127,8 @@ Option        Default  Description
       (println message))
     (flush)))
 
-(defn -main [& args]
+(defn -main
+  [& args]
   (require 'sybilant.compiler)
   (let [compile-and-emit-all (resolve 'sybilant.compiler/compile-and-emit-all)
         print-stack-trace? (atom false)]
