@@ -14,7 +14,7 @@
             [sybilant.utils :refer :all]
             [sybilant.visitor :refer [dfs-visit]]))
 
-(defn define-local-labels
+(defn define-local-env
   [exp]
   {:pre [(top-level? exp)]}
   (if (deftext? exp)
@@ -24,17 +24,19 @@
       (doseq [statement (:statements exp)
               :when (label? statement)]
         (define-label local-env statement))
-      (if-let [local-labels (not-empty (dissoc @local-env exp-label-name))]
-        (assoc exp :local-labels local-labels)
+      (if-let [local-env (not-empty @local-env)]
+        (vary-meta exp assoc :local-env local-env)
         exp))
     exp))
 
 (defn free-symbols
   [exp]
   {:pre [(top-level? exp)]}
-  (let [local-symbols (set (keys (:local-labels exp)))
+  (let [local-symbols (set (keys (:local-env (meta exp))))
         global-symbols (set (keys @global-env))
-        free-symbol? (complement (set/union local-symbols global-symbols))
+        free-symbol? (complement (set/union #{(:label exp)}
+                                            local-symbols
+                                            global-symbols))
         free-symbols (atom [])]
     (dfs-visit exp (fn [exp]
                      (when (and (symbol? exp) (free-symbol? exp))
@@ -59,7 +61,7 @@
   [exp options]
   {:pre [(top-level? exp)]}
   (let [exp (-> exp
-                define-local-labels
+                define-local-env
                 free-symbols
                 verify-deftext-closed)]
     (define-label global-env (:label exp))
