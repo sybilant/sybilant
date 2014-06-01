@@ -9,7 +9,7 @@
 (ns sybilant.visitor
   (:require [clojure.zip :as zip]))
 
-(def branch-types #{:deftext :defdata :instruction})
+(def branch-types #{:deftext :defdata :label :instruction})
 
 (def branch? (comp branch-types #(get-in % [:type :name])))
 
@@ -24,6 +24,10 @@
   [exp]
   (cons (:label exp) (:values exp)))
 
+(defmethod children :label
+  [exp]
+  [(:name exp)])
+
 (defmethod children :instruction
   [exp]
   (cons (:operator exp) (:operands exp)))
@@ -36,6 +40,10 @@
 (defmethod make-node :defdata
   [exp [label & values]]
   (assoc exp :label label :values values))
+
+(defmethod make-node :label
+  [exp [name]]
+  (assoc exp :name name))
 
 (defmethod make-node :instruction
   [exp [operator & operands]]
