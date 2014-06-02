@@ -12,7 +12,7 @@
             [sybilant.environment :refer :all]
             [sybilant.types :refer :all]
             [sybilant.utils :refer :all]
-            [sybilant.visitor :refer [dfs-visit]]))
+            [sybilant.visitor :refer [dfs-visit visit-property]]))
 
 (defn define-local-env
   [exp]
@@ -32,29 +32,37 @@
 (defn free-symbols
   [exp]
   {:pre [(top-level? exp)]}
-  (let [local-symbols (set (keys (:local-env (meta exp))))
-        global-symbols (set (keys @global-env))
-        free-symbol? (complement (set/union #{(:label exp)}
-                                            local-symbols
-                                            global-symbols))
-        free-symbols (atom [])]
-    (dfs-visit exp (fn [exp]
-                     (when (and (symbol? exp) (free-symbol? exp))
-                       (swap! free-symbols conj exp))
-                     exp))
-    (if-let [free-symbols (not-empty (distinct @free-symbols))]
-      (assoc exp :free-symbols free-symbols)
-      exp)))
+  (letfn
+      [(symbol-refs
+         [exp]
+         (if (symbol? exp)
+           #{exp}
+           #{}))
+       (symbol-defs
+         [exp]
+         (if (label? exp)
+           #{(:name exp)}
+           #{}))
+       (free-symbols
+         [exp]
+         (let [{:keys [symbol-refs symbol-defs]} (meta exp)]
+           (set/difference symbol-refs symbol-defs)))]
+    (-> exp
+        (visit-property :symbol-refs symbol-refs set/union)
+        (visit-property :symbol-defs symbol-defs set/union)
+        (visit-property :free-symbols free-symbols))))
 
 (defn verify-deftext-closed
   [exp]
   {:pre [(top-level? exp)]}
   (when (deftext? exp)
-    (when-let [free-symbols (seq (:free-symbols exp))]
-      (error "undefined symbol%s: %s%s"
-             (str (when (> (count free-symbols) 1) "s"))
-             (apply oxford (map form free-symbols))
-             (compiling (first free-symbols)))))
+    (let [global-symbols (set (keys @global-env))
+          free-symbols (seq (:free-symbols (meta exp)))]
+      (when-let [undefined-symbols (seq (remove global-symbols free-symbols))]
+        (error "undefined symbol%s: %s%s"
+               (str (when (> (count undefined-symbols) 1) "s"))
+               (apply oxford (map form undefined-symbols))
+               (compiling (first undefined-symbols))))))
   exp)
 
 (defn analyze
