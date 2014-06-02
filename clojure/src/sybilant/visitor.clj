@@ -55,3 +55,16 @@
     (if-not (zip/end? loc)
       (recur (zip/next (apply zip/edit loc f args)))
       (zip/node loc))))
+
+(defn visit-property
+  ([exp key mf]
+     (dfs-visit exp (fn [exp] (vary-meta exp assoc key (mf exp)))))
+  ([exp key mf rf]
+     (if (branch? exp)
+       (let [exp (make-node exp (for [child (children exp)]
+                                  (visit-property child key mf rf)))]
+         (vary-meta exp assoc key (reduce (fn [result child]
+                                            (rf result (get (meta child) key)))
+                                          (mf exp)
+                                          (children exp))))
+       (vary-meta exp assoc key (mf exp)))))
