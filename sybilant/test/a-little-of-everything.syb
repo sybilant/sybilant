@@ -5,6 +5,7 @@
 
 (%deftext (%label foo)
   (%mov %rax (%mem64 1))
+  (%mov %bl (%mem8 %rdi bar))
   (%jmp bar)
   (%label bar)
   (%add %rax 1))

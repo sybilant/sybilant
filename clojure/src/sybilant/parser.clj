@@ -375,13 +375,15 @@
 
 (defn disp-form?
   [form]
-  (literal-form? form))
+  (or (literal-form? form) (symbol-form? form)))
 
 (defn parse-disp
   [form]
   {:pre [(disp-form? form)]
    :post [(disp? %)]}
-  (parse-literal form))
+  (cond
+   (literal-form? form) (parse-literal form)
+   (symbol-form? form) (parse-symbol form)))
 
 (declare mem-form?)
 

@@ -203,7 +203,7 @@
 
 (defn disp?
   [exp]
-  (literal? exp))
+  (or (literal? exp) (symbol? exp)))
 
 (def mem-type (make-type :mem))
 

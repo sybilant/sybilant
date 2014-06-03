@@ -3,6 +3,7 @@ extern PI
 global foo
 foo:
 mov rax, qword [1]
+mov bl, byte [rdi+.bar]
 jmp .bar
 .bar:
 add rax, 1

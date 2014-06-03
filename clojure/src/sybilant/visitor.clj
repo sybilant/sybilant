@@ -9,7 +9,7 @@
 (ns sybilant.visitor
   (:require [clojure.zip :as zip]))
 
-(def branch-types #{:deftext :defdata :label :instruction})
+(def branch-types #{:deftext :defdata :label :instruction :mem})
 
 (def branch? (comp branch-types #(get-in % [:type :name])))
 
@@ -32,6 +32,10 @@
   [exp]
   (cons (:operator exp) (:operands exp)))
 
+(defmethod children :mem
+  [exp]
+  ((juxt :base :index :scale :disp) exp))
+
 (defmulti make-node (comp dispatch-fn first list))
 (defmethod make-node :deftext
   [exp [label & statements]]
@@ -49,11 +53,28 @@
   [exp [operator & operands]]
   (assoc exp :operator operator :operands operands))
 
+(defmethod make-node :mem
+  [exp [base index scale disp]]
+  (merge exp
+         (when base
+           {:base base})
+         (when index
+           {:index index})
+         (when scale
+           {:scale scale})
+         (when disp
+           {:disp disp})))
+
 (defn dfs-visit
   [exp f & args]
   (loop [loc (zip/zipper branch? children make-node exp)]
     (if-not (zip/end? loc)
-      (recur (zip/next (apply zip/edit loc f args)))
+      (recur (zip/next (apply zip/edit
+                              loc
+                              (fn [node & args]
+                                (when node
+                                  (apply f node args)))
+                              args)))
       (zip/node loc))))
 
 (defn visit-property
@@ -67,4 +88,5 @@
                                             (rf result (get (meta child) key)))
                                           (mf exp)
                                           (children exp))))
-       (vary-meta exp assoc key (mf exp)))))
+       (when exp
+         (vary-meta exp assoc key (mf exp))))))
