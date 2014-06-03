@@ -38,3 +38,15 @@ bar:
 db 1
 db 2"
            (str/join "\n" (compile-and-emit-all forms {}))))))
+
+(defn sybilant-test-files
+  []
+  (sort (for [f (file-seq (io/file "sybilant/test"))
+              :let [file-name (.getName f)]
+              :when (.endsWith file-name ".syb")]
+          file-name)))
+
+(deftest test-sybilant-test-files
+  (doseq [file-name (sybilant-test-files)]
+    (reset-global-env)
+    (is (assembles? file-name) (str "Failed to compile " file-name))))
