@@ -7,9 +7,9 @@
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.compile
-  (:refer-clojure :exclude [read])
+  (:refer-clojure :exclude [read read-string])
   (:require [clojure.java.io :as io]
-            [clojure.tools.reader :refer [read]]
+            [clojure.tools.reader.edn :refer [read read-string]]
             [clojure.tools.reader.reader-types :refer
              [indexing-push-back-reader]]
             [slingshot.slingshot :refer [try+]]
@@ -87,10 +87,17 @@ Option        Default  Description
 
 (def ^:const EOF (symbol (str (char 65535))))
 
+(defonce data-readers
+  (delay (into {} (for [[tag sym] (-> (io/resource "data_readers.clj")
+                                      slurp
+                                      read-string)]
+                    [tag (intern (create-ns (symbol (namespace sym)))
+                                 (symbol (name sym)))]))))
+
 (defn read-all
   [in]
   (take-while (complement (partial = EOF))
-              (repeatedly #(read in false EOF))))
+              (repeatedly #(read {:eof EOF :readers @data-readers} in))))
 
 (defn read-file
   [^String infile options]
