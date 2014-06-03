@@ -8,39 +8,13 @@
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.test.compiler
   (:refer-clojure :exclude [compile])
-  (:require [clojure.string :as str]
+  (:require [clojure.java.io :as io]
+            [clojure.string :as str]
             [clojure.test :refer :all]
             [sybilant.compiler :refer :all]
-            [sybilant.environment :refer [global-env]]))
+            [sybilant.test.utils :refer :all]))
 
-(use-fixtures :each
-  (fn reset-global-env [f]
-    (reset! global-env {})
-    (f)))
-
-(defmacro %deftext [& body]
-  `(list '~'%deftext
-         ~@(for [exp body]
-             `'~exp)))
-
-(deftest test-deftext-macro
-  (is (= '(%deftext (%label foo)
-            (%mov %rax (%mem64 1))
-            (%jmp bar)
-            (%label bar)
-            (%add %rax 1))
-         (%deftext (%label foo)
-           (%mov %rax (%mem64 1))
-           (%jmp bar)
-           (%label bar)
-           (%add %rax 1)))))
-
-(defmacro %defdata [name & values]
-  `(list '~'%defdata '~name ~@(for [value values] `'~value)))
-
-(deftest test-defdata-macro
-  (is (= '(%defdata (%label foo) #sint8 1 #sint8 2)
-         (%defdata (%label foo) #sint8 1 #sint8 2))))
+(use-fixtures :each reset-global-env-fixture)
 
 (deftest test-compile-and-emit-all
   (let [forms [(%deftext (%label malloc))
