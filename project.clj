@@ -11,4 +11,5 @@
   :test-paths ["clojure/test"]
   :aot [sybilant.compile]
   :main sybilant.compile
-  :profiles {:dev {:dependencies [[robert/hooke "1.3.0"]]}})
+  :profiles {:dev {:dependencies [[pjstadig/humane-test-output "0.6.0"]
+                                  [robert/hooke "1.3.0"]]}})
