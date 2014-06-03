@@ -170,21 +170,19 @@
   [{:keys [label statements]}]
   (let [label-name (:name label)]
     (if (seq statements)
-      (apply str
-             "global " (emit* label-name) "\n"
-             (emit* label-name) ":\n"
-             (str/join "\n" (map emit* statements)))
-      (str "extern " (emit* label-name)))))
+      (concat [(str "global " (emit* label-name))]
+              [(str (emit* label-name) ":")]
+              (map emit* statements))
+      [(str "extern " (emit* label-name))])))
 
 (defmethod emit* :defdata
   [{:keys [label values]}]
   (let [label-name (:name label)]
     (if (seq values)
-      (apply str
-             "global " (emit* label-name) "\n"
-             (emit* label-name) ":\n"
-             (str/join "\n" (map emit-as-data values)))
-      (str "extern " (emit* label-name)))))
+      (concat [(str "global " (emit* label-name))
+               (str (emit* label-name) ":")]
+              (map emit-as-data values))
+      [(str "extern " (emit* label-name))])))
 
 (defmethod emit* :default
   [exp]

@@ -27,8 +27,8 @@
 
 (defn emit-all
   [exps options]
-  (for [exp exps]
-    (emit exp options)))
+  (apply concat (for [exp exps]
+                  (emit exp options))))
 
 (defn compile-and-emit-all
   [forms options]

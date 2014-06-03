@@ -52,6 +52,6 @@
 (defmethod assert-expr 'assembles?
   [msg [_ file-name]]
   `(let [file-name# (str "sybilant/test/" (str ~file-name))]
-     (is (~'= (str/trim (slurp (str file-name# ".asm")))
-              (str/join "\n" (compile-and-emit-all (read-file file-name# {}) {})))
+     (is (~'= (str/split (slurp (str file-name# ".asm")) #"\n")
+              (compile-and-emit-all (read-file file-name# {}) {}))
          ~msg)))
