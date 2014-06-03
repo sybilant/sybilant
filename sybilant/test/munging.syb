@@ -3,6 +3,9 @@
 
 (%deftext ^:extern (%label _start)
   (%mov %rdi 0)
-  (%jmp foo-bar)
-  (%label foo-bar)
+  (%jmp ☃)
+  (%label ☃)
   (%jmp exit))
+
+(%deftext (%label ☃)
+  (%jmp _start))
