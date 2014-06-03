@@ -99,7 +99,7 @@
   {:pre [(symbol? exp)]}
   (let [exp-form (form exp)]
     (when-not (re-matches #"^[a-zA-Z_][a-zA-Z0-9_]*$" (str exp-form))
-      (error "invalid symbol format %s%s" exp-form (compiling exp))))
+      (error "invalid external symbol format %s%s" exp-form (compiling exp))))
   exp)
 
 (defn munge-symbols
