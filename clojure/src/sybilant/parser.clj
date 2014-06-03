@@ -73,6 +73,8 @@
              (compiling form)))
     (when-not (symbol-form? symbol-form)
       (syntax-error :symbol symbol-form))
+    (when (:extern (meta form))
+      (error "%s may not be marked external%s" symbol-form (compiling form)))
     (make-label (parse-symbol symbol-form) form)))
 
 (defn asm-symbol-form?
@@ -639,6 +641,15 @@
                        {:statements statements}))
               form))
 
+(defn parse-extern-label
+  [form]
+  {:pre [(label-form? form)]
+   :post [(label? %) (form= form %)]}
+  (let [label (parse-label (vary-meta form dissoc :extern))]
+    (if (:extern (meta form))
+      (vary-meta label assoc :extern? true)
+      label)))
+
 (defn parse-deftext
   [form]
   {:pre [(deftext-form? form)]
@@ -667,7 +678,7 @@
                         " but got %s%s")
                    (pr-str statement-form)
                    (compiling statement-form))))))
-    (make-deftext (parse-label label-form)
+    (make-deftext (parse-extern-label label-form)
                   (map parse-statement statement-forms)
                   form)))
 
@@ -698,7 +709,7 @@
     (doseq [value-form value-forms]
       (when-not (precise-literal-form? value-form)
         (syntax-error "precise literal" value-form)))
-    (make-defdata (parse-label label-form)
+    (make-defdata (parse-extern-label label-form)
                   (map parse-precise-literal value-forms)
                   form)))
 

@@ -30,7 +30,7 @@ extern PI
 global foo
 foo:
 mov rax, qword [1]
-jmp bar
+jmp .bar
 .bar:
 add rax, 1
 global bar

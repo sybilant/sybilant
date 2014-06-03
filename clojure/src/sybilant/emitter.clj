@@ -7,9 +7,67 @@
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.emitter
-  (:refer-clojure :exclude [symbol?])
-  (:require [sybilant.types :refer :all]
+  (:refer-clojure :exclude [munge symbol?])
+  (:require [clojure.string :as str]
+            [sybilant.types :refer :all]
             [sybilant.utils :refer :all]))
+
+(defn munge ^String [value]
+  (let [chars (seq (if (namespace value)
+                     (str (namespace value) "/" (name value))
+                     (name value)))
+        sb (StringBuilder.)
+        chars (condp = (first chars)
+                \$ (do (.append sb "_A")
+                       (rest chars))
+                \. (do (.append sb "_O")
+                       (rest chars))
+                chars)]
+    (when (seq chars)
+      (loop [[^Character c & chars] chars]
+        (let [chars (cond
+                     (or (and (not (pos? (.compareTo \a c)))
+                              (not (pos? (.compareTo c \z))))
+                         (and (not (pos? (.compareTo \A c)))
+                              (not (pos? (.compareTo c \Z))))
+                         (and (not (pos? (.compareTo \0 c)))
+                              (not (pos? (.compareTo c \9))))
+                         (= \$ c)
+                         (= \# c)
+                         (= \. c)
+                         (= \? c))
+                     (do (.append sb c)
+                         chars)
+                     :else
+                     (condp = c
+                       \_ (do (.append sb "__") chars)
+                       \! (do (.append sb "_N") chars)
+                       \% (do (.append sb "_E") chars)
+                       \& (do (.append sb "_M") chars)
+                       \* (do (.append sb "_S") chars)
+                       \- (do (.append sb "_D") chars)
+                       \= (do (.append sb "_Q") chars)
+                       \+ (do (.append sb "_P") chars)
+                       \| (do (.append sb "_R") chars)
+                       \: (do (.append sb "_C") chars)
+                       \< (do (.append sb "_L") chars)
+                       \> (do (.append sb "_G") chars)
+                       \/ (do (.append sb "_H") chars)
+                       (if (Character/isHighSurrogate c)
+                         (if (and (seq chars)
+                                  (Character/isLowSurrogate (first chars)))
+                           (let [p (first chars)
+                                 cp (Character/toCodePoint c p)]
+                             (.append sb (if (> cp 0xffff)
+                                           (format "_U%08x" cp)
+                                           (format "_u%04x" cp)))
+                             (rest chars))
+                           (error "Invalid symbol" value))
+                         (do (.append sb (format "_u%04x" (int c)))
+                             chars))))]
+          (when (seq chars)
+            (recur chars)))))
+    (.toString sb)))
 
 (defmulti width (fn [exp] (get-in exp [:type :name])))
 
@@ -69,7 +127,7 @@
 
 (defmethod emit* :label
   [exp]
-  (str "." (emit* (:name exp)) ":"))
+  (str (emit* (:name exp)) ":"))
 
 (defmethod emit* :operator
   [exp]
@@ -91,34 +149,42 @@
          (str (when (or base index) "+")
               (emit* disp))) "]"))
 
+(defmethod emit* :symbol
+  [exp]
+  (let [sym (form exp)
+        name (if (:munge? (meta exp))
+               (munge sym)
+               (str sym))]
+    (if (:local? (meta exp))
+      (str "." name)
+      name)))
+
 (defmethod emit* :instruction
   [{:keys [operator operands]}]
   (apply str
          (emit* operator)
          " "
-         (interpose ", " (map emit-with-prefix operands))))
+         (str/join ", " (map emit-with-prefix operands))))
 
 (defmethod emit* :deftext
   [{:keys [label statements]}]
   (let [label-name (:name label)]
     (if (seq statements)
       (apply str
-             "global " (form label-name) "\n"
-             (emit* label-name)
-             ":\n"
-             (interpose "\n" (map emit* statements)))
-      (str "extern " (form label-name)))))
+             "global " (emit* label-name) "\n"
+             (emit* label-name) ":\n"
+             (str/join "\n" (map emit* statements)))
+      (str "extern " (emit* label-name)))))
 
 (defmethod emit* :defdata
   [{:keys [label values]}]
   (let [label-name (:name label)]
     (if (seq values)
       (apply str
-             "global " (form label-name) "\n"
-             (emit* label-name)
-             ":\n"
-             (interpose "\n" (map emit-as-data values)))
-      (str "extern " (form label-name)))))
+             "global " (emit* label-name) "\n"
+             (emit* label-name) ":\n"
+             (str/join "\n" (map emit-as-data values)))
+      (str "extern " (emit* label-name)))))
 
 (defmethod emit* :default
   [exp]

@@ -14,20 +14,49 @@
             [sybilant.utils :refer :all]
             [sybilant.visitor :refer [dfs-visit visit-property]]))
 
+(defn define-global-env
+  [exp]
+  {:pre [(top-level? exp)]}
+  (let [exp-label (:label exp)
+        exp-label-name (:name exp-label)
+        global-env (assoc @global-env exp-label-name exp-label)]
+    (dfs-visit exp vary-meta assoc :global-env global-env)))
+
 (defn define-local-env
   [exp]
   {:pre [(top-level? exp)]}
   (if (deftext? exp)
     (let [exp-label (:label exp)
           exp-label-name (:name exp-label)
-          local-env (atom {exp-label-name exp-label})]
+          local-env (atom {})]
       (doseq [statement (:statements exp)
               :when (label? statement)]
         (define-label local-env statement))
       (if-let [local-env (not-empty @local-env)]
-        (vary-meta exp assoc :local-env local-env)
+        (dfs-visit exp vary-meta assoc :local-env local-env)
         exp))
     exp))
+
+(defn local-symbol-table
+  [exp]
+  (:local-env (meta exp)))
+
+(defn global-symbol-table
+  [exp]
+  (:global-env (meta exp)))
+
+(defn symbol-table
+  [exp]
+  (merge (global-symbol-table exp)
+         (local-symbol-table exp)))
+
+(defn mark-local-symbols
+  [exp]
+  {:pre [(top-level? exp)]}
+  (dfs-visit exp (fn [exp]
+                   (if (contains? (local-symbol-table exp) exp)
+                     (vary-meta exp assoc :local? true)
+                     exp))))
 
 (defn free-symbols
   [exp]
@@ -56,7 +85,7 @@
   [exp]
   {:pre [(top-level? exp)]}
   (when (deftext? exp)
-    (let [global-symbols (set (keys @global-env))
+    (let [global-symbols (set (keys (global-symbol-table exp)))
           free-symbols (seq (:free-symbols (meta exp)))]
       (when-let [undefined-symbols (seq (remove global-symbols free-symbols))]
         (error "undefined symbol%s: %s%s"
@@ -65,12 +94,33 @@
                (compiling (first undefined-symbols))))))
   exp)
 
+(defn verify-symbol-format
+  [exp]
+  {:pre [(symbol? exp)]}
+  (let [exp-form (form exp)]
+    (when-not (re-matches #"^[a-zA-Z_][a-zA-Z0-9_]*$" (str exp-form))
+      (error "invalid symbol format %s%s" exp-form (compiling exp))))
+  exp)
+
+(defn munge-symbols
+  [exp]
+  {:pre [(top-level? exp)]}
+  (dfs-visit exp (fn [exp]
+                   (if (symbol? exp)
+                     (if (not (:extern? (meta (get (symbol-table exp) exp))))
+                       (vary-meta exp assoc :munge? true)
+                       (verify-symbol-format exp))
+                     exp))))
+
 (defn analyze
   [exp options]
   {:pre [(top-level? exp)]}
   (let [exp (-> exp
+                define-global-env
                 define-local-env
+                mark-local-symbols
                 free-symbols
-                verify-deftext-closed)]
+                verify-deftext-closed
+                munge-symbols)]
     (define-label global-env (:label exp))
     exp))
