@@ -23,32 +23,6 @@
   (reset-global-env)
   (f))
 
-(defmacro %deftext
-  [& body]
-  `(list '~'%deftext
-         ~@(for [exp body]
-             `'~exp)))
-
-(defmacro %defdata
-  [name & values]
-  `(list '~'%defdata '~name ~@(for [value values] `'~value)))
-
-(deftest test-deftext-macro
-  (is (= '(%deftext (%label foo)
-            (%mov %rax (%mem64 1))
-            (%jmp bar)
-            (%label bar)
-            (%add %rax 1))
-         (%deftext (%label foo)
-           (%mov %rax (%mem64 1))
-           (%jmp bar)
-           (%label bar)
-           (%add %rax 1)))))
-
-(deftest test-defdata-macro
-  (is (= '(%defdata (%label foo) #sint8 1 #sint8 2)
-         (%defdata (%label foo) #sint8 1 #sint8 2))))
-
 (defmethod assert-expr 'assembles?
   [msg [_ file-name]]
   `(let [file-name# (str "sybilant/test/" (str ~file-name))]

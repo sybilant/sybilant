@@ -16,29 +16,6 @@
 
 (use-fixtures :each reset-global-env-fixture)
 
-(deftest test-compile-and-emit-all
-  (let [forms [(%deftext (%label malloc))
-               (%defdata (%label PI))
-               (%deftext (%label foo)
-                 (%mov %rax (%mem64 1))
-                 (%jmp bar)
-                 (%label bar)
-                 (%add %rax 1))
-               (%defdata (%label bar) #sint8 1 #uint8 2)]]
-    (is (= "extern malloc
-extern PI
-global foo
-foo:
-mov rax, qword [1]
-jmp .bar
-.bar:
-add rax, 1
-global bar
-bar:
-db 1
-db 2"
-           (str/join "\n" (compile-and-emit-all forms {}))))))
-
 (defn sybilant-test-files
   []
   (sort (for [f (file-seq (io/file "sybilant/test"))

@@ -1,0 +1,16 @@
+;; -*- mode: clojure -*-
+(%deftext (%label exit))
+
+(%defdata (%label PI))
+
+(%deftext (%label foo)
+  (%mov %rax (%mem64 1))
+  (%jmp bar)
+  (%label bar)
+  (%add %rax 1))
+
+(%defdata (%label bar) #sint8 1 #uint8 2)
+
+(%deftext ^:extern (%label _start)
+  (%mov %rdi 0)
+  (%jmp exit))
