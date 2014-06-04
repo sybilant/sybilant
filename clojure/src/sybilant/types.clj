@@ -46,7 +46,7 @@
 
 (defn int?
   [exp]
-  (typed-map? exp int-type))
+  (= :int (get-in exp [:type :name])))
 
 (def sint-type (make-type :sint))
 
@@ -78,7 +78,7 @@
 
 (defn sint?
   [exp]
-  (or (sint8? exp) (sint16? exp) (sint32? exp) (sint64? exp)))
+  (= :sint (get-in exp [:type :name])))
 
 (def uint-type (assoc (make-type :uint) :min 0))
 
@@ -114,7 +114,7 @@
 
 (defn uint?
   [exp]
-  (or (uint8? exp) (uint16? exp) (uint32? exp) (uint64? exp)))
+  (= :uint (get-in exp [:type :name])))
 
 (defn precise-literal?
   [exp]

@@ -107,7 +107,7 @@
   [form]
   {:pre [(int-form? form)]
    :post [(int? %)]}
-  {:type int-type :form form})
+  {:type (make-int-type form form) :form form})
 
 (defn read-sint8
   [form]
