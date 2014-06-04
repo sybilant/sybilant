@@ -5,7 +5,7 @@ if [ -n "$*" ]; then
     done
     skip_lein=true
 else
-    test_files=$(ls sybilant/test/*.syb 2>/dev/null)
+    test_files=$(ls sybilant/test/*.syb.asm 2>/dev/null)
 fi
 
 function assemble {
@@ -17,20 +17,14 @@ if [ -z "$skip_lein" ]; then
     lein test
 fi
 echo "== Sybilant tests"
-if [ ! -z "$debug" ]; then
-    debug=-d
-fi
 for test_file in $test_files; do
-    name=$(basename $test_file .syb)
+    name=$(basename $test_file .syb.asm)
     echo -n "$name..."
     bin_file=$(dirname $test_file)/../../target/sybilant/test/$name
     mkdir -p $(dirname $bin_file)
-    asm_file=$bin_file.asm
     object_file=$bin_file.o
     stats_file=$bin_file.stats
-    if (lein trampoline run -m sybilant.compile -f $debug -o $asm_file \
-        $test_file &&
-            assemble $asm_file $object_file $bin_file &&
+    if (assemble $test_file $object_file $bin_file &&
             /usr/bin/env time -v -o $stats_file ./$bin_file); then
         echo "passed ($(grep "Elapsed (wall clock) time" $stats_file | \
 cut -f8 -d" "))"
