@@ -12,4 +12,6 @@
   :aot [sybilant.compile]
   :main sybilant.compile
   :profiles {:dev {:dependencies [[pjstadig/humane-test-output "0.6.0"]
-                                  [robert/hooke "1.3.0"]]}})
+                                  [robert/hooke "1.3.0"]]}
+             :test {:injections [(require 'pjstadig.humane-test-output)
+                                 (pjstadig.humane-test-output/activate!)]}})
