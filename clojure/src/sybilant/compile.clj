@@ -87,17 +87,10 @@ Option        Default  Description
 
 (def ^:const EOF (symbol (str (char 65535))))
 
-(defonce data-readers
-  (delay (into {} (for [[tag sym] (-> (io/resource "data_readers.clj")
-                                      slurp
-                                      read-string)]
-                    [tag (intern (create-ns (symbol (namespace sym)))
-                                 (symbol (name sym)))]))))
-
 (defn read-all
   [in]
   (take-while (complement (partial = EOF))
-              (repeatedly #(read {:eof EOF :readers @data-readers} in))))
+              (repeatedly #(read {:eof EOF :readers *data-readers*} in))))
 
 (defn read-file
   [^String infile options]
