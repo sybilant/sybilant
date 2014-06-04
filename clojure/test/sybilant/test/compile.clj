@@ -29,11 +29,7 @@
   main-with-fresh-env
   redef-exit)
 
-(def expected-output ["extern exit"
-                      "global _start"
-                      "_start:"
-                      "mov rdi, 0"
-                      "jmp exit"])
+(def expected-output (slurp-lines "sybilant/test/exit0.syb.asm"))
 
 (defmacro with-output
   [result out err exp & body]
