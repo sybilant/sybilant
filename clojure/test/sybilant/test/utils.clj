@@ -10,8 +10,7 @@
   (:refer-clojure :exclude [compile])
   (:require [clojure.string :as str]
             [clojure.test :refer :all]
-            [sybilant.compile :refer [read-file]]
-            [sybilant.compiler :refer [compile-and-emit-all]]
+            [sybilant.compiler :refer [compile-and-emit-all read-file]]
             [sybilant.environment :refer [global-env]]))
 
 (defn reset-global-env

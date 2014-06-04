@@ -7,16 +7,11 @@
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.compile
-  (:refer-clojure :exclude [read read-string])
-  (:require [clojure.java.io :as io]
-            [clojure.tools.reader.edn :refer [read read-string]]
-            [clojure.tools.reader.reader-types :refer
-             [indexing-push-back-reader]]
-            [slingshot.slingshot :refer [try+]]
-            [sybilant.utils :refer :all])
-  (:import (java.io FileInputStream InputStreamReader PrintWriter PushbackReader
-                    Writer))
   (:gen-class))
+
+(defn die
+  [exit-code format-str & args]
+  (throw (ex-info (apply format format-str args) {:exit-code exit-code})))
 
 (def usage
   "Compiles Sybilant source into x86-64 assembly source.
@@ -85,78 +80,43 @@ Option        Default  Description
   (flush)
   (System/exit exit-code))
 
-(def ^:const EOF (symbol (str (char 65535))))
-
-(defn read-all
-  [in]
-  (take-while (complement (partial = EOF))
-              (repeatedly #(read {:eof EOF :readers *data-readers*} in))))
-
-(defn read-file
-  [^String infile options]
-  (with-open [in (FileInputStream. infile)
-              in (InputStreamReader. in "UTF-8")
-              in (PushbackReader. in)]
-    (doall (read-all (indexing-push-back-reader in 1 infile)))))
-
-(defn read-files
-  [infiles options]
-  (doall (mapcat #(read-file % options) infiles)))
-
-(defn write-to-stream
-  [strs ^Writer out]
-  (doseq [^String str strs]
-    (.write out str)
-    (.write out "\n")))
-
-(defn write-to-file
-  [strs outfile force?]
-  (if (and (.exists (io/file outfile)) (not force?))
-    (die 1 "%s already exists" outfile)
-    (with-open [out (io/writer outfile :encoding "UTF-8")]
-      (write-to-stream strs out))))
+(def ^:dynamic *debug?* false)
 
 (defn print-error
-  [message ^Throwable t print-stack-trace?]
+  [message ^Throwable t]
   (binding [*out* *err*]
     (print "An error occurred: ")
-    (if print-stack-trace?
-      (.printStackTrace t ^PrintWriter *out*)
+    (if *debug?*
+      (.printStackTrace t ^java.io.PrintWriter *out*)
       (println message))
     (flush)))
 
+(defn parse-and-compile
+  [args]
+  (try
+    (let [compile-files (do (require 'sybilant.compiler)
+                            (resolve 'sybilant.compiler/compile-files))
+          {:keys [infiles outfile force? debug?]} (-> args
+                                                      prep-args
+                                                      parse-args)]
+      (set! *debug?* debug?)
+      (compile-files infiles outfile {:force? force? :debug? debug?}))
+    0
+    (catch clojure.lang.ExceptionInfo e
+      (let [exit-code (:exit-code (ex-data e))]
+        (when-not exit-code
+          (throw e))
+        (let [message (.getMessage e)]
+          (if (pos? exit-code)
+            (print-error message e)
+            (println message)))
+        exit-code))))
+
 (defn -main
   [& args]
-  (require 'sybilant.compiler)
-  (let [compile-and-emit-all (resolve 'sybilant.compiler/compile-and-emit-all)
-        print-stack-trace? (atom false)]
-    (try+
-      (let [{:keys [infiles outfile force? debug?]} (-> args
-                                                        prep-args
-                                                        parse-args)
-            options {:force? force? :debug? debug?}]
-        (reset! print-stack-trace? debug?)
-        (if (seq infiles)
-          (let [strs (-> infiles
-                         (read-files options)
-                         (compile-and-emit-all options))]
-            (if outfile
-              (write-to-file strs outfile force?)
-              (write-to-stream strs *out*))
-            (exit 0))
-          (die 1 "expected at least one input file")))
-      (catch :exit-code {:keys [exit-code]}
-        (let [{:keys [message wrapper]} &throw-context]
-          (if (pos? exit-code)
-            (print-error message wrapper @print-stack-trace?)
-            (println message)))
-        (exit exit-code))
-      (catch Throwable t
-        (print-error (.getMessage ^Throwable t) t @print-stack-trace?)
-        (exit 1))
-      (catch Object o
-        (binding [*out* *err*]
-          (print "Unexpectedly thrown object: ")
-          (prn o)
-          (flush))
-        (exit 1)))))
+  (exit (binding [*debug?* *debug?*]
+          (try
+            (parse-and-compile args)
+            (catch Throwable t
+              (print-error (.getMessage t) t)
+              1)))))

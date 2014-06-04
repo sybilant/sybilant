@@ -11,14 +11,13 @@
             [clojure.test :refer :all]
             [robert.hooke :refer [prepend with-scope]]
             [sybilant.compile :refer :all]
-            [sybilant.environment :refer [global-env]]
             [sybilant.test.utils :refer :all])
   (:import (java.io ByteArrayOutputStream File PrintStream PrintWriter)))
 
 (defn main-with-fresh-env
   [f]
   (with-scope
-    (prepend -main (reset! global-env {}))
+    (prepend -main (reset-global-env))
     (f)))
 
 (defn redef-exit

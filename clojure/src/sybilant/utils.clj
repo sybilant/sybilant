@@ -7,8 +7,7 @@
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.utils
-  (:require [clojure.string :as str]
-            [slingshot.slingshot :refer [throw+]]))
+  (:require [clojure.string :as str]))
 
 (defn atom?
   [obj]
@@ -22,13 +21,13 @@
   [p q]
   (or (not p) q))
 
-(defmacro die
+(defn die
   [exit-code format-str & args]
-  `(throw+ {:exit-code ~exit-code} ~format-str ~@args))
+  (throw (ex-info (apply format format-str args) {:exit-code exit-code})))
 
-(defmacro error
+(defn error
   [msg & args]
-  `(die 1 ~msg ~@args))
+  (apply die 1 msg args))
 
 (defn form
   [obj]
