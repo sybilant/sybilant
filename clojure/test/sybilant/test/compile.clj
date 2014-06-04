@@ -11,7 +11,8 @@
             [clojure.test :refer :all]
             [robert.hooke :refer [prepend with-scope]]
             [sybilant.compile :refer :all]
-            [sybilant.environment :refer [global-env]])
+            [sybilant.environment :refer [global-env]]
+            [sybilant.test.utils :refer :all])
   (:import (java.io ByteArrayOutputStream File PrintStream PrintWriter)))
 
 (defn main-with-fresh-env
@@ -29,13 +30,11 @@
   main-with-fresh-env
   redef-exit)
 
-(def expected-output
-  "extern exit
-global _start
-_start:
-mov rdi, 0
-jmp exit
-")
+(def expected-output ["extern exit"
+                      "global _start"
+                      "_start:"
+                      "mov rdi, 0"
+                      "jmp exit"])
 
 (defmacro with-output
   [result out err exp & body]
@@ -73,13 +72,13 @@ jmp exit
     (with-output result out err
       (-main "sybilant/test/exit0.syb")
       (is (= 0 result))
-      (is (= expected-output out))))
+      (is (= expected-output (split-lines out)))))
   (testing "given infiles and outfile"
     (.delete (io/file outfile))
     (with-output result out err
       (-main "sybilant/test/exit0.syb" "-o" outfile)
       (is (= 0 result))
-      (is (= expected-output (slurp outfile)))))
+      (is (= expected-output (slurp-lines outfile)))))
   (testing "given infiles, outfile, and force"
     (with-output result out err
       (-main "sybilant/test/exit0.syb" "-o" outfile)
@@ -88,4 +87,4 @@ jmp exit
     (with-output result out err
       (-main "sybilant/test/exit0.syb" "-o" outfile "-f")
       (is (= 0 result))
-      (is (= expected-output (slurp outfile))))))
+      (is (= expected-output (slurp-lines outfile))))))

@@ -23,9 +23,17 @@
   (reset-global-env)
   (f))
 
+(defn split-lines
+  [string]
+  (map str/trim (str/split-lines string)))
+
+(defn slurp-lines
+  [file-name]
+  (split-lines (slurp file-name)))
+
 (defmethod assert-expr 'assembles?
   [msg [_ file-name]]
   `(let [file-name# (str "sybilant/test/" (str ~file-name))]
-     (is (~'= (str/split (slurp (str file-name# ".asm")) #"\n")
+     (is (~'= (slurp-lines (str file-name# ".asm"))
               (compile-and-emit-all (read-file file-name# {}) {}))
          ~msg)))
