@@ -1,5 +1,5 @@
-extern exit
-global _start
+        extern exit
+        global _start
 _start:
-mov rdi, 0
-jmp exit
+        mov rdi, 0
+        jmp exit
