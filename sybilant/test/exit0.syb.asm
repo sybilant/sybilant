@@ -1,3 +1,4 @@
+        section .text
         extern exit
         global _start
 _start:

@@ -7,7 +7,7 @@
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.compiler
-  (:refer-clojure :exclude [compile read read-string])
+  (:refer-clojure :exclude [compile read read-string symbol?])
   (:require [clojure.java.io :as io]
             [clojure.tools.reader.edn :refer [read read-string]]
             [clojure.tools.reader.reader-types :refer
@@ -16,6 +16,7 @@
             [sybilant.emitter :refer [emit]]
             [sybilant.optimizer :refer [optimize]]
             [sybilant.parser :refer [parse]]
+            [sybilant.types :refer :all]
             [sybilant.utils :refer :all])
   (:import (java.io FileInputStream InputStreamReader PushbackReader Writer)))
 
@@ -33,8 +34,16 @@
 
 (defn emit-all
   [exps options]
-  (apply concat (for [exp exps]
-                  (emit exp options))))
+  (let [data-exps (filter defdata? exps)
+        text-exps (filter deftext? exps)]
+    (concat
+     (when (seq data-exps)
+       (cons "section .data"
+             (apply concat (for [exp data-exps]
+                             (emit exp options)))))
+     ["section .text"]
+     (apply concat (for [exp text-exps]
+                     (emit exp options))))))
 
 (defn compile-and-emit-all
   [forms options]

@@ -1,8 +1,14 @@
-        extern exit
+        section .data
         extern PI
         global something
 something:
         db -6
+        global bar
+bar:
+        db 1
+        db 2
+        section .text
+        extern exit
         global foo
 foo:
         mov rax, qword [1]
@@ -10,10 +16,6 @@ foo:
         jmp .bar
         .bar:
         add rax, 1
-        global bar
-bar:
-        db 1
-        db 2
         global _start
 _start:
         mov rdi, 6
