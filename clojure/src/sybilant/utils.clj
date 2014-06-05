@@ -17,9 +17,9 @@
   [pred]
   (fn [x] (or (nil? x) (pred x))))
 
-(defn implies
+(defmacro implies
   [p q]
-  (or (not p) q))
+  `(or (not ~p) ~q))
 
 (defn die
   [exit-code format-str & args]
