@@ -36,19 +36,6 @@
         exp))
     exp))
 
-(defn local-symbol-table
-  [exp]
-  (:local-env (meta exp)))
-
-(defn global-symbol-table
-  [exp]
-  (:global-env (meta exp)))
-
-(defn symbol-table
-  [exp]
-  (merge (global-symbol-table exp)
-         (local-symbol-table exp)))
-
 (defn mark-local-symbols
   [exp]
   {:pre [(top-level? exp)]}

@@ -34,3 +34,16 @@
                       (loc existing-label)
                       (compiling label)))
        (assoc env label-name val))))
+
+(defn local-symbol-table
+  [exp]
+  (:local-env (meta exp)))
+
+(defn global-symbol-table
+  [exp]
+  (:global-env (meta exp)))
+
+(defn symbol-table
+  [exp]
+  (merge (global-symbol-table exp)
+         (local-symbol-table exp)))
