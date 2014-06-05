@@ -310,15 +310,16 @@
 
 (defn precise-literal-form?
   [form]
-  (or (sint-form? form) (uint-form? form)))
+  (or (sint-form? form) (uint-form? form) (symbol-form? form)))
 
 (defn parse-precise-literal
   [form]
   {:pre [(precise-literal-form? form)]
    :post [(precise-literal? %)]}
-  (if (sint-form? form)
-    (parse-sint form)
-    (parse-uint form)))
+  (cond
+   (sint-form? form) (parse-sint form)
+   (uint-form? form) (parse-uint form)
+   (symbol-form? form) (parse-symbol form)))
 
 (defn literal-form?
   [form]
@@ -715,9 +716,37 @@
                   (map parse-precise-literal value-forms)
                   form)))
 
+(defn defconst-form?
+  [form]
+  (tagged-list? form '%defconst))
+
+(defn make-defconst
+  [label value form]
+  {:pre [(label? label) (literal? value) (defconst-form? form)]
+   :post [(defconst? %) (form= form %)]}
+  (assoc-form {:type defconst-type :label label :value value}
+              form))
+
+(defn parse-defconst
+  [form]
+  {:pre [(defconst-form? form)]
+   :post [(defconst? %) (form= form %)]}
+  (let [[_ label-form value-form] form
+        form-count (dec (count form))]
+    (when (not= form-count 2)
+      (error "%%defconst expects exactly 2 arguments, but got %s%s" form-count
+             (compiling form)))
+    (when-not (label-form? label-form)
+      (syntax-error :label label-form))
+    (when-not (literal-form? value-form)
+      (syntax-error "literal" value-form))
+    (make-defconst (parse-extern-label label-form)
+                   (parse-literal value-form)
+                   form)))
+
 (defn top-level-form?
   [form]
-  (or (deftext-form? form) (defdata-form? form)))
+  (or (deftext-form? form) (defdata-form? form) (defconst-form? form)))
 
 (defn parse-top-level
   [form]
@@ -725,7 +754,8 @@
    :post [(top-level? %)]}
   (cond
    (deftext-form? form) (parse-deftext form)
-   (defdata-form? form) (parse-defdata form)))
+   (defdata-form? form) (parse-defdata form)
+   (defconst-form? form) (parse-defconst form)))
 
 (defn parse
   [form options]

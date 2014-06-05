@@ -116,19 +116,19 @@
   [exp]
   (= :uint (get-in exp [:type :name])))
 
-(defn precise-literal?
-  [exp]
-  (or (sint? exp) (uint? exp)))
-
-(defn literal?
-  [exp]
-  (or (int? exp) (precise-literal? exp)))
-
 (def symbol-type (make-type :symbol))
 
 (defn symbol?
   [exp]
   (typed-map? exp symbol-type))
+
+(defn precise-literal?
+  [exp]
+  (or (sint? exp) (uint? exp) (symbol? exp)))
+
+(defn literal?
+  [exp]
+  (or (int? exp) (precise-literal? exp)))
 
 (defn int-form?
   [form]
@@ -273,6 +273,12 @@
   [exp]
   (typed-map? exp defdata-type))
 
+(def defconst-type (make-type :defconst))
+
+(defn defconst?
+  [exp]
+  (typed-map? exp defconst-type))
+
 (defn top-level?
   [exp]
-  (or (deftext? exp) (defdata? exp)))
+  (or (deftext? exp) (defdata? exp) (defconst? exp)))

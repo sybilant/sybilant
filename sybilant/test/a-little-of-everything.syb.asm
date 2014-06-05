@@ -1,5 +1,8 @@
         extern exit
         extern PI
+        global something
+something:
+        db -6
         global foo
 foo:
         mov rax, qword [1]
@@ -13,5 +16,6 @@ bar:
         db 2
         global _start
 _start:
-        mov rdi, 0
+        mov rdi, 6
+        add rdi, byte -6
         jmp exit

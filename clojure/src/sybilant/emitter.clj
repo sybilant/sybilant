@@ -184,6 +184,10 @@
               (map emit-as-data values))
       [(str "extern " (emit* label-name))])))
 
+(defmethod emit* :defconst
+  [exp]
+  [])
+
 (defmethod emit* :default
   [exp]
   (str (form exp)))

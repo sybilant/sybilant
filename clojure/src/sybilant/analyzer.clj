@@ -94,11 +94,26 @@
   (dfs-visit exp
              (fn [exp]
                (if (symbol? exp)
-                 (if (:extern? (meta (get-in (global-symbol-table exp)
-                                             [exp :label])))
+                 (if (:extern? (meta (get-in (symbol-table exp) [exp :label])))
                    (verify-symbol-format exp)
                    (vary-meta exp assoc :munge? true))
                  exp))))
+
+(defn constant
+  [exp]
+  (when (symbol? exp)
+    (when-let [val (get (symbol-table exp) exp)]
+      (when (defconst? val)
+        val))))
+
+(defn insert-constant-values
+  [exp]
+  (letfn
+      [(insert-constant-values [exp]
+         (if-let [defconst (constant exp)]
+           (:value defconst)
+           exp))]
+    (dfs-visit exp insert-constant-values)))
 
 (defn analyze
   [exp options]
@@ -109,6 +124,7 @@
                 mark-local-symbols
                 free-symbols
                 verify-deftext-closed
-                munge-symbols)]
+                munge-symbols
+                insert-constant-values)]
     (reset! global-env (:global-env (meta exp)))
     exp))

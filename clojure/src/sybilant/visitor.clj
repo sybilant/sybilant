@@ -24,6 +24,10 @@
   [exp]
   (cons (:label exp) (:values exp)))
 
+(defmethod children :defconst
+  [exp]
+  (list (:label exp) (:value exp)))
+
 (defmethod children :label
   [exp]
   [(:name exp)])
@@ -44,6 +48,10 @@
 (defmethod make-node :defdata
   [exp [label & values]]
   (assoc exp :label label :values values))
+
+(defmethod make-node :defconst
+  [exp [label value]]
+  (assoc exp :label label :value value))
 
 (defmethod make-node :label
   [exp [name]]

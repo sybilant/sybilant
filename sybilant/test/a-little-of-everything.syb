@@ -3,6 +3,10 @@
 
 (%defdata (%label PI))
 
+(%defconst (%label TAU) 6)
+(%defconst (%label ANTITAU) #sint8 -6)
+(%defdata (%label something) ANTITAU)
+
 (%deftext (%label foo)
   (%mov %rax (%mem64 1))
   (%mov %bl (%mem8 %rdi bar))
@@ -13,5 +17,6 @@
 (%defdata (%label bar) #sint8 1 #uint8 2)
 
 (%deftext ^:extern (%label _start)
-  (%mov %rdi 0)
+  (%mov %rdi TAU)
+  (%add %rdi ANTITAU)
   (%jmp exit))
