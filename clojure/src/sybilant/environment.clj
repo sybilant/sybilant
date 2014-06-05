@@ -23,15 +23,14 @@
     (error "%s cannot be redefined%s" form compiling-loc)))
 
 (defn define-label
-  [env label]
-  {:pre [(atom? env) (label? label)]}
-  (let [label-name (:name label)]
-    (letfn [(define
-              [env]
-              (when-let [existing-label (get env label-name)]
-                (redef-error (form label-name)
-                             (loc existing-label)
-                             (compiling label)))
-              (assoc env label-name label))]
-      (swap! env define)))
-  nil)
+  ([env label]
+     {:pre [(map? env) (label? label)]}
+     (define-label env label label))
+  ([env label val]
+     {:pre [(map? env) (label? label) (or (label? val) (top-level? val))]}
+     (let [label-name (:name label)]
+       (when-let [existing-label (get env label-name)]
+         (redef-error (form label-name)
+                      (loc existing-label)
+                      (compiling label)))
+       (assoc env label-name val))))

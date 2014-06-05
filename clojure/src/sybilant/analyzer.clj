@@ -18,8 +18,7 @@
   [exp]
   {:pre [(top-level? exp)]}
   (let [exp-label (:label exp)
-        exp-label-name (:name exp-label)
-        global-env (assoc @global-env exp-label-name exp-label)]
+        global-env (define-label @global-env exp-label exp)]
     (dfs-visit exp vary-meta assoc :global-env global-env)))
 
 (defn define-local-env
@@ -31,7 +30,7 @@
           local-env (atom {})]
       (doseq [statement (:statements exp)
               :when (label? statement)]
-        (define-label local-env statement))
+        (swap! local-env define-label statement))
       (if-let [local-env (not-empty @local-env)]
         (dfs-visit exp vary-meta assoc :local-env local-env)
         exp))
@@ -105,12 +104,14 @@
 (defn munge-symbols
   [exp]
   {:pre [(top-level? exp)]}
-  (dfs-visit exp (fn [exp]
-                   (if (symbol? exp)
-                     (if (not (:extern? (meta (get (symbol-table exp) exp))))
-                       (vary-meta exp assoc :munge? true)
-                       (verify-symbol-format exp))
-                     exp))))
+  (dfs-visit exp
+             (fn [exp]
+               (if (symbol? exp)
+                 (if (:extern? (meta (get-in (global-symbol-table exp)
+                                             [exp :label])))
+                   (verify-symbol-format exp)
+                   (vary-meta exp assoc :munge? true))
+                 exp))))
 
 (defn analyze
   [exp options]
@@ -122,5 +123,5 @@
                 free-symbols
                 verify-deftext-closed
                 munge-symbols)]
-    (define-label global-env (:label exp))
+    (reset! global-env (:global-env (meta exp)))
     exp))
