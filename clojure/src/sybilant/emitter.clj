@@ -69,35 +69,9 @@
             (recur chars)))))
     (.toString sb)))
 
-(defmulti width (fn [exp] (get-in exp [:type :name])))
-
-(defmethod width :reg
+(defn width
   [exp]
   (get-in exp [:type :width]))
-
-(defmethod width :mem
-  [exp]
-  (get-in exp [:type :width]))
-
-(defmethod width :sint
-  [{{min :min max :max} :type}]
-  (cond
-   (<= (:min sint8-type) min max (:max sint8-type)) 8
-   (<= (:min sint16-type) min max (:max sint16-type)) 16
-   (<= (:min sint32-type) min max (:max sint32-type)) 32
-   (<= (:min sint64-type) min max (:max sint64-type)) 64))
-
-(defmethod width :uint
-  [{{min :min max :max} :type}]
-  (cond
-   (<= (:min uint8-type) min max (:max uint8-type)) 8
-   (<= (:min uint16-type) min max (:max uint16-type)) 16
-   (<= (:min uint32-type) min max (:max uint32-type)) 32
-   (<= (:min uint64-type) min max (:max uint64-type)) 64))
-
-(defmethod width :default
-  [exp]
-  nil)
 
 (defmulti emit* (fn [exp] (get-in exp [:type :name])))
 

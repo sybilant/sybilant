@@ -64,3 +64,6 @@
      (format "%s, and %s"
              (str/join ", " (map str (list* a b (butlast more))))
              (str (last more)))))
+
+(defn assoc-meta [obj & keys-and-vals]
+  (apply vary-meta obj assoc keys-and-vals))

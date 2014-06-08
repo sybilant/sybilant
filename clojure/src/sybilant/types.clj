@@ -40,37 +40,43 @@
 
 (def ^:const +uint64-max-value+ (inc' (*' Long/MAX_VALUE 2)))
 
-(def int-type (assoc (make-type :int)
-                :min Long/MIN_VALUE
-                :max +uint64-max-value+))
+(def int-type (assoc-meta (make-type :int)
+                          :min Long/MIN_VALUE
+                          :max +uint64-max-value+))
 
 (defn int?
   [exp]
-  (= :int (get-in exp [:type :name])))
+  (typed-map? exp int-type))
 
 (def sint-type (make-type :sint))
 
-(def sint8-type (assoc sint-type :min Byte/MIN_VALUE :max Byte/MAX_VALUE))
+(def sint8-type (assoc-meta (assoc sint-type :width 8)
+                            :min Byte/MIN_VALUE
+                            :max Byte/MAX_VALUE))
 
 (defn sint8?
   [exp]
   (typed-map? exp sint8-type))
 
-(def sint16-type (assoc sint-type :min Short/MIN_VALUE :max Short/MAX_VALUE))
+(def sint16-type (assoc-meta (assoc sint-type :width 16)
+                             :min Short/MIN_VALUE
+                             :max Short/MAX_VALUE))
 
 (defn sint16?
   [exp]
   (typed-map? exp sint16-type))
 
-(def sint32-type (assoc sint-type
-                   :min Integer/MIN_VALUE
-                   :max Integer/MAX_VALUE))
+(def sint32-type (assoc-meta (assoc sint-type :width 32)
+                             :min Integer/MIN_VALUE
+                             :max Integer/MAX_VALUE))
 
 (defn sint32?
   [exp]
   (typed-map? exp sint32-type))
 
-(def sint64-type (assoc sint-type :min Long/MIN_VALUE :max Long/MAX_VALUE))
+(def sint64-type (assoc-meta (assoc sint-type :width 64)
+                             :min Long/MIN_VALUE
+                             :max Long/MAX_VALUE))
 
 (defn sint64?
   [exp]
@@ -80,11 +86,12 @@
   [exp]
   (= :sint (get-in exp [:type :name])))
 
-(def uint-type (assoc (make-type :uint) :min 0))
+(def uint-type (assoc-meta (make-type :uint) :min 0))
 
 (def ^:const +uint8-max-value+ (inc' (*' Byte/MAX_VALUE 2)))
 
-(def uint8-type (assoc uint-type :max +uint8-max-value+))
+(def uint8-type (assoc-meta (assoc uint-type :width 8)
+                            :max +uint8-max-value+))
 
 (defn uint8?
   [exp]
@@ -92,7 +99,8 @@
 
 (def ^:const +uint16-max-value+ (inc' (*' Short/MAX_VALUE 2)))
 
-(def uint16-type (assoc uint-type :max +uint16-max-value+))
+(def uint16-type (assoc-meta (assoc uint-type :width 16)
+                             :max +uint16-max-value+))
 
 (defn uint16?
   [exp]
@@ -100,13 +108,15 @@
 
 (def ^:const +uint32-max-value+ (inc' (*' Integer/MAX_VALUE 2)))
 
-(def uint32-type (assoc uint-type :max +uint32-max-value+))
+(def uint32-type (assoc-meta (assoc uint-type :width 32)
+                             :max +uint32-max-value+))
 
 (defn uint32?
   [exp]
   (typed-map? exp uint32-type))
 
-(def uint64-type (assoc uint-type :max +uint64-max-value+))
+(def uint64-type (assoc-meta (assoc uint-type :width 64)
+                             :max +uint64-max-value+))
 
 (defn uint64?
   [exp]
@@ -145,13 +155,21 @@
   [min max]
   {:pre [(int-form? (long min)) (int-form? (long max))]
    :post [(int-type? %)]}
-  (assoc int-type :min min :max max))
+  (assoc-meta int-type :min min :max max))
+
+(defn int-max
+  [exp]
+  (:max (meta exp)))
+
+(defn int-min
+  [exp]
+  (:min (meta exp)))
 
 (def reg-type (make-type :reg))
 
 (def reg8-type (merge reg-type {:width 8
                                 :sint sint8-type :uint uint8-type
-                                :int (make-int-type 0 (:max sint8-type))}))
+                                :int (make-int-type 0 (int-max sint8-type))}))
 
 (defn reg8?
   [exp]
@@ -159,7 +177,7 @@
 
 (def reg16-type (merge reg-type {:width 16
                                  :sint sint16-type :uint uint16-type
-                                 :int (make-int-type 0 (:max sint16-type))}))
+                                 :int (make-int-type 0 (int-max sint16-type))}))
 
 (defn reg16?
   [exp]
@@ -167,7 +185,7 @@
 
 (def reg32-type (merge reg-type {:width 32
                                  :sint sint32-type :uint uint32-type
-                                 :int (make-int-type 0 (:max sint32-type))}))
+                                 :int (make-int-type 0 (int-max sint32-type))}))
 
 (defn reg32?
   [exp]
@@ -175,7 +193,7 @@
 
 (def reg64-type (merge reg-type {:width 64
                                  :sint sint64-type :uint uint64-type
-                                 :int (make-int-type 0 (:max sint64-type))}))
+                                 :int (make-int-type 0 (int-max sint64-type))}))
 
 (defn reg64?
   [exp]
@@ -213,7 +231,7 @@
 
 (def mem8-type (merge mem-type {:width 8
                                 :sint sint8-type :uint uint8-type
-                                :int (make-int-type 0 (:max sint8-type))}))
+                                :int (make-int-type 0 (int-max sint8-type))}))
 
 (defn mem8?
   [exp]
@@ -221,7 +239,7 @@
 
 (def mem16-type (merge mem-type {:width 16
                                  :sint sint16-type :uint uint16-type
-                                 :int (make-int-type 0 (:max sint16-type))}))
+                                 :int (make-int-type 0 (int-max sint16-type))}))
 
 (defn mem16?
   [exp]
@@ -229,7 +247,7 @@
 
 (def mem32-type (merge mem-type {:width 32
                                  :sint sint32-type :uint uint32-type
-                                 :int (make-int-type 0 (:max sint32-type))}))
+                                 :int (make-int-type 0 (int-max sint32-type))}))
 
 (defn mem32?
   [exp]
@@ -237,7 +255,7 @@
 
 (def mem64-type (merge mem-type {:width 64
                                  :sint sint64-type :uint uint64-type
-                                 :int (make-int-type 0 (:max sint64-type))}))
+                                 :int (make-int-type 0 (int-max sint64-type))}))
 
 (defn mem64?
   [exp]
