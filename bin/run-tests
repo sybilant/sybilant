@@ -15,8 +15,8 @@ function assemble {
 
 if [ -z "$skip_lein" ]; then
     lein test
-fi
-echo "== Sybilant tests"
+fi &&
+echo "== Sybilant tests" &&
 for test_file in $test_files; do
     name=$(basename $test_file .syb.asm)
     echo -n "$name..."
@@ -32,7 +32,7 @@ cut -f8 -d" "))"
         echo "failed!!"
         failed=true
     fi
-done
+done &&
 if [ -z "$failed" ]; then
     echo "== Testing complete"
 else
