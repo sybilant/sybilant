@@ -9,6 +9,7 @@
 (ns sybilant.analyzer
   (:refer-clojure :exclude [symbol?])
   (:require [clojure.set :as set]
+            [sybilant.analyzer.syntax :refer [check-syntax]]
             [sybilant.environment :refer :all]
             [sybilant.types :refer :all]
             [sybilant.utils :refer :all]
@@ -99,13 +100,6 @@
                    (vary-meta exp assoc :munge? true))
                  exp))))
 
-(defn constant
-  [exp]
-  (when (symbol? exp)
-    (when-let [val (get (symbol-table exp) exp)]
-      (when (defconst? val)
-        val))))
-
 (defn insert-constant-values
   [exp]
   (letfn
@@ -125,6 +119,7 @@
                 free-symbols
                 verify-deftext-closed
                 munge-symbols
-                insert-constant-values)]
+                insert-constant-values
+                check-syntax)]
     (reset! global-env (:global-env (meta exp)))
     exp))

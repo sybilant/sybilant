@@ -47,3 +47,10 @@
   [exp]
   (merge (global-symbol-table exp)
          (local-symbol-table exp)))
+
+(defn constant
+  [exp]
+  (when (symbol? exp)
+    (when-let [val (get (symbol-table exp) exp)]
+      (when (defconst? val)
+        val))))
