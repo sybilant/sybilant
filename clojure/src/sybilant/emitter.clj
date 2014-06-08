@@ -10,7 +10,8 @@
   (:refer-clojure :exclude [munge symbol?])
   (:require [clojure.string :as str]
             [sybilant.types :refer :all]
-            [sybilant.utils :refer :all]))
+            [sybilant.utils :refer :all]
+            [sybilant.visitor :refer [dispatch-fn]]))
 
 (defn munge ^String [value]
   (let [chars (seq (if (namespace value)
@@ -73,7 +74,7 @@
   [exp]
   (get-in exp [:type :width]))
 
-(defmulti emit* (fn [exp] (get-in exp [:type :name])))
+(defmulti emit* dispatch-fn)
 
 (def width->prefix
   {8 "byte "
