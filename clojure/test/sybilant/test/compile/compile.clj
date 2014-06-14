@@ -6,10 +6,10 @@
 ;;;;
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
-(ns sybilant.test.compile
+(ns sybilant.test.compile.compile
   (:require [clojure.java.io :as io]
             [clojure.test :refer :all]
-            [sybilant.compile :refer :all]
+            [sybilant.compile.compile :refer :all]
             [sybilant.compiler :refer [compile-files]]
             [sybilant.test.util :refer [clear-file with-output-strs]]))
 
@@ -42,12 +42,12 @@
 (deftest test-main-prints-exception-string
   (with-redefs [compile-files (fn [& _] (throw (Exception. "ex")))]
     (is (= "An error occurred: ex\n"
-           (second (with-output-strs (-main "-o" outpath inpath))))))
+           (second (with-output-strs (main "-o" outpath inpath))))))
   (is (= 1 @exit-code)))
 
 (deftest test-main-debug-flag-prints-stack-trace
   (with-redefs [compile-files (fn [& _] (throw (Exception. "ex")))]
-    (let [err (second (with-output-strs (-main "-d" "-o" outpath inpath)))]
+    (let [err (second (with-output-strs (main "-d" "-o" outpath inpath)))]
       (is (.startsWith err (str "An error occurred: java.lang.Exception: ex\n"
                                 "\tat sybilant.test.compile"))
           err)))
