@@ -65,21 +65,13 @@
   [file]
   (split-lines (slurp file)))
 
-(def expected-output
-  ["bits 64"
-   "default rel"
-   "section .text"
-   "extern exit"
-   "global _start"
-   "_start:"
-   "mov rdi, 0"
-   "jmp exit"])
+(def expected-output (delay (vec (slurp-lines "sybilant/test/exit0.syb.asm"))))
 
 (deftest test-main
   (let [outfile @outfile]
     (with-output out err
       (is (= 0 (with-output-capture (main [input-file "--outfile" outfile]))))
-      (is (= expected-output (slurp-lines outfile)))
+      (is (= @expected-output (slurp-lines outfile)))
       (is (empty? (str out)))
       (is (empty? (str err))))
     (testing "should fail with existing outfile"
@@ -94,7 +86,7 @@
     (testing "should overwrite existing outfile when given force option"
       (with-output out err
         (is (= 0 (with-output-capture (main [input-file "-o" outfile "-f"]))))
-        (is (= expected-output (slurp-lines outfile)))
+        (is (= @expected-output (slurp-lines outfile)))
         (is (empty? (str out)))
         (is (empty? (str err)))))))
 
@@ -105,17 +97,31 @@
         (is (= 0 (with-output-capture (main ["-o" outfile]))))
         (is (= "> " (str out)))
         (is (empty? (str err)))
-        (is (= expected-output (slurp-lines outfile)))))))
+        (is (= @expected-output (slurp-lines outfile)))))))
 
 (deftest test-main-given-no-outfile
   (with-output out err
     (is (= 0 (with-output-capture (main [input-file]))))
-    (is (= expected-output (split-lines out)))
+    (is (= @expected-output (split-lines out)))
     (is (empty? (str err)))))
 
 (deftest test-main-given-no-infile-and-no-outfile
   (with-in-str (read-input-file)
     (with-output out err
       (is (= 0 (with-output-capture (main []))))
-      (is (= (update-in expected-output [0] #(str "> " %)) (split-lines out)))
+      (is (= (update-in @expected-output [0] #(str "> " %)) (split-lines out)))
       (is (empty? (str err))))))
+
+(defn sybilant-test-files
+  []
+  (for [file (file-seq (io/file "sybilant/test"))
+        :let [file-name (.getCanonicalPath ^File file)]
+        :when (.endsWith file-name ".asm")]
+    file-name))
+
+(deftest test-compiler
+  (doseq [asm-file (sybilant-test-files)
+          :let [syb-file (str/replace asm-file #"\.asm$" "")]]
+    (reset! *globals* {})
+    (is (= (slurp-lines asm-file)
+           (map str/trim (compile-files [syb-file] {}))))))
