@@ -12,4 +12,4 @@
 (defn -main [& args]
   (require 'sybilant.compile.compile)
   (let [main (resolve 'sybilant.compile.compile/main)]
-    (apply main args)))
+    (main args)))

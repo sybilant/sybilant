@@ -7,107 +7,183 @@
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.compile.compile
-  (:refer-clojure :exclude [compile])
-  (:require [slingshot.slingshot :refer [try+]]
+  (:refer-clojure :exclude [compile *data-readers* read])
+  (:require [clojure.core :as clj]
+            [clojure.java.io :as io]
+            [clojure.tools.reader :refer [read *data-readers*]]
+            [clojure.tools.reader.reader-types
+             :refer [indexing-push-back-reader]]
+            [slingshot.slingshot :refer [try+]]
             [sybilant.compiler :refer [compile]]
-            [sybilant.util :refer [die]])
-  (:gen-class))
+            [sybilant.emitter :refer [emit]]
+            [sybilant.parser :refer [defasm? defdata? defimport?]]
+            [sybilant.util :refer :all])
+  (:import (java.io File PrintWriter PushbackReader)))
 
-(def usage
-  (str
-   "Compiles Sybilant source into x86-64 assembly source.  If no source files\n"
-   "are specified, then the source is read from standard input.\n"
-   "\n"
-   "Usage: [OPTIONS] [FILE]...\n"
-   "\n"
-   "Option        Default  Description\n"
-   "------        -------  -----------\n"
-   "-h --help              Display this usage message\n"
-   "-d --debug             Print detailed error messages, and leave output\n"
-   "                       file for inspection\n"
-   "-o --outfile  stdout   Path to the output file\n"
-   "-f --force             Overwrite output file, if it exists\n"))
-
-(defn option? [arg]
+(defn option?
+  [^String arg]
   (and arg (.startsWith arg "-")))
 
-(defn long-option? [arg]
+(defn long-option?
+  [^String arg]
   (and arg (.startsWith arg "--")))
 
-(defn parse-long-option [arg]
-  (and arg (seq (.split arg "="))))
+(defn prep-args
+  ([args]
+     (prep-args args []))
+  ([[^String arg & args] result]
+     (if arg
+       (if (and (long-option? arg) (pos? (.indexOf arg "=")))
+         (recur args (into result (.split arg "=")))
+         (recur args (conj result arg)))
+       result)))
 
-(defn prep-args [args]
-  (loop [[arg & args] args
-         result []]
-    (if arg
-      (if (long-option? arg)
-        (let [[arg value] (parse-long-option arg)]
-          (if value
-            (recur args (conj result arg value))
-            (recur (rest args) (conj result arg (first args)))))
-        (recur args (conj result arg)))
-      result)))
+(defn parse-outfile
+  [arg [file & args] result]
+  (when (option? file)
+    (die 1 "expected value for" arg))
+  [args (assoc result :outfile (io/file file))])
 
-(defn parse-args [args]
-  (loop [[arg & args] args
-         options {}
-         infiles []]
-    (if arg
-      (case arg
-        ("-h" "--help")
-        (die 0 usage)
-        ("-d" "--debug")
-        (recur args (assoc options :debug? true) infiles)
-        ("-o" "--outfile")
-        (let [outfile (first args)]
-          (when (or (nil? outfile) (option? outfile))
-            (die 1 "expected value for --outfile"))
-          (recur (rest args) (assoc options :outfile (first args)) infiles))
-        ("-f" "--force")
-        (recur args (assoc options :force? true) infiles)
-        (if (option? arg)
-          (die 1 "unknown option" arg)
-          (recur args options (conj infiles arg))))
-      (assoc options :infiles infiles))))
+(defn parse-flag
+  [key]
+  (fn
+    [arg args result]
+    (if (seq args)
+      (cond
+       (option? (first args)) [args (assoc result key true)]
+       (= "true" (first args)) [(rest args) (assoc result key true)]
+       (= "false" (first args)) [(rest args) (assoc result key false)]
+       :else (die 1 "invalid value for" arg))
+      [args (assoc result key true)])))
 
-(defn exit [exit-code]
-  (flush)
+(def option-specs
+  {"-o" parse-outfile
+   "--outfile" parse-outfile
+   "-d" (parse-flag :debug?)
+   "--debug" (parse-flag :debug?)
+   "-f" (parse-flag :force?)
+   "--force" (parse-flag :force?)})
+
+(defn parse-args
+  ([args]
+     (parse-args args {}))
+  ([[arg & args] result]
+     (if arg
+       (if (option? arg)
+         (if-let [f (option-specs arg)]
+           (let [[args result] (f arg args result)]
+             (recur args result))
+           (die 1 "invalid option" arg))
+         (recur args (update-in result [:infiles] (fnil conj []) arg)))
+       result)))
+
+(defn parse-options
+  [args]
+  (parse-args (prep-args args)))
+
+(defn read-forms
+  ([]
+     (read-forms (indexing-push-back-reader *in*)))
+  ([in]
+     (binding [*data-readers* clj/*data-readers*]
+       (doall (take-while (partial not= ::eof)
+                          (repeatedly #(read in false ::eof)))))))
+
+(defn read-forms-from-file
+  [f]
+  (with-open [r (io/reader f :encoding "UTF-8")
+              r (PushbackReader. r)]
+    (read-forms (indexing-push-back-reader r 1 f))))
+
+(defn data-exp? [exp]
+  (defdata? exp))
+
+(defn code-exp? [exp]
+  (or (defasm? exp) (defimport? exp)))
+
+(defn compile-and-emit-forms
+  [forms options]
+  (let [exps (for [form forms] (compile form options))
+        data-exps (mapcat emit (doall (filter data-exp? exps)))
+        code-exps (mapcat emit (doall (filter code-exp? exps)))
+        lines (concat
+               (when (seq data-exps)
+                 (cons "section .data" data-exps))
+               (when (seq code-exps)
+                 (cons "section .text" code-exps)))]
+    (when (seq lines)
+      (list* "bits 64" "default rel" lines))))
+
+(defn read-files
+  [infiles]
+  (if (seq infiles)
+    (mapcat read-forms-from-file infiles)
+    (do (print "> ")
+        (flush)
+        (read-forms))))
+
+(defn compile-files
+  [infiles options]
+  (let [forms (read-files infiles)]
+    (compile-and-emit-forms forms options)))
+
+(defn print-lines
+  [lines]
+  (doseq [line lines]
+    (println line)))
+
+(defn print-lines-to-file
+  [lines outfile]
+  (with-open [w (io/writer outfile :encoding "utf-8")
+              out (PrintWriter. w)]
+    (binding [*out* out]
+      (print-lines lines))))
+
+(def debug? (atom false))
+
+(defn print-error
+  ([message]
+     (binding [*out* *err*]
+       (println message)))
+  ([message ^Throwable throwable]
+     (binding [*out* *err*]
+       (println message)
+       (when @debug?
+         (let [w (PrintWriter. *out*)]
+           (try
+             (.printStackTrace throwable w)
+             (finally
+               (.flush w))))))))
+
+(defn exit*
+  [exit-code]
   (System/exit exit-code))
 
-(defn main [& args]
+(defn main
+  [args]
   (try+
-    (let [{:keys [infiles outfile force? debug?] :as options} (-> args
-                                                                  prep-args
-                                                                  parse-args)]
-      (try+
-        (compile infiles outfile force? debug?)
-        (exit 0)
-        (catch Throwable t
-          (binding [*out* *err*]
-            (print "An error occurred: ")
-            (if debug?
-              (.printStackTrace t *out*)
-              (println (.getMessage t)))
-            (flush))
-          (exit 1))))
+    (let [{:keys [infiles ^File outfile] :as cli-options} (parse-options args)
+          options (select-keys cli-options [:debug? :force?])]
+      (reset! debug? (:debug? options))
+      (if (and outfile (.exists outfile) (not (:force? options)))
+        (die 1 outfile "already exists")
+        (let [lines (compile-files infiles options)]
+          (if outfile
+            (print-lines-to-file lines outfile)
+            (print-lines lines)))))
+    (exit* 0)
     (catch :exit-code {:keys [exit-code message]}
-      (if (pos? exit-code)
-        (binding [*out* *err*]
-          (print "An error occurred: ")
-          (println message)
-          (flush))
-        (println message))
-      (exit exit-code))
+      (when message
+        (if (pos? exit-code)
+          (print-error message)
+          (println message)))
+      (exit* exit-code))
     (catch Throwable t
-      (binding [*out* *err*]
-        (print "An error occurred: ")
-        (.printStackTrace t *out*)
-        (flush))
-      (exit 1))
+      (print-error (format "Unexpected exception: %s"
+                           (.getMessage ^Throwable t))
+                   t)
+      (exit* 1))
     (catch Object o
-      (binding [*out* *err*]
-        (print "Unexpectedly thrown object: ")
-        (prn o)
-        (flush))
-      (exit 1))))
+      (print-error (format "Unexpectedly thrown object: %s" (pr-str o))
+                   (:throwable &throw-context))
+      (exit* 1))))

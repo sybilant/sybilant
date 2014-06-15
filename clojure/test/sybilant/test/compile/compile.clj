@@ -8,47 +8,114 @@
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.test.compile.compile
   (:require [clojure.java.io :as io]
+            [clojure.string :as str]
             [clojure.test :refer :all]
+            [sybilant.analyzer :refer [*globals*]]
             [sybilant.compile.compile :refer :all]
-            [sybilant.compiler :refer [compile-files]]
-            [sybilant.test.util :refer [clear-file with-output-strs]]))
+            [sybilant.test.util :refer [reset-globals]])
+  (:import (java.io File Writer)))
 
-(def inpath "clojure/test/sybilant/test/input.syb")
+(use-fixtures :once (fn redef-exit* [f]
+                      (with-redefs [exit* (fn [exit-code] exit-code)]
+                        (f))))
 
-(def outpath "clojure/test/sybilant/test/output.asm")
-(def outfile (io/file outpath))
-
-(def exit-code (atom nil))
-
-(use-fixtures :once
-  (fn mock-exit [f]
-    (with-redefs [exit (fn [x] (flush) (reset! exit-code x))]
-      (f))))
+(defonce outfile (delay (-> (File/createTempFile "sybilant" ".asm")
+                            .getCanonicalPath)))
 
 (use-fixtures :each
-  (fn reset-exit-code [f]
-    (reset! exit-code nil)
+  (fn clear-outfile [f]
+    (.delete (io/file @outfile))
     (f))
-  (clear-file outfile))
+  reset-globals)
 
-(deftest test-prep-args
-  (is (= ["-o" "foo" "--outfile" "bar" "--outfile" "baz" "quux"]
-         (prep-args ["-o" "foo" "--outfile=bar" "--outfile" "baz" "quux"]))))
+(def ^:dynamic *out-writer*)
+(def ^:dynamic *err-writer*)
 
-(deftest test-parse-args
-  (is (= {:debug? true :force? true :outfile "foo" :infiles ["bar" "baz"]}
-         (parse-args ["-d" "-f" "-o" "foo" "bar" "baz"]))))
+(defmacro with-output
+  [out-sym err-sym & body]
+  `(let [out-sw# (java.io.StringWriter.)
+         err-sw# (java.io.StringWriter.)
+         ~out-sym out-sw#
+         ~err-sym err-sw#]
+     (binding [*out-writer* out-sw#
+               *err-writer* err-sw#]
+       ~@body)))
 
-(deftest test-main-prints-exception-string
-  (with-redefs [compile-files (fn [& _] (throw (Exception. "ex")))]
-    (is (= "An error occurred: ex\n"
-           (second (with-output-strs (main "-o" outpath inpath))))))
-  (is (= 1 @exit-code)))
+(defmacro with-output-capture
+  [& body]
+  `(binding [*out* *out-writer*
+             *err* *err-writer*]
+     (try
+       ~@body
+       (finally
+         (.flush *out*)
+         (.flush ^java.io.Writer *err*)))))
 
-(deftest test-main-debug-flag-prints-stack-trace
-  (with-redefs [compile-files (fn [& _] (throw (Exception. "ex")))]
-    (let [err (second (with-output-strs (main "-d" "-o" outpath inpath)))]
-      (is (.startsWith err (str "An error occurred: java.lang.Exception: ex\n"
-                                "\tat sybilant.test.compile"))
-          err)))
-  (is (= 1 @exit-code)))
+(def input-file "sybilant/test/exit0.syb")
+
+(defn read-input-file
+  []
+  (slurp input-file))
+
+(defn split-lines
+  [string]
+  (map str/trim (str/split-lines (str string))))
+
+(defn slurp-lines
+  [file]
+  (split-lines (slurp file)))
+
+(def expected-output
+  ["bits 64"
+   "default rel"
+   "section .text"
+   "extern exit"
+   "global _start"
+   "_start:"
+   "mov rdi, 0"
+   "jmp exit"])
+
+(deftest test-main
+  (let [outfile @outfile]
+    (with-output out err
+      (is (= 0 (with-output-capture (main [input-file "--outfile" outfile]))))
+      (is (= expected-output (slurp-lines outfile)))
+      (is (empty? (str out)))
+      (is (empty? (str err))))
+    (testing "should fail with existing outfile"
+      (with-output out err
+        (is (= 1 (with-output-capture (main [input-file "-o" outfile]))))
+        (is (empty? (str out)))
+        (is (= (format "%s already exists\n" outfile) (str err)))))
+    (reset! *globals* {})
+    (doto (io/file outfile)
+      .delete
+      .createNewFile)
+    (testing "should overwrite existing outfile when given force option"
+      (with-output out err
+        (is (= 0 (with-output-capture (main [input-file "-o" outfile "-f"]))))
+        (is (= expected-output (slurp-lines outfile)))
+        (is (empty? (str out)))
+        (is (empty? (str err)))))))
+
+(deftest test-main-given-no-infile
+  (let [outfile @outfile]
+    (with-in-str (read-input-file)
+      (with-output out err
+        (is (= 0 (with-output-capture (main ["-o" outfile]))))
+        (is (= "> " (str out)))
+        (is (empty? (str err)))
+        (is (= expected-output (slurp-lines outfile)))))))
+
+(deftest test-main-given-no-outfile
+  (with-output out err
+    (is (= 0 (with-output-capture (main [input-file]))))
+    (is (= expected-output (split-lines out)))
+    (is (empty? (str err)))))
+
+(deftest test-main-given-no-infile-and-no-outfile
+  (with-in-str (read-input-file)
+    (with-output out err
+      (is (= 0 (with-output-capture (main []))))
+      (is (= (update-in expected-output [0] #(str "> " %)) (split-lines out)))
+      (is (empty? (str err))))))
