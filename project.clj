@@ -8,4 +8,7 @@
                  [slingshot "0.10.3"]]
   :source-paths ["clojure/src"]
   :test-paths ["clojure/test"]
-  :aot [sybilant.compile])
+  :aot [sybilant.compile]
+  :profiles {:dev {:dependencies [[pjstadig/humane-test-output "0.6.0"]]
+                   :injections [(require 'pjstadig.humane-test-output)
+                                (pjstadig.humane-test-output/activate!)]}})
