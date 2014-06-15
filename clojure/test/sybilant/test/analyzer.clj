@@ -11,7 +11,7 @@
   (:require [clojure.test :refer :all]
             [sybilant.analyzer :refer :all]
             [sybilant.parser :refer :all]
-            [sybilant.test.util :refer [reset-globals with-empty-env]]))
+            [sybilant.test.utils :refer [reset-globals with-empty-env]]))
 
 (use-fixtures :each reset-globals)
 

@@ -12,7 +12,7 @@
             [clojure.test :refer :all]
             [sybilant.analyzer :refer [*globals*]]
             [sybilant.compile.compile :refer :all]
-            [sybilant.test.util :refer [reset-globals]])
+            [sybilant.test.utils :refer [reset-globals]])
   (:import (java.io File Writer)))
 
 (use-fixtures :once (fn redef-exit* [f]

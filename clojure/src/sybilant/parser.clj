@@ -11,7 +11,7 @@
   (:require [clojure.core :as clj]
             [clojure.java.io :as io]
             [slingshot.slingshot :refer [throw+]]
-            [sybilant.util :refer [error maybe]])
+            [sybilant.utils :refer [error maybe]])
   (:import (java.io Writer)))
 
 (defn read-int8 [form]

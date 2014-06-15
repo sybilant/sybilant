@@ -10,7 +10,7 @@
   (:refer-clojure :exclude [munge])
   (:require [clojure.string :as str]
             [sybilant.parser :refer [int? mem? uint?]]
-            [sybilant.util :refer [error]]))
+            [sybilant.utils :refer [error]]))
 
 (defn munge ^String [value]
   (let [chars (seq (if (namespace value)

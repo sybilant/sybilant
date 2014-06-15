@@ -10,7 +10,7 @@
   (:refer-clojure :exclude [number? string? symbol?])
   (:require [clojure.java.io :as io]
             [sybilant.parser :refer :all]
-            [sybilant.util :refer [error form]]
+            [sybilant.utils :refer [error form]]
             [sybilant.visitor :refer [visit]]))
 
 (def ^:dynamic *globals* (atom {}))

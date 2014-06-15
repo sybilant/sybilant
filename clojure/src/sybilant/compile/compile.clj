@@ -17,7 +17,7 @@
             [sybilant.compiler :refer [compile]]
             [sybilant.emitter :refer [emit]]
             [sybilant.parser :refer [defasm? defdata? defimport?]]
-            [sybilant.util :refer :all])
+            [sybilant.utils :refer :all])
   (:import (java.io File PrintWriter PushbackReader)))
 
 (defn option?

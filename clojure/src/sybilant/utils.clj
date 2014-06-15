@@ -6,7 +6,7 @@
 ;;;;
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
-(ns sybilant.util
+(ns sybilant.utils
   (:require [clojure.string :as str]
             [slingshot.slingshot :refer [throw+]]))
 

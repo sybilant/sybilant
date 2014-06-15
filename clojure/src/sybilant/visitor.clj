@@ -8,7 +8,7 @@
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.visitor
   (:require [clojure.zip :as z]
-            [sybilant.util :refer [error]]))
+            [sybilant.utils :refer [error]]))
 
 (defn branch? [exp]
   (contains? #{:mem :instruction :label :defasm :defimport :defdata :defconst}
