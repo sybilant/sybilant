@@ -18,17 +18,18 @@
 (def inpath "clojure/test/sybilant/test/input.syb")
 (def infile (io/file inpath))
 
-(def output "bits 64\ndefault rel\nCOMPILE'D!")
+(def output "bits 64\ndefault rel\nCOMPILE'D!\n")
 (def outpath "clojure/test/sybilant/test/output.asm")
 (def outfile (io/file outpath))
 
-(defn mocked-compile-files [infiles out]
+(defn mocked-compile-files [infiles]
   (if (seq infiles)
-    (doseq [infile infiles
-            :let [in (io/file infile)]]
-      (with-open [in (reader in)]
-        (io/copy in out)))
-    (io/copy *in* out)))
+    (doall (for [infile infiles
+                 :let [in (io/file infile)]
+                 line (with-open [in (io/reader in)]
+                        (doall (line-seq in)))]
+             line))
+    (doall (line-seq (io/reader *in*)))))
 
 (use-fixtures :once
   (fn reset-infile [f]
@@ -47,23 +48,23 @@
   (clear-file outfile))
 
 (deftest test-compile-files
-  (is (= (str "bits 64\n"
-              "default rel\n\n"
-              "section .data\n\n"
-              "global foo\n"
-              "foo:\n"
-              "db 1\n\n"
-              "section .text\n\n"
-              "global bar\n"
-              "bar:\n"
-              "jmp bar\n")
+  (is (= ["bits 64"
+          "default rel"
+          "section .data"
+          "global foo"
+          "foo:"
+          "db 1"
+          "section .text"
+          "global bar"
+          "bar:"
+          "jmp bar"]
          (with-in-str "(defdata foo #int8 1) (defasm bar (%jmp bar))"
-           (with-out-str (compile-files [] *out*))))))
+           (compile-files [])))))
 
 (deftest test-compile-will-default-to-standard-in
   (with-redefs [compile-files mocked-compile-files]
     (with-in-str output
-      (compile [] outpath false false)))
+      (compile [] outfile false false)))
   (is (= output (slurp outfile))))
 
 (deftest test-compile-will-default-to-standard-out

@@ -8,9 +8,9 @@
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.emitter
   (:refer-clojure :exclude [munge])
-  (:require [sybilant.parser :refer [int? mem? uint?]]
-            [sybilant.util :refer [error]])
-  (:import (java.io Writer)))
+  (:require [clojure.string :as str]
+            [sybilant.parser :refer [int? mem? uint?]]
+            [sybilant.util :refer [error]]))
 
 (defn munge ^String [value]
   (let [chars (seq (if (namespace value)
@@ -70,105 +70,88 @@
     (.toString sb)))
 
 (defmulti emit (comp :type first list))
-(defmethod emit :symbol [exp ^Writer out]
+(defmethod emit :symbol [exp]
   (let [symbol-info (get-in (meta exp) [:symbol-table exp])]
-    (when (= :label (:type symbol-info))
-      (.write out "."))
-    (cond
-     (not (:extern? symbol-info))
-     (.write out (munge (:form exp)))
-     :else
-     (.write out (str (:form exp))))))
-(defmethod emit :string [exp ^Writer out]
+    (str (when (= :label (:type symbol-info))
+           ".")
+         (cond
+          (not (:extern? symbol-info))
+          (munge (:form exp))
+          :else
+          (str (:form exp))))))
+(defmethod emit :string [exp]
   (let [chars (seq (.getBytes ^String (:form exp) "utf-8"))]
-    (when (seq chars)
-      (.write out (str (first chars)))
-      (doseq [char (rest chars)]
-        (.write out ", ")
-        (.write out (str char))))))
-(defmethod emit :number [exp ^Writer out]
-  (.write out (str (:form exp))))
-(defmethod emit :int [exp ^Writer out]
-  (.write out (str (:form exp))))
-(defmethod emit :uint [exp ^Writer out]
-  (.write out (str (:form exp))))
-(defmethod emit :register [exp ^Writer out]
-  (.write out (subs (str (:form (meta exp))) 1)))
-(defmethod emit :mem [{:keys [base index scale disp] :as exp} ^Writer out]
-  (.write out "[")
-  (when base
-    (emit base out))
-  (when index
-    (when base
-      (.write out "+"))
-    (when scale
-      (.write out "("))
-    (emit index out)
-    (when scale
-      (.write out "*")
-      (emit scale out)
-      (.write out ")")))
-  (when disp
-    (when (or base index)
-      (.write out "+"))
-    (emit disp out))
-  (.write out "]"))
-(defmethod emit :operator [exp ^Writer out]
-  (.write out (subs (str (:form exp)) 1)))
+    (str (when (seq chars)
+           (str/join ", "
+                     (for [char chars]
+                       (str char)))))))
+(defmethod emit :number [exp]
+  (str (:form exp)))
+(defmethod emit :int [exp]
+  (str (:form exp)))
+(defmethod emit :uint [exp]
+  (str (:form exp)))
+(defmethod emit :register [exp]
+  (subs (str (:form (meta exp))) 1))
+(defmethod emit :mem [{:keys [base index scale disp] :as exp}]
+  (str "["
+       (when base
+         (emit base))
+       (when index
+         (str (when base
+                "+")
+              (when scale
+                "(")
+              (emit index)
+              (when scale
+                (str "*" (emit scale) ")"))))
+       (when disp
+         (str (when (or base index)
+                "+")
+              (emit disp)))
+       "]"))
+(defmethod emit :operator [exp]
+  (subs (str (:form exp)) 1))
 (defn emit-prefix? [exp]
   (or (int? exp) (mem? exp) (uint? exp)))
-(defn emit-width-prefix [exp ^Writer out]
-  (.write out (case (long (:width exp))
-                8 "byte "
-                16 "word "
-                32 "dword "
-                64 "qword ")))
-(defmethod emit :instruction [exp ^Writer out]
-  (emit (:operator exp) out)
-  (when-let [operands (seq (:operands exp))]
-    (.write out " ")
-    (when (emit-prefix? (first operands))
-      (emit-width-prefix (first operands) out))
-    (emit (first operands) out)
-    (doseq [operand (rest operands)]
-      (.write out ", ")
-      (when (emit-prefix? operand)
-        (emit-width-prefix operand out))
-      (emit operand out)))
-  (.write out "\n"))
-(defmethod emit :label [exp ^Writer out]
-  (emit (:name exp) out)
-  (.write out ":\n"))
-(defmethod emit :defasm [exp ^Writer out]
-  (.write out "\nglobal ")
-  (emit (:name exp) out)
-  (.write out "\n")
-  (emit (:name exp) out)
-  (.write out ":\n")
-  (doseq [statement (:statements exp)]
-    (emit statement out)))
-(defmethod emit :defimport [exp ^Writer out]
-  (.write out "\nextern ")
-  (emit (:name exp) out)
-  (.write out "\n"))
-(defn emit-data-instruction [exp ^Writer out]
-  (.write out (case (long (:width exp))
-                8 "db "
-                16 "dw "
-                32 "dd "
-                64 "dq ")))
-(defmethod emit :defdata [exp ^Writer out]
-  (.write out "\nglobal ")
-  (emit (:name exp) out)
-  (.write out "\n")
-  (emit (:name exp) out)
-  (.write out ":\n")
-  (emit-data-instruction (first (:values exp)) out)
-  (emit (first (:values exp)) out)
-  (doseq [value (rest (:values exp))]
-    (.write out "\n")
-    (emit-data-instruction value out)
-    (emit value out))
-  (.write out "\n"))
-(defmethod emit :defconst [exp ^Writer out]
+(defn emit-width-prefix [exp]
+  (case (long (:width exp))
+    8 "byte "
+    16 "word "
+    32 "dword "
+    64 "qword "))
+(defmethod emit :instruction [exp]
+  (str (emit (:operator exp))
+       " "
+       (when-let [operands (seq (:operands exp))]
+         " "
+         (when (emit-prefix? (first operands))
+           (emit-width-prefix (first operands)))
+         (str/join ", "
+                   (for [operand operands]
+                     (str (when (emit-prefix? operand)
+                            (emit-width-prefix operand))
+                          (emit operand)))))))
+(defmethod emit :label [exp]
+  (str (emit (:name exp)) ":"))
+(defmethod emit :defasm [exp]
+  (list* (str "global " (emit (:name exp)))
+         (str (emit (:name exp)) ":")
+         (for [statement (:statements exp)]
+           (emit statement))))
+(defmethod emit :defimport [exp]
+  [(str "extern " (emit (:name exp)))])
+(defn emit-data-instruction [exp]
+  (case (long (:width exp))
+    8 "db "
+    16 "dw "
+    32 "dd "
+    64 "dq "))
+(defmethod emit :defdata [exp]
+  (list* (str "global " (emit (:name exp)))
+         (str (emit (:name exp)) ":")
+         (for [value (:values exp)]
+           (str (emit-data-instruction value)
+                (emit value)))))
+(defmethod emit :defconst [exp]
   (comment intentionally left blank))

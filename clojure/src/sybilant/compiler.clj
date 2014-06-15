@@ -20,8 +20,8 @@
   (LineNumberingPushbackReader. (io/reader in :encoding "utf-8")))
 
 (defn read-file [in]
-  (take-while (partial not= ::eof)
-              (repeatedly #(read in false ::eof))))
+  (doall (take-while (partial not= ::eof)
+                     (repeatedly #(read in false ::eof)))))
 
 (defn read-files [infiles]
   (if (seq infiles)
@@ -30,30 +30,32 @@
                 (when-not (.exists in)
                   (die 1 "input file" infile "does not exist"))
                 (with-open [in (reader in)]
-                  (doall (read-file in)))))
+                  (read-file in))))
             infiles)
     (read-file *in*)))
 
 (defn data-exp? [exp]
   (defdata? exp))
 
-(defn compile-files [infiles ^Writer out]
+(defn compile-files [infiles]
   (let [forms (read-files infiles)
         exps (->> forms
                   (map parse-top-level)
                   (map analyze))
         data-exps (filter data-exp? exps)
         code-exps (filter (complement data-exp?) exps)]
-    (.write out "bits 64\n")
-    (.write out "default rel\n")
-    (when (seq data-exps)
-      (.write out "\nsection .data\n")
-      (doseq [exp data-exps]
-        (emit exp out)))
-    (when (seq code-exps)
-      (.write out "\nsection .text\n")
-      (doseq [exp code-exps]
-        (emit exp out)))))
+    (apply concat
+           ["bits 64"
+            "default rel"]
+           (concat
+            (when (seq data-exps)
+              (cons ["section .data"]
+                    (for [exp data-exps]
+                      (emit exp))))
+            (when (seq code-exps)
+              (cons ["section .text"]
+                    (for [exp code-exps]
+                      (emit exp))))))))
 
 (defn compile [infiles outfile force? debug?]
   (if-let [outfile (io/file outfile)]
@@ -62,9 +64,13 @@
         (die 1 "output file" outfile "exists"))
       (try
         (with-open [out (io/writer outfile :encoding "utf-8")]
-          (compile-files infiles out))
+          (doseq [str (compile-files infiles)]
+            (.write out str)
+            (.write out "\n")))
         (catch Throwable t
           (when-not debug?
             (.delete outfile))
           (throw t))))
-    (compile-files infiles *out*)))
+    (doseq [str (compile-files infiles)]
+      (.write *out* str)
+      (.write *out* "\n"))))
