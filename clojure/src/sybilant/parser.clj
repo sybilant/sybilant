@@ -215,6 +215,7 @@
       (int64-form? form)))
 
 (defn parse-int [form]
+  {:post [(int? %)]}
   (when-not (int-form? form)
     (error "expected int, but was" form))
   (cond
@@ -314,6 +315,7 @@
       (uint64-form? form)))
 
 (defn parse-uint [form]
+  {:post [(uint? %)]}
   (when-not (uint-form? form)
     (error "expected uint, but was" form))
   (cond
@@ -426,6 +428,7 @@
    [a b c d]))
 
 (defn parse-disp [form]
+  {:post [(mem-disp? %)]}
   (when-not (mem-disp-form? form)
     (error "expected memory displacement, but got" form))
   (if (number-form? form)
@@ -544,6 +547,7 @@
       (register-form? form) (symbol-form? form) (mem-form? form)))
 
 (defn parse-operand [form]
+  {:post [(operand? %)]}
   (when-not (operand-form? form)
     (error "expected operand, but was" form))
   (cond
@@ -640,6 +644,7 @@
   (or (primitive-tag-form? form) (label-tag-form? form)))
 
 (defn parse-tag [form]
+  {:post [(tag? %)]}
   (when-not (tag-form? form)
     (error "expected tag, but was" form))
   (cond
@@ -692,6 +697,7 @@
   (or (instruction-form? form) (label-form? form)))
 
 (defn parse-statement [form]
+  {:post [(statement? %)]}
   (when-not (statement-form? form)
     (error "expected statement, but was" form))
   (cond
@@ -808,6 +814,7 @@
       (string-form? form)))
 
 (defn parse-value [form]
+  {:post [(value? %)]}
   (when-not (value-form? form)
     (error "expected value, but was" form))
   (cond
@@ -859,6 +866,7 @@
       (symbol-form? form)))
 
 (defn parse-constant-value [form]
+  {:post [(constant-value? %)]}
   (when-not (constant-value-form? form)
     (error "expected constant value, but was" form))
   (cond
@@ -907,6 +915,7 @@
       (defconst-form? form)))
 
 (defn parse-top-level [form]
+  {:post [(top-level? %)]}
   (when-not (top-level-form? form)
     (error "expected top level form, but was" form))
   (cond
