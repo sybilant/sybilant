@@ -249,23 +249,6 @@
   {:pre [(label-tag? label-tag)]}
   (reduce set-tag {} (:tags label-tag)))
 
-(defn tag=
-  ([tag] true)
-  ([tag0 tag1]
-     (cond
-      (and (or (int-tag? tag0) (uint-tag? tag0)) (number-tag? tag1))
-      (<= (:min tag0) (:form tag1) (:max tag0))
-      (and (number-tag? tag0) (or (int-tag? tag1) (uint-tag? tag1)))
-      (<= (:min tag1) (:form tag0) (:max tag1))
-      :else
-      (= (:type tag0) (:type tag1))))
-  ([tag0 tag1 & tags]
-     (if (tag= tag0 tag1)
-       (if (next tags)
-         (recur tag1 (first tags) (next tags))
-         (tag= tag1 (first tags)))
-       false)))
-
 (defn check-label-tag [label-tag env]
   (every? identity (for [[k v] (:tags label-tag)
                          :let [t (get-tag env k)]]
@@ -302,6 +285,13 @@
               16 uint16-tag
               32 uint32-tag
               64 uint64-tag}})
+
+(defn tag= [tag0 tag1]
+  (if (and (number-tag? tag0) (not (number-tag? tag1)))
+    (tag= tag1 tag0)
+    (and (or (= (:type tag0) (:type tag1))
+             (number-tag? tag1))
+         (<= (:min tag0) (:min tag1) (:max tag1) (:max tag0)))))
 
 (defmulti check-instruction-tag (comp :form :operator second list))
 (defmethod check-instruction-tag '%mov [env {:keys [operands] :as exp}]
@@ -345,8 +335,9 @@
                           (error operand "not compatible with tag:" tag))
                         tag))
                     operands)]
-      (when (and (seq tags) (not (apply tag= tags)))
-        (apply error "incompatible types:" (map form tags)))
+      (when (seq tags)
+        (when-not (every? (partial tag= (first tags)) (rest tags))
+          (apply error "incompatible types:" (map form tags))))
       (if (number-tag? (first tags))
         (set-tag env (first operands) (second tags))
         env))))

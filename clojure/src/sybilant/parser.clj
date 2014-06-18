@@ -113,11 +113,29 @@
                (instance? java.math.BigInteger form))
            (<= -9223372036854775808 form 18446744073709551615N))))
 
+(defn tagged-list? [form t]
+  (and (list? form) (= t (first form))))
+
+(defn number-tag-form? [form]
+  (tagged-list? form 'number))
+
+(defn make-number-tag
+  ([min max]
+     {:pre [(number-form? min) (number-form? max)]
+      :post [(number-tag? %)]}
+     (assoc number-tag :min min :max max))
+  ([min max form]
+     {:pre [(number-tag-form? form)]
+      :post [(form= % form)]}
+     (-> (make-number-tag min max)
+         (vary-meta merge (meta form))
+         (vary-meta assoc :form (with-meta form {})))))
+
 (defn make-number [form]
   {:pre [(number-form? form)]
    :post [(number? %)]}
   (with-meta {:type :number :form form}
-    {:tag (assoc number-tag :form form)}))
+    {:tag (make-number-tag form form)}))
 
 (defn parse-number [form]
   (when-not (number-form? form)
@@ -457,9 +475,6 @@
                     (parse-disp disp))
                   form)
         (error "invalid arguments for" form)))))
-
-(defn tagged-list? [form t]
-  (and (list? form) (= t (first form))))
 
 (defn mem8? [exp]
   (and (mem? exp) (= 8 (:width exp))))
