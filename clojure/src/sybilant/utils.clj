@@ -24,3 +24,6 @@
 
 (defn maybe [pred]
   (fn [x] (or (nil? x) (pred x))))
+
+(defn form= [exp form]
+  (= (or (:form exp) (:form (meta exp))) form))

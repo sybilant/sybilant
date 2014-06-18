@@ -11,7 +11,7 @@
   (:require [clojure.core :as clj]
             [clojure.java.io :as io]
             [slingshot.slingshot :refer [throw+]]
-            [sybilant.utils :refer [error maybe]])
+            [sybilant.utils :refer [error form= maybe]])
   (:import (java.io Writer)))
 
 (defn read-int8 [form]
@@ -90,7 +90,8 @@
   (and (clj/symbol? form) (not= \% (first (str form)))))
 
 (defn make-symbol [form]
-  {:pre [(symbol-form? form)]}
+  {:pre [(symbol-form? form)]
+   :post [(symbol? %)]}
   (with-meta {:type :symbol :form form} (meta form)))
 
 (defn parse-symbol [form]
@@ -113,7 +114,8 @@
            (<= -9223372036854775808 form 18446744073709551615N))))
 
 (defn make-number [form]
-  {:pre [(number-form? form)]}
+  {:pre [(number-form? form)]
+   :post [(number? %)]}
   (with-meta {:type :number :form form}
     {:tag (assoc number-tag :form form)}))
 
@@ -138,7 +140,8 @@
   (instance? Byte form))
 
 (defn make-int8 [form]
-  {:pre [(int8-form? form)]}
+  {:pre [(int8-form? form)]
+   :post [(int8? %)]}
   (with-meta {:type :int :width 8 :form form}
     {:tag int8-tag}))
 
@@ -157,7 +160,8 @@
   (instance? Short form))
 
 (defn make-int16 [form]
-  {:pre [(int16-form? form)]}
+  {:pre [(int16-form? form)]
+   :post [(int16? %)]}
   (with-meta {:type :int :width 16 :form form}
     {:tag int16-tag}))
 
@@ -176,7 +180,8 @@
   (instance? Integer form))
 
 (defn make-int32 [form]
-  {:pre [(int32-form? form)]}
+  {:pre [(int32-form? form)]
+   :post [(int32? %)]}
   (with-meta {:type :int :width 32 :form form}
     {:tag int32-tag}))
 
@@ -195,7 +200,8 @@
   (instance? Int64 form))
 
 (defn make-int64 [form]
-  {:pre [(int64-form? form)]}
+  {:pre [(int64-form? form)]
+   :post [(int64? %)]}
   (with-meta {:type :int :width 64 :form (:form form)}
     {:tag int64-tag}))
 
@@ -233,7 +239,8 @@
   (instance? Uint8 form))
 
 (defn make-uint8 [form]
-  {:pre [(uint8-form? form)]}
+  {:pre [(uint8-form? form)]
+   :post [(uint8? %)]}
   (with-meta {:type :uint :width 8 :form (:form form)}
     {:tag uint8-tag}))
 
@@ -252,7 +259,8 @@
   (instance? Uint16 form))
 
 (defn make-uint16 [form]
-  {:pre [(uint16-form? form)]}
+  {:pre [(uint16-form? form)]
+   :post [(uint16? %)]}
   (with-meta {:type :uint :width 16 :form (:form form)}
     {:tag uint16-tag}))
 
@@ -271,7 +279,8 @@
   (instance? Uint32 form))
 
 (defn make-uint32 [form]
-  {:pre [(uint32-form? form)]}
+  {:pre [(uint32-form? form)]
+   :post [(uint32? %)]}
   (with-meta {:type :uint :width 32 :form (:form form)}
     {:tag uint32-tag}))
 
@@ -290,7 +299,8 @@
   (instance? Uint64 form))
 
 (defn make-uint64 [form]
-  {:pre [(uint64-form? form)]}
+  {:pre [(uint64-form? form)]
+   :post [(uint64? %)]}
   (with-meta {:type :uint :width 64 :form (:form form)}
     {:tag uint64-tag}))
 
@@ -332,7 +342,8 @@
   (contains? registers form))
 
 (defn make-register [form]
-  {:pre [(register-form? form)]}
+  {:pre [(register-form? form)]
+   :post [(register? %)]}
   (vary-meta (get registers form) merge (meta form)))
 
 (defn parse-register [form]
@@ -375,7 +386,8 @@
             ((maybe mem-scale?) scale)
             ((maybe mem-disp?) disp)
             (or (nil? scale) index)
-            (or (nil? index) disp)]}
+            (or (nil? index) disp)]
+      :post [(mem? %)]}
      (merge {:type :mem :width (mem-width name)}
             (when base
               {:base base})
@@ -386,7 +398,8 @@
             (when disp
               {:disp disp})))
   ([name base index scale disp form]
-     {:pre [(mem-form? form)]}
+     {:pre [(mem-form? form)]
+      :post [(form= % form)]}
      (-> (make-mem name base index scale disp)
          (vary-meta merge (meta form))
          (vary-meta assoc :form (with-meta form {})))))
@@ -510,7 +523,8 @@
   (contains? operators form))
 
 (defn make-operator [form]
-  {:pre [(operator-form? form)]}
+  {:pre [(operator-form? form)]
+   :post [(operator? %)]}
   (let [operator (get operators form)]
     (with-meta (get operators form)
       (merge (meta operator)
@@ -548,10 +562,12 @@
 
 (defn make-instruction
   ([operator operands]
-     {:pre [(operator? operator) (every? operand? operands)]}
+     {:pre [(operator? operator) (every? operand? operands)]
+      :post [(instruction? %)]}
      {:type :instruction :operator operator :operands operands})
   ([operator operands form]
-     {:pre [(instruction-form? form)]}
+     {:pre [(instruction-form? form)]
+      :post [(form= % form)]}
      (with-meta (make-instruction operator operands)
        (assoc (meta form) :form (with-meta form {})))))
 
@@ -577,7 +593,8 @@
   (contains? primitive-tag-forms form))
 
 (defn make-primitive-tag [form]
-  {:pre [(primitive-tag-form? form)]}
+  {:pre [(primitive-tag-form? form)]
+   :post [(primitive-tag? %)]}
   (vary-meta (get primitive-tag-forms form) merge (meta form)))
 
 (defn parse-primitive-tag [form]
@@ -585,7 +602,7 @@
     (error "expected primitive tag, but was" form))
   (make-primitive-tag form))
 
-(declare tag-form? parse-tag)
+(declare tag? tag-form? parse-tag)
 
 (defn label-tag? [exp]
   (typed-map? exp :label-tag))
@@ -597,9 +614,12 @@
 
 (defn make-label-tag
   ([tags]
+     {:pre [(every? tag? (vals tags))]
+      :post [(label-tag? %)]}
      {:type :label-tag :tags tags :width 64})
   ([tags form]
-     {:pre [(label-tag-form? form)]}
+     {:pre [(label-tag-form? form)]
+      :post [(form= % form)]}
      (-> (make-label-tag tags)
          (vary-meta merge (meta form))
          (vary-meta assoc :form (with-meta form {})))))
@@ -636,13 +656,15 @@
   ([name]
      (make-label name nil))
   ([name maybe-tag]
-     {:pre [(symbol? name) ((maybe label-tag?) maybe-tag)]}
+     {:pre [(symbol? name) ((maybe label-tag?) maybe-tag)]
+      :post [(label? %)]}
      (with-meta {:type :label :name name}
        (merge {:definition? true}
               (when maybe-tag
                 {:tag maybe-tag}))))
   ([name maybe-tag form]
-     {:pre [(label-form? form)]}
+     {:pre [(label-form? form)]
+      :post [(form= % form)]}
      (-> (make-label name maybe-tag)
          (vary-meta merge (meta form))
          (vary-meta assoc :form (with-meta form {})))))
@@ -686,7 +708,8 @@
   ([name maybe-tag statements]
      {:pre [(symbol? name)
             ((maybe label-tag?) maybe-tag)
-            (every? statement? statements)]}
+            (every? statement? statements)]
+      :post [(defasm? %)]}
      (with-meta {:type :defasm :name name :statements statements}
        (merge {:definition? true}
               (when (:export (meta name))
@@ -694,7 +717,8 @@
               (when maybe-tag
                 {:tag maybe-tag}))))
   ([name maybe-tag statements form]
-     {:pre [(defasm-form? form)]}
+     {:pre [(defasm-form? form)]
+      :post [(form= % form)]}
      (-> (make-defasm name maybe-tag statements)
          (vary-meta merge (meta form))
          (vary-meta assoc :form (with-meta form {})))))
@@ -737,12 +761,14 @@
 
 (defn make-defimport
   ([name]
-     {:pre [(symbol? name)]}
+     {:pre [(symbol? name)]
+      :post [(defimport? %)]}
      (with-meta {:type :defimport :name name}
        {:definition? true
         :extern? true}))
   ([name form]
-     {:pre [(defimport-form? form)]}
+     {:pre [(defimport-form? form)]
+      :post [(form= % form)]}
      (-> (make-defimport name)
          (vary-meta merge (meta form))
          (vary-meta assoc :form (with-meta form {})))))
@@ -765,7 +791,8 @@
   (clj/string? form))
 
 (defn make-string [form]
-  {:pre [(clj/string? form)]}
+  {:pre [(clj/string? form)]
+   :post [(string? %)]}
   {:type :string :form form :width 8})
 
 (defn parse-string [form]
@@ -797,13 +824,15 @@
 
 (defn make-defdata
   ([name values]
-     {:pre [(symbol? name) (every? value? values)]}
+     {:pre [(symbol? name) (every? value? values)]
+      :post [(defdata? %)]}
      (with-meta {:type :defdata :name name :values values}
        (merge {:definition? true}
               (when (:export (meta name))
                 {:extern? true}))))
   ([name values form]
-     {:pre [(defdata-form? form)]}
+     {:pre [(defdata-form? form)]
+      :post [(form= % form)]}
      (-> (make-defdata name values)
          (vary-meta merge (meta form))
          (vary-meta assoc :form (with-meta form {})))))
@@ -846,11 +875,13 @@
 
 (defn make-defconst
   ([name value]
-     {:pre [(symbol? name) (constant-value? value)]}
+     {:pre [(symbol? name) (constant-value? value)]
+      :post [(defconst? %)]}
      (with-meta {:type :defconst :name name :value value}
        {:definition? true}))
   ([name value form]
-     {:pre [(defconst-form? form)]}
+     {:pre [(defconst-form? form)]
+      :post [(form= % form)]}
      (-> (make-defconst name value)
          (vary-meta merge (meta form))
          (vary-meta assoc :form (with-meta form {})))))
