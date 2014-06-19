@@ -323,7 +323,7 @@
 (defmulti check-instruction-tag (comp :form :operator second list))
 (defmethod check-instruction-tag '%mov [env {:keys [operands] :as exp}]
   (let [[dst src] operands
-        tag (get-tag env src)
+        tag (read-tag env src)
         dst-tag (if (int? src)
                   (get-in literal-cast [(:type tag) (:width dst)])
                   tag)]
@@ -331,49 +331,49 @@
     (set-tag env dst dst-tag)))
 (defmethod check-instruction-tag '%movsx [env {:keys [operands] :as exp}]
   (let [[dst src] operands
-        tag (get-tag env src)]
+        tag (read-tag env src)]
     (when-not (int-tag? tag)
       (error tag "is incompatible with %movsx"))
     (set-tag env dst (get-in literal-cast [(:type tag) (:width dst)]))))
 (defmethod check-instruction-tag '%movsxd [env {:keys [operands] :as exp}]
   (let [[dst src] operands
-        tag (get-tag env src)]
+        tag (read-tag env src)]
     (when-not (int-tag? tag)
       (error tag "is incompatible with %movsxd"))
     (set-tag env dst (get-in literal-cast [(:type tag) (:width dst)]))))
 (defmethod check-instruction-tag '%movzx [env {:keys [operands] :as exp}]
   (let [[dst src] operands
-        tag (get-tag env src)]
+        tag (read-tag env src)]
     (when-not (uint-tag? tag)
       (error tag "is incompatible with %movzx"))
     (set-tag env dst (get-in literal-cast [(:type tag) (:width dst)]))))
 (defmethod check-instruction-tag '%bsf [env {:keys [operands] :as exp}]
   (let [[dst src] operands
-        tag (get-tag env src)]
+        tag (read-tag env src)]
     (set-tag env dst (make-number-tag 0 (dec (:width dst))))))
 (defmethod check-instruction-tag '%bsr [env {:keys [operands] :as exp}]
   (let [[dst src] operands
-        tag (get-tag env src)]
+        tag (read-tag env src)]
     (set-tag env dst (make-number-tag 0 (dec (:width dst))))))
 (defmethod check-instruction-tag '%cbw [env exp]
-  (let [tag (get-tag env al)]
+  (let [tag (read-tag env al)]
     (when-not (= int8-tag tag)
       (error "expected" al "to be int8"))
     (set-tag env al int16-tag)))
 (defmethod check-instruction-tag '%cwde [env exp]
-  (let [tag (get-tag env ax)]
+  (let [tag (read-tag env ax)]
     (when-not (= int16-tag tag)
       (error "expected" ax "to be int16"))
     (set-tag env ax int32-tag)))
 (defmethod check-instruction-tag '%cdqe [env exp]
-  (let [tag (get-tag env eax)]
+  (let [tag (read-tag env eax)]
     (when-not (= int32-tag tag)
       (error "expected" eax "to be int32"))
     (set-tag env eax int64-tag)))
 (defmethod check-instruction-tag '%xchg [env {:keys [operands] :as exp}]
   (let [[dst0 dst1] operands
-        tag0 (get-tag env dst0)
-        tag1 (get-tag env dst1)]
+        tag0 (read-tag env dst0)
+        tag1 (read-tag env dst1)]
     (-> env
         (set-tag dst0 tag1)
         (set-tag dst1 tag0))))
