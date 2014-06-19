@@ -337,3 +337,9 @@
                             (%cbw)
                             (%add %ax #int16 1)
                             (%ret)))))
+
+(deftest test-check-xchg
+  (analyze (parse-defasm '(defasm foo {%ax uint16 %bx int16}
+                            (%xchg %ax %bx)
+                            (%add %ax #int16 1)
+                            (%ret)))))

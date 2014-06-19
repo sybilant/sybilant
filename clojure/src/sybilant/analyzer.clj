@@ -370,6 +370,13 @@
     (when-not (= int32-tag tag)
       (error "expected" eax "to be int32"))
     (set-tag env eax int64-tag)))
+(defmethod check-instruction-tag '%xchg [env {:keys [operands] :as exp}]
+  (let [[dst0 dst1] operands
+        tag0 (get-tag env dst0)
+        tag1 (get-tag env dst1)]
+    (-> env
+        (set-tag dst0 tag1)
+        (set-tag dst1 tag0))))
 (defmethod check-instruction-tag :default
   [env {:keys [operator operands] :as exp}]
   (if (:branch? (meta operator))

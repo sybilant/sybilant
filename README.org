@@ -244,11 +244,12 @@
        - [X] check for uses of memory references
        - [X] check tag for %mov
        - [X] check tag for instructions
-       - [ ] check tag for instructions that change register types (%bsf, %bsr,
-         %cbw, %cdq, %cdqe, %cqo, %cwd, %cwde, %div, %idiv, %imul, %mov, %movsx,
-         %movsxd, %movzx, %mul, %rdtsc, %xchg)
+       - [X] check tag for instructions that change register types (%bsf, %bsr,
+         %cbw, %cdqe, %cwde, %mov, %movsx, %movsxd, %movzx, %xchg)
        - [ ] unsigned extend tag when a 32-bit register is used as a 64-bit
-         register.
+         register
+       - [ ] check tag for instructions with weird types (%cdq, %cqo, %cwd,
+         %div, %idiv, %imul, %mul, %rdtsc)
    - [ ] version 0.8
      - [ ] parse tuple types
      - [ ] parse defdata type (must be a tuple type)
