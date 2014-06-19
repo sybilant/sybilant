@@ -240,11 +240,11 @@
   ([env [reg tag]]
      (set-tag env reg tag))
   ([env reg tag]
-     (assoc-in env [:tags (:name reg)] tag)))
+     (swap! env assoc-in [:tags (:name reg)] tag)))
 
 (defn get-tag [env exp]
   (let [tag (if (register? exp)
-              (get-in env [:tags (:name exp)])
+              (get-in @env [:tags (:name exp)])
               (:tag (meta exp)))]
     (when-not tag
       (error "missing tag for" exp))
@@ -252,7 +252,10 @@
 
 (defn make-env [label-tag]
   {:pre [(label-tag? label-tag)]}
-  (reduce set-tag {} (:tags label-tag)))
+  (let [env (atom {})]
+    (doseq [[r t] (:tags label-tag)]
+      (set-tag env r t))
+    env))
 
 (defn check-label-tag [label-tag env]
   (every? identity (for [[k v] (:tags label-tag)
@@ -264,7 +267,7 @@
 (declare check-basic-block)
 
 (defn check-branch-instruction [env {:keys [operands] :as exp}]
-  (let [blocks (:basic-blocks env)
+  (let [blocks (:basic-blocks @env)
         label-name (first operands)]
     (if-let [block (get blocks label-name)]
       (if-let [tag (:tag (meta (:label block)))]
@@ -278,8 +281,7 @@
           (error "target of jump instruction must be a label or defasm:"
                  label-name))
         (when-let [tag (:tag (meta defasm))]
-          (check-label-tag tag env)))))
-  env)
+          (check-label-tag tag env))))))
 
 (def literal-cast
   {:int-tag {8 int8-tag
@@ -374,9 +376,8 @@
   (let [[dst0 dst1] operands
         tag0 (read-tag env dst0)
         tag1 (read-tag env dst1)]
-    (-> env
-        (set-tag dst0 tag1)
-        (set-tag dst1 tag0))))
+    (set-tag env dst0 tag1)
+    (set-tag env dst1 tag0)))
 (defmethod check-instruction-tag :default
   [env {:keys [operator operands] :as exp}]
   (if (:branch? (meta operator))
@@ -386,19 +387,19 @@
                         (error operand "not allowed in checked block"))
                       (read-tag env operand))
                     operands)]
-      (if (seq tags)
+      (when (seq tags)
         (if-let [tag (calc-tag tags)]
           (set-tag env (first operands) tag)
-          (apply error "incompatible types:" (map form tags)))
-        env))))
+          (apply error "incompatible types:" (map form tags)))))))
 
 (defn jmp? [exp]
   (and (instruction? exp)
        (= '%jmp (get-in exp [:operator :form]))))
 
 (defn check-basic-block [env block]
-  (let [blocks (:basic-blocks env)
-        env (reduce check-instruction-tag env (:instructions block))]
+  (let [blocks (:basic-blocks @env)]
+    (doseq [instruction (:instructions block)]
+      (check-instruction-tag env instruction))
     (when-let [block (get blocks (inc (:index block)))]
       (when-not (jmp? (last (:instructions block)))
         (if-let [tag (:tag (meta (:label block)))]
@@ -410,9 +411,10 @@
     (let [blocks (:basic-blocks (meta exp))]
       (doseq [block (set (vals blocks))
               :let [label-tag (:tag (meta (:label block)))]
-              :when (and label-tag (nil? (:unchecked (meta label-tag))))]
-        (check-basic-block (assoc (make-env label-tag) :basic-blocks blocks)
-                           block))))
+              :when (and label-tag (nil? (:unchecked (meta label-tag))))
+              :let [env (make-env label-tag)]]
+        (swap! env assoc :basic-blocks blocks)
+        (check-basic-block env block))))
   exp)
 
 (defn global-defined? [exp]
