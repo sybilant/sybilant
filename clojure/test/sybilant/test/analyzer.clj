@@ -343,3 +343,8 @@
                             (%xchg %ax %bx)
                             (%add %ax #int16 1)
                             (%ret)))))
+
+(deftest test-auto-widen-unsigned-ints
+  (analyze (parse-defasm '(defasm foo {%eax uint32 %rbx uint64}
+                            (%add %rax %rbx)
+                            (%ret)))))

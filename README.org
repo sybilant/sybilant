@@ -246,7 +246,7 @@
        - [X] check tag for instructions
        - [X] check tag for instructions that change register types (%bsf, %bsr,
          %cbw, %cdqe, %cwde, %mov, %movsx, %movsxd, %movzx, %xchg)
-       - [ ] unsigned extend tag when a 32-bit register is used as a 64-bit
+       - [X] unsigned extend tag when a 32-bit register is used as a 64-bit
          register
        - [ ] check tag for instructions with weird types (%cdq, %cqo, %cwd,
          %div, %idiv, %imul, %mul, %rdtsc)

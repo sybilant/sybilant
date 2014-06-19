@@ -306,8 +306,14 @@
              (not= (:width tag) (:width operand)))
     (error operand "not compatible with tag:" tag)))
 
+(defn widen-tag [env operand tag]
+  (if (and (uint-tag? tag) (= 64 (:width operand)) (= 32 (:width tag)))
+    (do (set-tag env operand uint64-tag)
+        uint64-tag)
+    tag))
+
 (defn read-tag [env operand]
-  (let [tag (get-tag env operand)]
+  (let [tag (widen-tag env operand (get-tag env operand))]
     (validate-tag operand tag)
     tag))
 
