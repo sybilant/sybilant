@@ -346,6 +346,10 @@
   (let [[dst src] operands
         tag (get-tag env src)]
     (set-tag env dst (make-number-tag 0 (dec (:width dst))))))
+(defmethod check-instruction-tag '%bsr [env {:keys [operands] :as exp}]
+  (let [[dst src] operands
+        tag (get-tag env src)]
+    (set-tag env dst (make-number-tag 0 (dec (:width dst))))))
 (defmethod check-instruction-tag :default
   [env {:keys [operator operands] :as exp}]
   (if (:branch? (meta operator))
