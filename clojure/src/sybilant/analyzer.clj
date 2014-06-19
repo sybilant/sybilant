@@ -231,6 +231,11 @@
               (assoc-block exp block))))))
     exp))
 
+(def al (parse-register '%al))
+(def ax (parse-register '%ax))
+(def eax (parse-register '%eax))
+(def rax (parse-register '%rax))
+
 (defn set-tag
   ([env [reg tag]]
      (set-tag env reg tag))
@@ -350,6 +355,21 @@
   (let [[dst src] operands
         tag (get-tag env src)]
     (set-tag env dst (make-number-tag 0 (dec (:width dst))))))
+(defmethod check-instruction-tag '%cbw [env exp]
+  (let [tag (get-tag env al)]
+    (when-not (= int8-tag tag)
+      (error "expected" al "to be int8"))
+    (set-tag env al int16-tag)))
+(defmethod check-instruction-tag '%cwde [env exp]
+  (let [tag (get-tag env ax)]
+    (when-not (= int16-tag tag)
+      (error "expected" ax "to be int16"))
+    (set-tag env ax int32-tag)))
+(defmethod check-instruction-tag '%cdqe [env exp]
+  (let [tag (get-tag env eax)]
+    (when-not (= int32-tag tag)
+      (error "expected" eax "to be int32"))
+    (set-tag env eax int64-tag)))
 (defmethod check-instruction-tag :default
   [env {:keys [operator operands] :as exp}]
   (if (:branch? (meta operator))

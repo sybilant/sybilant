@@ -331,3 +331,9 @@
                             (%bsf %rax %rbx)
                             (%add %rax #int32 1)
                             (%ret)))))
+
+(deftest test-check-cbw
+  (analyze (parse-defasm '(defasm foo {%al int8}
+                            (%cbw)
+                            (%add %ax #int16 1)
+                            (%ret)))))
