@@ -286,12 +286,34 @@
               32 uint32-tag
               64 uint64-tag}})
 
-(defn tag= [tag0 tag1]
-  (if (and (number-tag? tag0) (not (number-tag? tag1)))
-    (tag= tag1 tag0)
-    (and (or (= (:type tag0) (:type tag1))
-             (number-tag? tag1))
-         (<= (:min tag0) (:min tag1) (:max tag1) (:max tag0)))))
+(defn assignable-from? [dst-tag src-tag]
+  (and dst-tag
+       src-tag
+       (or (= (:type dst-tag) (:type src-tag))
+           (number-tag? dst-tag)
+           (number-tag? src-tag))
+       (<= (:min dst-tag) (:min src-tag) (:max src-tag) (:max dst-tag))))
+
+(defn validate-tag [operand tag]
+  (when (and (not (number-tag? tag))
+             (not= (:width tag) (:width operand)))
+    (error operand "not compatible with tag:" tag)))
+
+(defn read-tag [env operand]
+  (let [tag (get-tag env operand)]
+    (validate-tag operand tag)
+    tag))
+
+(defn calc-tag
+  ([tags]
+     (calc-tag (rest tags) (first tags)))
+  ([[tag & tags] result-tag]
+     (if tag
+       (recur tags
+              (cond
+               (assignable-from? result-tag tag) result-tag
+               (assignable-from? tag result-tag) tag))
+       result-tag)))
 
 (defmulti check-instruction-tag (comp :form :operator second list))
 (defmethod check-instruction-tag '%mov [env {:keys [operands] :as exp}]
@@ -300,9 +322,7 @@
         dst-tag (if (int? src)
                   (get-in literal-cast [(:type tag) (:width dst)])
                   tag)]
-    (when (and (not (number-tag? dst-tag))
-               (not= (:width dst-tag) (:width dst)))
-      (error dst "not compatible with tag:" dst-tag))
+    (validate-tag dst dst-tag)
     (set-tag env dst dst-tag)))
 (defmethod check-instruction-tag '%movsx [env {:keys [operands] :as exp}]
   (let [[dst src] operands
@@ -329,17 +349,12 @@
     (let [tags (map (fn [operand]
                       (when (mem? operand)
                         (error operand "not allowed in checked block"))
-                      (let [tag (get-tag env operand)]
-                        (when (and (not (number-tag? tag))
-                                   (not= (:width tag) (:width operand)))
-                          (error operand "not compatible with tag:" tag))
-                        tag))
+                      (read-tag env operand))
                     operands)]
-      (when (seq tags)
-        (when-not (every? (partial tag= (first tags)) (rest tags))
-          (apply error "incompatible types:" (map form tags))))
-      (if (number-tag? (first tags))
-        (set-tag env (first operands) (second tags))
+      (if (seq tags)
+        (if-let [tag (calc-tag tags)]
+          (set-tag env (first operands) tag)
+          (apply error "incompatible types:" (map form tags)))
         env))))
 
 (defn jmp? [exp]
