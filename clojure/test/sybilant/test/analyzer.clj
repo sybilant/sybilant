@@ -325,3 +325,9 @@
                             (%movzx %rbx %ax)
                             (%label bar {%rbx uint64})
                             (%ret)))))
+
+(deftest test-check-bsf
+  (analyze (parse-defasm '(defasm foo {%rbx int64}
+                            (%bsf %rax %rbx)
+                            (%add %rax #int32 1)
+                            (%ret)))))

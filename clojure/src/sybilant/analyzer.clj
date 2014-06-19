@@ -342,6 +342,10 @@
     (when-not (uint-tag? tag)
       (error tag "is incompatible with %movzx"))
     (set-tag env dst (get-in literal-cast [(:type tag) (:width dst)]))))
+(defmethod check-instruction-tag '%bsf [env {:keys [operands] :as exp}]
+  (let [[dst src] operands
+        tag (get-tag env src)]
+    (set-tag env dst (make-number-tag 0 (dec (:width dst))))))
 (defmethod check-instruction-tag :default
   [env {:keys [operator operands] :as exp}]
   (if (:branch? (meta operator))
