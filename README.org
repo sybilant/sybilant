@@ -1,0 +1,30 @@
+# -*- mode: org; coding: utf-8-unix -*-
+#+STARTUP: hidestars showall
+* Overview
+  Sybilant is a hybridly typed, functional, full stack, Lisp programming
+  language.
+  
+  - /hybridly typed/: it will statically check types when possible, and insert
+    run-time casts when necessary.
+  - /functional/: it has a rich set of immutable data structures, isolation and
+    control of effects, and functions as values.
+  - /full stack/: it has expressions for high-order functional programming, and
+    also for assembly code.
+  - /lisp programming language/: it has REPL evaluation semantics (meaning
+    running a file has the same effect as would successively entering each line
+    of the file into a REPL), and its evaluation pipeline is: read,
+    macro-expand, compile, and run.
+    
+  Sybilant is also a work in progress, so the vision described here is not fully
+  implemented.
+** License
+   #+BEGIN_EXAMPLE
+   Copyright © 2014 Paul Stadig.  All rights reserved.
+   
+   This Source Code Form is subject to the terms of the Mozilla Public License,
+   v. 2.0.  If a copy of the MPL was not distributed with this file, You can
+   obtain one at http://mozilla.org/MPL/2.0/.
+   
+   This Source Code Form is "Incompatible With Secondary Licenses", as defined
+   by the Mozilla Public License, v. 2.0.
+   #+END_EXAMPLE
