@@ -10,6 +10,12 @@
   (:require [clojure.test :refer :all]
             [sybilant.compile :refer :all]))
 
+(defn redef-exit [f]
+  (with-redefs [exit (fn [exit-code] exit-code)]
+    (f)))
+
+(use-fixtures :once redef-exit)
+
 (deftest test-main
   (is (= "Hello, Sybilant!\n" (with-out-str (-main))))
   (is (= "Hello, Sybilant! foo\n" (with-out-str (-main "foo")))))
