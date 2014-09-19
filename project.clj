@@ -10,4 +10,5 @@
   :test-paths ["clojure/test"]
   :main ^:skip-aot sybilant.compile
   :target-path "target/%s"
+  :clean-targets ["target"]
   :profiles {:uberjar {:aot :all}})
