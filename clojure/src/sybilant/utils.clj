@@ -91,6 +91,8 @@
   ^String []
   (str (uuid)))
 
-(defn println-err [& strs]
+(defn println-err
+  "Same as println with output to *err*."
+  [& strs]
   (binding [*out* *err*]
     (apply println strs)))
