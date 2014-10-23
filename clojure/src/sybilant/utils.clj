@@ -8,6 +8,7 @@
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.utils
   (:require [clojure.java.io :as io]
+            [clojure.string :as str]
             [slingshot.slingshot :refer [throw+]]))
 
 (defn die
@@ -97,5 +98,10 @@
   (binding [*out* *err*]
     (apply println strs)))
 
-(defmacro implies [p q]
+(defmacro implies
+  [p q]
   `(or (not ~p) ~q))
+
+(defn illegal-state
+  [& msg]
+  (throw (IllegalStateException. (str/join " " msg))))
