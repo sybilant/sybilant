@@ -96,3 +96,6 @@
   [& strs]
   (binding [*out* *err*]
     (apply println strs)))
+
+(defmacro implies [p q]
+  `(or (not ~p) ~q))
