@@ -53,19 +53,19 @@
   [args result]
   (if-let [[arg & args] (seq args)]
     (cond
-     (long-option? arg) (let [pair (parse-long-option arg)]
-                          (recur args (into result pair)))
-     (option? arg) (if-let [arg (next arg)]
-                     (recur args (into result
-                                       (for [option arg]
-                                         (str "-" option))))
-                     (recur args (conj result arg)))
-     :else (recur args (conj result arg)))
+      (long-option? arg) (let [pair (parse-long-option arg)]
+                           (recur args (into result pair)))
+      (option? arg) (if-let [arg (next arg)]
+                      (recur args (into result
+                                        (for [option arg]
+                                          (str "-" option))))
+                      (recur args (conj result arg)))
+      :else (recur args (conj result arg)))
     result))
 
 (def usage
   "Usage: [OPTION]... [FILE]...
-Compiles Sybilant source code into x86-64 assembly source code.
+  Compiles Sybilant source code into x86-64 assembly source code.
 
   -h, --help                  display this usage message
   -o, --output=FILE           path to the output file; defaults to stdout
@@ -80,7 +80,7 @@ Compiles Sybilant source code into x86-64 assembly source code.
         ("-h" "--help") (die 0 usage)
         ("-o" "--output") (recur (next args)
                                  (assoc options
-                                   :outfile (expect-value (first args))))
+                                        :outfile (expect-value (first args))))
         ("-f" "--force") (recur args (assoc options :force? true))
         (throw (Exception. (str "Invalid option: " arg))))
       (recur args (update-in options [:infiles] (fnil conj []) arg)))
@@ -93,12 +93,12 @@ Compiles Sybilant source code into x86-64 assembly source code.
   java.io.PushbackReader and file-name to be a String.  If file-name is not
   specified, it defaults to \"NO_SOURCE_FILE\"."
   ([reader]
-     (read-all reader "NO_SOURCE_FILE"))
+   (read-all reader "NO_SOURCE_FILE"))
   ([reader file-name]
-     (let [reader (indexing-push-back-reader reader 1 file-name)
-           forms (take-while (partial not= ::eof)
-                             (repeatedly #(r/read reader false ::eof)))]
-       forms)))
+   (let [reader (indexing-push-back-reader reader 1 file-name)
+         forms (take-while (partial not= ::eof)
+                           (repeatedly #(r/read reader false ::eof)))]
+     forms)))
 
 (defn read-file
   "Reads the forms from file-name."
@@ -188,26 +188,26 @@ Compiles Sybilant source code into x86-64 assembly source code.
 (defn -main
   [& args]
   (try+
-    (let [options (parse-args (expand-args args []) default-options)
-          {:keys [outfile infiles force?]} options]
-      (validate-infiles infiles)
-      (validate-outfile outfile force?)
-      (->> (read-files infiles)
-           (compile-and-emit-all options)
-           (write-lines outfile)))
-    (exit 0)
-    (catch Throwable t
-      (binding [*out* *err*]
-        (print "Unexpected error: ")
-        (print-stack-trace t)
-        (flush))
-      (exit 1))
-    (catch :exit-code {:keys [exit-code exit-message]}
-      (when exit-message
-        (if (pos? exit-code)
-          (println-err exit-message)
-          (println exit-message)))
-      (exit exit-code))
-    (catch Object o
-      (println-err "Unexpected error:" (pr-str o))
-      (exit 1))))
+   (let [options (parse-args (expand-args args []) default-options)
+         {:keys [outfile infiles force?]} options]
+     (validate-infiles infiles)
+     (validate-outfile outfile force?)
+     (->> (read-files infiles)
+          (compile-and-emit-all options)
+          (write-lines outfile)))
+   (exit 0)
+   (catch Throwable t
+     (binding [*out* *err*]
+       (print "Unexpected error: ")
+       (print-stack-trace t)
+       (flush))
+     (exit 1))
+   (catch :exit-code {:keys [exit-code exit-message]}
+     (when exit-message
+       (if (pos? exit-code)
+         (println-err exit-message)
+         (println exit-message)))
+     (exit exit-code))
+   (catch Object o
+     (println-err "Unexpected error:" (pr-str o))
+     (exit 1))))
