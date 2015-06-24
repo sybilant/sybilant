@@ -27,7 +27,7 @@
 (s/defschema UintValue
   (s/pred valid-uint-value? 'valid-uint-value?))
 
-(s/defrecord UintType
+(s/defrecord UintTypeNode
     [width :- Width
      min :- UintValue
      max :- UintValue]
@@ -35,11 +35,13 @@
     [{:keys [min max]}]
     (<= min max)))
 
+(def UintType UintTypeNode)
+
 (s/defn uint-type :- UintType
   [width :- Width
    min :- UintValue
    max :- UintValue]
-  (->UintType width min max))
+  (->UintTypeNode width min max))
 
 (s/defn uint-type? :- s/Bool
   [obj]
@@ -74,19 +76,21 @@
 (def ^:const +uint8-type+
   (uint8-type 0 +uint8-max-value+))
 
-(s/defrecord Uint8
+(s/defrecord Uint8Node
     [type :- Uint8Type
      value :- Uint8Value]
   (fn valid-uint8?
     [{{min :min max :max} :type value :value}]
     (<= min value max)))
 
+(def Uint8 Uint8Node)
+
 (s/defn uint8 :- Uint8
   ([value :- Uint8Value]
-   (->Uint8 +uint8-type+ value))
+   (uint8 +uint8-type+ value))
   ([type :- Uint8Type
     value :- Uint8Value]
-   (->Uint8 type value)))
+   (->Uint8Node type value)))
 
 (s/defn uint8? :- s/Bool
   [obj]
@@ -121,19 +125,21 @@
 (def ^:const +uint16-type+
   (uint16-type 0 +uint16-max-value+))
 
-(s/defrecord Uint16
+(s/defrecord Uint16Node
     [type :- Uint16Type
      value :- Uint16Value]
   (fn valid-uint16?
     [{{min :min max :max} :type value :value}]
     (<= min value max)))
 
+(def Uint16 Uint16Node)
+
 (s/defn uint16 :- Uint16
   ([value :- Uint16Value]
-   (->Uint16 +uint16-type+ value))
+   (uint16 +uint16-type+ value))
   ([type :- Uint16Type
     value :- Uint16Value]
-   (->Uint16 type value)))
+   (->Uint16Node type value)))
 
 (s/defn uint16? :- s/Bool
   [obj]
@@ -168,19 +174,21 @@
 (def ^:const +uint32-type+
   (uint32-type 0 +uint32-max-value+))
 
-(s/defrecord Uint32
+(s/defrecord Uint32Node
     [type :- Uint32Type
      value :- Uint32Value]
   (fn valid-uint32?
     [{{min :min max :max} :type value :value}]
     (<= min value max)))
 
+(def Uint32 Uint32Node)
+
 (s/defn uint32 :- Uint32
   ([value :- Uint32Value]
-   (->Uint32 +uint32-type+ value))
+   (uint32 +uint32-type+ value))
   ([type :- Uint32Type
     value :- Uint32Value]
-   (->Uint32 type value)))
+   (->Uint32Node type value)))
 
 (s/defn uint32? :- s/Bool
   [obj]
@@ -212,19 +220,21 @@
 (def ^:const +uint64-type+
   (uint64-type 0 +uint64-max-value+))
 
-(s/defrecord Uint64
+(s/defrecord Uint64Node
     [type :- Uint64Type
      value :- Uint64Value]
   (fn valid-uint64?
     [{{min :min max :max} :type value :value}]
     (<= min value max)))
 
+(def Uint64 Uint64Node)
+
 (s/defn uint64 :- Uint64
   ([value :- Uint64Value]
-   (->Uint64 +uint64-type+ value))
+   (uint64 +uint64-type+ value))
   ([type :- Uint64Type
     value :- Uint64Value]
-   (->Uint64 type value)))
+   (->Uint64Node type value)))
 
 (s/defn uint64? :- s/Bool
   [obj]
@@ -243,7 +253,7 @@
 (s/defschema IntValue
   (s/pred valid-int-value? 'valid-int-value?))
 
-(s/defrecord IntType
+(s/defrecord IntTypeNode
     [width :- Width
      min :- IntValue
      max :- IntValue]
@@ -251,11 +261,13 @@
     [{:keys [min max]}]
     (<= min max)))
 
+(def IntType IntTypeNode)
+
 (s/defn int-type :- IntType
   [width :- Width
    min :- IntValue
    max :- IntValue]
-  (->IntType width min max))
+  (->IntTypeNode width min max))
 
 (s/defn int-type? :- s/Bool
   [obj]
@@ -292,19 +304,21 @@
 (def ^:const +int8-type+
   (int8-type +int8-min-value+ +int8-max-value+))
 
-(s/defrecord Int8
+(s/defrecord Int8Node
     [type :- Int8Type
      value :- Int8Value]
   (fn valid-int8?
     [{{min :min max :max} :type value :value}]
     (<= min value max)))
 
+(def Int8 Int8Node)
+
 (s/defn int8 :- Int8
   ([value :- Int8Value]
-   (->Int8 +int8-type+ value))
+   (int8 +int8-type+ value))
   ([type :- Int8Type
     value :- Int8Value]
-   (->Int8 type value)))
+   (->Int8Node type value)))
 
 (s/defn int8? :- s/Bool
   [obj]
@@ -341,19 +355,21 @@
 (def ^:const +int16-type+
   (int16-type +int16-min-value+ +int16-max-value+))
 
-(s/defrecord Int16
+(s/defrecord Int16Node
     [type :- Int16Type
      value :- Int16Value]
   (fn valid-int16?
     [{{min :min max :max} :type value :value}]
     (<= min value max)))
 
+(def Int16 Int16Node)
+
 (s/defn int16 :- Int16
   ([value :- Int16Value]
-   (->Int16 +int16-type+ value))
+   (int16 +int16-type+ value))
   ([type :- Int16Type
     value :- Int16Value]
-   (->Int16 type value)))
+   (->Int16Node type value)))
 
 (s/defn int16? :- s/Bool
   [obj]
@@ -390,19 +406,21 @@
 (def ^:const +int32-type+
   (int32-type +int32-min-value+ +int32-max-value+))
 
-(s/defrecord Int32
+(s/defrecord Int32Node
     [type :- Int32Type
      value :- Int32Value]
   (fn valid-int32?
     [{{min :min max :max} :type value :value}]
     (<= min value max)))
 
+(def Int32 Int32Node)
+
 (s/defn int32 :- Int32
   ([value :- Int32Value]
-   (->Int32 +int32-type+ value))
+   (int32 +int32-type+ value))
   ([type :- Int32Type
     value :- Int32Value]
-   (->Int32 type value)))
+   (->Int32Node type value)))
 
 (s/defn int32? :- s/Bool
   [obj]
@@ -434,30 +452,34 @@
 (def ^:const +int64-type+
   (int64-type +int64-min-value+ +int64-max-value+))
 
-(s/defrecord Int64
+(s/defrecord Int64Node
     [type :- Int64Type
      value :- Int64Value]
   (fn valid-int64?
     [{{min :min max :max} :type value :value}]
     (<= min value max)))
 
+(def Int64 Int64Node)
+
 (s/defn int64 :- Int64
   ([value :- Int64Value]
-   (->Int64 +int64-type+ value))
+   (int64 +int64-type+ value))
   ([type :- Int64Type
     value :- Int64Value]
-   (->Int64 type value)))
+   (->Int64Node type value)))
 
 (s/defn int64? :- s/Bool
   [obj]
   (nil? (s/check Int64 obj)))
 
-(s/defrecord Symbol
+(s/defrecord SymbolNode
     [name :- s/Symbol])
+
+(def Symbol SymbolNode)
 
 (s/defn symbol :- Symbol
   [name :- s/Symbol]
-  (->Symbol name))
+  (->SymbolNode name))
 
 (s/defn symbol? :- s/Bool
   [obj]
@@ -477,12 +499,14 @@
   [obj]
   (nil? (s/check SpecialSymbol obj)))
 
-(s/defrecord Register
+(s/defrecord RegisterNode
     [name :- SpecialSymbol])
+
+(def Register RegisterNode)
 
 (s/defn register :- Register
   [name :- SpecialSymbol]
-  (->Register name))
+  (->RegisterNode name))
 
 (s/defn register? :- s/Bool
   [obj]
@@ -501,11 +525,15 @@
 (s/defschema Type
   (s/recursive #'Type*))
 
-(s/defrecord TupleType
+(s/defrecord TupleTypeNode
     [types :- [Type]])
 
-(s/defrecord TextType
+(def TupleType TupleTypeNode)
+
+(s/defrecord TextTypeNode
     [types :- {Register Type}])
+
+(def TextType TextTypeNode)
 
 (s/defschema Type*
   (s/either PreciseIntegerType TupleType TextType))
@@ -516,7 +544,7 @@
 
 (s/defn tuple-type :- TupleType
   [types :- [Type]]
-  (->TupleType types))
+  (->TupleTypeNode types))
 
 (s/defn tuple-type? :- s/Bool
   [obj]
@@ -524,7 +552,7 @@
 
 (s/defn text-type :- TextType
   [types :- {Register Type}]
-  (->TextType types))
+  (->TextTypeNode types))
 
 (s/defn text-type? :- s/Bool
   [obj]
@@ -537,13 +565,15 @@
   [obj]
   (nil? (s/check LabelType obj)))
 
-(s/defrecord Label
+(s/defrecord LabelNode
     [name :- Symbol]
   {(s/optional-key :tag) (s/maybe LabelType)})
 
+(def Label LabelNode)
+
 (s/defn label :- Label
   ([name :- Symbol]
-   (->Label name))
+   (->LabelNode name))
   ([name :- Symbol
     tag :- (s/maybe LabelType)]
    (let [obj (label name)]
@@ -573,14 +603,16 @@
   [obj]
   (nil? (s/check UntaggedLabel obj)))
 
-(s/defrecord Deftype
+(s/defrecord DeftypeNode
     [name :- UntaggedLabel
      value :- Type])
+
+(def Deftype DeftypeNode)
 
 (s/defn deftype :- Deftype
   [name :- UntaggedLabel
    value :- Type]
-  (->Deftype name value))
+  (->DeftypeNode name value))
 
 (s/defn deftype? :- s/Bool
   [obj]
@@ -596,25 +628,29 @@
 (s/defschema Const
   (s/either PreciseInteger))
 
-(s/defrecord Defconst
+(s/defrecord DefconstNode
     [name :- UntaggedLabel
      value :- Const])
+
+(def Defconst DefconstNode)
 
 (s/defn defconst :- Defconst
   [name :- UntaggedLabel
    value :- Type]
-  (->Defconst name value))
+  (->DefconstNode name value))
 
 (s/defn defconst? :- s/Bool
   [obj]
   (nil? (s/check Defconst obj)))
 
-(s/defrecord Defimport
+(s/defrecord DefimportNode
     [name :- Label])
+
+(def Defimport DefimportNode)
 
 (s/defn defimport :- Defimport
   [name :- Label]
-  (->Defimport name))
+  (->DefimportNode name))
 
 (s/defn defimport? :- s/Bool
   [obj]
@@ -626,7 +662,7 @@
 
 (s/defn data-tuple-type :- DataTupleType
   [types :- [PreciseIntegerType]]
-  (->TupleType types))
+  (->TupleTypeNode types))
 
 (s/defn data-tuple-type? :- s/Bool
   [obj]
@@ -650,7 +686,7 @@
 
 (declare subtype?)
 
-(s/defrecord Defdata
+(s/defrecord DefdataNode
     [name :- DataLabel
      data :- Data]
   (fn valid-data?
@@ -660,38 +696,44 @@
           (and (= (count data) (count types))
                (all? subtype? (map :type data) types))))))
 
+(def Defdata DefdataNode)
+
 (s/defn defdata :- Defdata
   ([name :- DataLabel
     data :- Data]
-   (->Defdata name (map :type data) data))
+   (defdata name (map :type data) data))
   ([name :- DataLabel
     type :- DataTupleType
     data :- Data]
-   (->Defdata name type data)))
+   (->DefdataNode name type data)))
 
 (s/defn defdata? :- s/Bool
   [obj]
   (nil? (s/check Defdata obj)))
 
-(s/defrecord Operator
+(s/defrecord OperatorNode
     [name :- SpecialSymbol])
+
+(def Operator OperatorNode)
 
 (s/defn operator :- Operator
   [name :- SpecialSymbol]
-  (->Operator name))
+  (->OperatorNode name))
 
 (s/defn operator? :- s/Bool
   [obj]
   (nil? (s/check Operator obj)))
 
-(s/defrecord TupleReference
+(s/defrecord TupleReferenceNode
     [tuple :- Symbol
      slot :- Uint64])
+
+(def TupleReference TupleReferenceNode)
 
 (s/defn tuple-reference :- TupleReference
   [tuple :- Symbol
    slot :- Uint64]
-  (->TupleReference tuple slot))
+  (->TupleReferenceNode tuple slot))
 
 (s/defn tuple-reference? :- s/Bool
   [obj]
@@ -711,13 +753,15 @@
   [obj]
   (nil? (s/check MemOperands obj)))
 
-(s/defrecord Mem
+(s/defrecord MemNode
     [operands :- MemOperands]
   {(s/optional-key :width) (s/maybe Width)})
 
+(def Mem MemNode)
+
 (s/defn mem :- Mem
   ([operands :- MemOperands]
-   (->Mem operands))
+   (->MemNode operands))
   ([operands :- MemOperands
     width :- (s/maybe Width)]
    (let [obj (mem operands)]
@@ -809,16 +853,18 @@
   [obj]
   (nil? (s/check Operands obj)))
 
-(s/defrecord Instruction
+(s/defrecord InstructionNode
     [operator :- Operator
      operands :- Operands])
 
+(def Instruction InstructionNode)
+
 (s/defn instruction :- Instruction
   ([operator :- Operator]
-   (->Instruction operator []))
+   (instruction operator []))
   ([operator :- Operator
     operands :- Operands]
-   (->Instruction operator operands)))
+   (->InstructionNode operator operands)))
 
 (s/defn instruction? :- s/Bool
   [obj]
@@ -838,14 +884,16 @@
   [obj]
   (nil? (s/check Statements obj)))
 
-(s/defrecord Deftext
+(s/defrecord DeftextNode
     [name :- Label
      statements :- Statements])
+
+(def Deftext DeftextNode)
 
 (s/defn deftext :- Deftext
   [name :- Label
    statements :- Statements]
-  (->Deftext name statements))
+  (->DeftextNode name statements))
 
 (s/defn deftext? :- s/Bool
   [obj]
