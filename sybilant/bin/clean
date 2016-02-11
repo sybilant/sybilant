@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -e
+
+basedir="$(dirname "${0}")/.."
+
+for test in $(find "${basedir}/test" -name \*.asm); do
+  "${basedir}/bin/clean-test" "$(basename "${test}" ".asm")"
+done

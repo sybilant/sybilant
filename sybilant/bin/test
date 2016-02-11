@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+set -e
+
+basedir="$(dirname "${0}")/.."
+
+echo "== Building tests"
+for test in $(find "${basedir}/test" -name \*.asm); do
+  test="$(basename "${test}" ".asm")"
+  echo "${test}"
+  "${basedir}/bin/build-test" "${test}"
+done
+
+echo "== Running tests"
+total=0
+failed=0
+for test in $(find "${basedir}/test" -name \*.asm); do
+  test="$(basename "${test}" ".asm")"
+  echo -n "${test}"
+  total=$((total+1))
+  if ! "${basedir}/test/${test}"; then
+    failed=$((failed+1))
+    echo " failed!"
+  else
+    echo
+  fi
+done
+echo "${total} tests; ${failed} failures"

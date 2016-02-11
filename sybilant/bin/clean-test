@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+set -e
+
+basedir="$(dirname "${0}")/.."
+
+if [ -z "${1}" ]; then
+  echo "Please specify a test to build"
+  exit 1
+fi
+
+bin_file="${basedir}/test/$(basename "${1}")"
+asm_file="${bin_file}.asm"
+
+if [ ! -f "${asm_file}" ]; then
+  echo "Test ${1} does not exist"
+  exit 1
+fi
+
+object_file="${bin_file}.o"
+
+rm -f "${object_file}"
+rm -f "${bin_file}"

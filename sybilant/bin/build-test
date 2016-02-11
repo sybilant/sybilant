@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+set -e
+
+basedir="$(dirname "${0}")/.."
+
+if [ -z "${1}" ]; then
+  echo "Please specify a test to build"
+  exit 1
+fi
+
+bin_file="${basedir}/test/$(basename "${1}")"
+asm_file="${bin_file}.asm"
+
+if [ ! -f "${asm_file}" ]; then
+  echo "Test ${1} does not exist"
+  exit 1
+fi
+
+object_file="${bin_file}.o"
+
+yasm -g dwarf2 -f elf64 -o "${object_file}" "${asm_file}" &&
+ld -dynamic-linker /lib64/ld-linux-x86-64.so.2 -lc -o "${bin_file}" \
+  "${object_file}"
