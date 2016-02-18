@@ -10,7 +10,7 @@
   (:refer-clojure :exclude [defn defrecord int])
   (:require
    [schema.core :refer [Bool cond-pre constrained defn defrecord defschema enum
-                        optional-key recursive Symbol]]))
+                        maybe optional-key recursive Symbol]]))
 
 (defschema Signedness
   (enum :unsigned :signed))
@@ -95,8 +95,8 @@
 (defrecord IntTagNode
     [min :- IntValue
      max :- IntValue]
-  {(optional-key :width) Width
-   (optional-key :signedness) Signedness})
+  {(optional-key :signedness) Signedness
+   (optional-key :width) Width})
 
 (defn min-less-than-or-equal-to-max? :- Bool
   [{:keys [min max]} :- IntTagNode]
@@ -201,7 +201,7 @@
   (and (instance? Label obj)
        (let [tag (:tag obj)]
          (or (nil? tag)
-             (instance? DataTag tag)))))
+             (instance? TupleTag tag)))))
 
 (defschema DataLabel
   (constrained Label data-label? 'data-label?))
@@ -210,9 +210,9 @@
   (cond-pre Int Symbol))
 
 (defrecord DefdataNode
-    [label :- DataLabel
-     ;; an empty value indicates a declaration
-     value :- [DataValue]])
+    [label :- DataLabel]
+  ;; an empty value indicates a declaration
+  {(optional-key :value) [DataValue]})
 
 (def Defdata
   DefdataNode)
@@ -223,25 +223,76 @@
 (def Operator
   OperatorNode)
 
-(defschema PointerArgument
-  (cond-pre Int Register Symbol))
+(defn base-register-name? :- Bool
+  [obj]
+  (and (symbol? obj)
+       (contains? '#{a b c d sp bp si di} obj)))
 
-(defschema PointerArguments
-  (constrained [PointerArgument] seq 'pointer-arguments?))
+(defn base-register? :- Bool
+  [{name :name :as reg}]
+  (base-register-name? name))
 
-(defrecord PointerNode
-    [name :- Symbol
-     arguments :- PointerArguments])
+(defschema BaseRegister
+  (constrained Register base-register? 'base-register?))
 
-(def Pointer
-  PointerNode)
+(defn index-register-name? :- Bool
+  [obj]
+  (and (symbol? obj)
+       (contains? '#{a b c d bp si di} obj)))
+
+(defn index-register? :- Bool
+  [{name :name :as reg}]
+  (index-register-name? name))
+
+(defschema IndexRegister
+  (constrained Register index-register? 'index-register?))
+
+(defn scale-value? :- Bool
+  [obj]
+  (and (integer? obj)
+       (contains? #{2 4 8} obj)))
+
+(defn valid-scale? :- Bool
+  [obj]
+  (scale-value? (:value obj)))
+
+(defschema Scale
+  (constrained Int valid-scale? 'valid-scale?))
+
+(defn disp-value? :- Bool
+  [obj]
+  (and (integer? obj)
+       (<= +sint32-min-value+ obj +sint32-max-value+)))
+
+(defn valid-displacement? :- Bool
+  [obj]
+  (disp-value? (:value obj)))
+
+(defschema Displacement
+  (cond-pre (constrained Int valid-displacement? 'valid-displacement?) Symbol))
+
+(defrecord AddressNode
+    []
+  {(optional-key :base) BaseRegister
+   (optional-key :index) IndexRegister
+   (optional-key :scale) Scale
+   (optional-key :disp) Displacement})
+
+(defn valid-address? :- Bool
+  [{:keys [base index scale disp]} :- AddressNode]
+  (and (or base index scale disp)
+       (or (nil? scale) index)
+       (or (nil? index) disp)))
+
+(def Address
+  (constrained AddressNode valid-address? 'valid-address?))
 
 (defschema Operand
-  (cond-pre Int Register Pointer Symbol))
+  (cond-pre Int Register Address Symbol))
 
 (defrecord InstructionNode
-    [operator :- Operator
-     operands :- [Operand]])
+    [operator :- Operator]
+  {(optional-key :operands) [Operand]})
 
 (def Instruction
   InstructionNode)
@@ -260,9 +311,9 @@
   (constrained Label text-label? 'text-label?))
 
 (defrecord DeftextNode
-    [label :- TextLabel
-     ;; an empty statements indicates a declaration
-     statements :- [Statement]])
+    [label :- TextLabel]
+  ;; an empty statements indicates a declaration
+  {(optional-key :statements) [Statement]})
 
 (def Deftext
   DeftextNode)
@@ -273,17 +324,37 @@
    (->IntTagNode min max))
   ([min :- IntValue
     max :- IntValue
-    width :- Width]
-   (assoc (int-tag min max) :width width))
+    signedness :- (maybe Signedness)]
+   (cond-> (int-tag min max)
+     signedness (assoc :signedness signedness)))
   ([min :- IntValue
     max :- IntValue
-    width :- Width
-    signedness :- Signedness]
-   (assoc (int-tag min max width) :signedness signedness)))
+    signedness :- (maybe Signedness)
+    width :- (maybe Width)]
+   (cond-> (int-tag min max signedness)
+     width (assoc :width width))))
+
+(defn int-tag? :- Bool
+  [obj]
+  (instance? IntTagNode obj))
+
+(defn sint-tag? :- Bool
+  [obj]
+  (and (int-tag? obj)
+       (= :signed (:signedness obj))))
+
+(defn uint-tag? :- Bool
+  [obj]
+  (and (int-tag? obj)
+       (= :unsigned (:signedness obj))))
 
 (defn tuple-tag :- TupleTag
   [tags :- Tags]
   (->TupleTagNode tags))
+
+(defn tuple-tag? :- Bool
+  [obj]
+  (instance? TupleTagNode obj))
 
 (defn register :- Register
   [name :- Symbol
@@ -294,6 +365,16 @@
   [tags :- {Register Tag}]
   (->TextTagNode tags))
 
+(defn text-tag? :- Bool
+  [obj]
+  (instance? TextTagNode obj))
+
+(defn tag? :- Bool
+  [obj]
+  (or (text-tag? obj)
+      (tuple-tag? obj)
+      (int-tag? obj)))
+
 (defn int :- Int
   ([value :- IntValue]
    (int value (int-tag value value)))
@@ -301,50 +382,94 @@
     tag :- IntTag]
    (->IntNode value tag)))
 
+(defn int? :- Bool
+  [obj]
+  (instance? IntNode obj))
+
 (defn label :- Label
   ([name :- Symbol]
    (->LabelNode name))
   ([name :- Symbol
-    tag :- Tag]
-   (assoc (label name) :tag tag)))
+    tag :- (maybe Tag)]
+   (cond-> (label name)
+     tag (assoc :tag tag))))
+
+(defn label? :- Bool
+  [obj]
+  (instance? LabelNode obj))
 
 (defn defimport :- Defimport
   [label :- Label]
   (->DefimportNode label))
+
+(defn defimport? :- Bool
+  [obj]
+  (instance? DefimportNode obj))
 
 (defn defconst :- Defconst
   [name :- Symbol
    value :- ConstValue]
   (->DefconstNode name value))
 
+(defn defconst? :- Bool
+  [obj]
+  (instance? DefconstNode obj))
+
 (defn defdata :- Defdata
   ([label :- Label]
-   (defdata label []))
+   (->DefdataNode label))
   ([label :- Label
-    value :- [DataValue]]
-   (->DefdataNode label value)))
+    value :- (maybe [DataValue])]
+   (cond-> (defdata label)
+     (seq value) (assoc :value value))))
+
+(defn defdata? :- Bool
+  [obj]
+  (instance? DefdataNode obj))
 
 (defn operator :- Operator
   [name :- Symbol]
   (->OperatorNode name))
 
-(defn pointer :- Pointer
-  ([name :- Symbol]
-   (pointer name []))
-  ([name :- Symbol
-    arguments :- [PointerArgument]]
-   (->PointerNode name arguments)))
+(defn operator? :- Bool
+  [obj]
+  (instance? OperatorNode obj))
+
+(defn address :- Address
+  [base :- (maybe Register)
+   index :- (maybe Register)
+   scale :- (maybe Scale)
+   disp :- (maybe Displacement)]
+  (cond-> (->AddressNode)
+    base (assoc :base base)
+    index (assoc :index index)
+    scale (assoc :scale scale)
+    disp (assoc :disp disp)))
+
+(defn address? :- Bool
+  [obj]
+  (instance? AddressNode obj))
 
 (defn instruction :- Instruction
   ([operator :- Operator]
-   (instruction operator []))
+   (->InstructionNode operator))
   ([operator :- Operator
-    operands :- [Operand]]
-   (->InstructionNode operator operands)))
+    operands :- (maybe [Operand])]
+   (cond-> (instruction operator)
+     (seq operands) (assoc :operands operands))))
+
+(defn instruction? :- Bool
+  [obj]
+  (instance? InstructionNode obj))
 
 (defn deftext :- Deftext
   ([label :- Label]
-   (deftext label []))
+   (->DeftextNode label))
   ([label :- Label
-    statements :- [Statement]]
-   (->DeftextNode label statements)))
+    statements :- (maybe [Statement])]
+   (cond-> (deftext label)
+     (seq statements) (assoc :statements statements))))
+
+(defn deftext? :- Bool
+  [obj]
+  (instance? DeftextNode obj))
