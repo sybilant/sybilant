@@ -120,13 +120,16 @@
 
 ;; The register and address parsing are admittedly x86 specific at the moment.
 (def registers
-  (edn/read {:readers {'sybilant.ast.RegisterNode ast/map->RegisterNode}}
-            (java.io.PushbackReader. (io/reader (io/resource "registers.edn")))))
+  (-> "registers.edn"
+      io/resource
+      io/reader
+      java.io.PushbackReader.
+      edn/read))
 
 (defn parse-register :- ast/Register
   [form]
-  (if-let [reg (get registers form)]
-    (with-form-meta form reg)
+  (if-let [{:keys [name width]} (get registers form)]
+    (with-form-meta form (ast/register name width))
     (syntax-error "Expected register, but got" (example form))))
 
 (defn register-form? :- Bool

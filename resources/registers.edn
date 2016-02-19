@@ -6,84 +6,84 @@
 ;;;;
 ;;;; This Source Code Form is "Incompatible With Secondary Licenses", as defined
 ;;;; by the Mozilla Public License, v. 2.0.
-{%al #sybilant.ast.RegisterNode{:name a, :width 8}
- %ax #sybilant.ast.RegisterNode{:name a, :width 16}
- %eax #sybilant.ast.RegisterNode{:name a, :width 32}
- %rax #sybilant.ast.RegisterNode{:name a, :width 64}
+{%al {:name a, :width 8}
+ %ax {:name a, :width 16}
+ %eax {:name a, :width 32}
+ %rax {:name a, :width 64}
 
- %bl #sybilant.ast.RegisterNode{:name b, :width 8}
- %bx #sybilant.ast.RegisterNode{:name b, :width 16}
- %ebx #sybilant.ast.RegisterNode{:name b, :width 32}
- %rbx #sybilant.ast.RegisterNode{:name b, :width 64}
+ %bl {:name b, :width 8}
+ %bx {:name b, :width 16}
+ %ebx {:name b, :width 32}
+ %rbx {:name b, :width 64}
 
- %cl #sybilant.ast.RegisterNode{:name c, :width 8}
- %cx #sybilant.ast.RegisterNode{:name c, :width 16}
- %ecx #sybilant.ast.RegisterNode{:name c, :width 32}
- %rcx #sybilant.ast.RegisterNode{:name c, :width 64}
+ %cl {:name c, :width 8}
+ %cx {:name c, :width 16}
+ %ecx {:name c, :width 32}
+ %rcx {:name c, :width 64}
 
- %dl #sybilant.ast.RegisterNode{:name d, :width 8}
- %dx #sybilant.ast.RegisterNode{:name d, :width 16}
- %edx #sybilant.ast.RegisterNode{:name d, :width 32}
- %rdx #sybilant.ast.RegisterNode{:name d, :width 64}
+ %dl {:name d, :width 8}
+ %dx {:name d, :width 16}
+ %edx {:name d, :width 32}
+ %rdx {:name d, :width 64}
 
- %spl #sybilant.ast.RegisterNode{:name sp, :width 8}
- %sp #sybilant.ast.RegisterNode{:name sp, :width 16}
- %esp #sybilant.ast.RegisterNode{:name sp, :width 32}
- %rsp #sybilant.ast.RegisterNode{:name sp, :width 64}
+ %spl {:name sp, :width 8}
+ %sp {:name sp, :width 16}
+ %esp {:name sp, :width 32}
+ %rsp {:name sp, :width 64}
 
- %bpl #sybilant.ast.RegisterNode{:name bp, :width 8}
- %bp #sybilant.ast.RegisterNode{:name bp, :width 16}
- %ebp #sybilant.ast.RegisterNode{:name bp, :width 32}
- %rbp #sybilant.ast.RegisterNode{:name bp, :width 64}
+ %bpl {:name bp, :width 8}
+ %bp {:name bp, :width 16}
+ %ebp {:name bp, :width 32}
+ %rbp {:name bp, :width 64}
 
- %sil #sybilant.ast.RegisterNode{:name si, :width 8}
- %si #sybilant.ast.RegisterNode{:name si, :width 16}
- %esi #sybilant.ast.RegisterNode{:name si, :width 32}
- %rsi #sybilant.ast.RegisterNode{:name si, :width 64}
+ %sil {:name si, :width 8}
+ %si {:name si, :width 16}
+ %esi {:name si, :width 32}
+ %rsi {:name si, :width 64}
 
- %dil #sybilant.ast.RegisterNode{:name di, :width 8}
- %di #sybilant.ast.RegisterNode{:name di, :width 16}
- %edi #sybilant.ast.RegisterNode{:name di, :width 32}
- %rdi #sybilant.ast.RegisterNode{:name di, :width 64}
+ %dil {:name di, :width 8}
+ %di {:name di, :width 16}
+ %edi {:name di, :width 32}
+ %rdi {:name di, :width 64}
 
- %r8l #sybilant.ast.RegisterNode{:name r8, :width 8}
- %r8w #sybilant.ast.RegisterNode{:name r8, :width 16}
- %r8d #sybilant.ast.RegisterNode{:name r8, :width 32}
- %r8 #sybilant.ast.RegisterNode{:name r8, :width 64}
+ %r8l {:name r8, :width 8}
+ %r8w {:name r8, :width 16}
+ %r8d {:name r8, :width 32}
+ %r8 {:name r8, :width 64}
 
- %r9l #sybilant.ast.RegisterNode{:name r9, :width 8}
- %r9w #sybilant.ast.RegisterNode{:name r9, :width 16}
- %r9d #sybilant.ast.RegisterNode{:name r9, :width 32}
- %r9 #sybilant.ast.RegisterNode{:name r9, :width 64}
+ %r9l {:name r9, :width 8}
+ %r9w {:name r9, :width 16}
+ %r9d {:name r9, :width 32}
+ %r9 {:name r9, :width 64}
 
- %r10l #sybilant.ast.RegisterNode{:name r10, :width 8}
- %r10w #sybilant.ast.RegisterNode{:name r10, :width 16}
- %r10d #sybilant.ast.RegisterNode{:name r10, :width 32}
- %r10 #sybilant.ast.RegisterNode{:name r10, :width 64}
+ %r10l {:name r10, :width 8}
+ %r10w {:name r10, :width 16}
+ %r10d {:name r10, :width 32}
+ %r10 {:name r10, :width 64}
 
- %r11l #sybilant.ast.RegisterNode{:name r11, :width 8}
- %r11w #sybilant.ast.RegisterNode{:name r11, :width 16}
- %r11d #sybilant.ast.RegisterNode{:name r11, :width 32}
- %r11 #sybilant.ast.RegisterNode{:name r11, :width 64}
+ %r11l {:name r11, :width 8}
+ %r11w {:name r11, :width 16}
+ %r11d {:name r11, :width 32}
+ %r11 {:name r11, :width 64}
 
- %r12l #sybilant.ast.RegisterNode{:name r12, :width 8}
- %r12w #sybilant.ast.RegisterNode{:name r12, :width 16}
- %r12d #sybilant.ast.RegisterNode{:name r12, :width 32}
- %r12 #sybilant.ast.RegisterNode{:name r12, :width 64}
+ %r12l {:name r12, :width 8}
+ %r12w {:name r12, :width 16}
+ %r12d {:name r12, :width 32}
+ %r12 {:name r12, :width 64}
 
- %r13l #sybilant.ast.RegisterNode{:name r13, :width 8}
- %r13w #sybilant.ast.RegisterNode{:name r13, :width 16}
- %r13d #sybilant.ast.RegisterNode{:name r13, :width 32}
- %r13 #sybilant.ast.RegisterNode{:name r13, :width 64}
+ %r13l {:name r13, :width 8}
+ %r13w {:name r13, :width 16}
+ %r13d {:name r13, :width 32}
+ %r13 {:name r13, :width 64}
 
- %r14l #sybilant.ast.RegisterNode{:name r14, :width 8}
- %r14w #sybilant.ast.RegisterNode{:name r14, :width 16}
- %r14d #sybilant.ast.RegisterNode{:name r14, :width 32}
- %r14 #sybilant.ast.RegisterNode{:name r14, :width 64}
+ %r14l {:name r14, :width 8}
+ %r14w {:name r14, :width 16}
+ %r14d {:name r14, :width 32}
+ %r14 {:name r14, :width 64}
 
- %r15l #sybilant.ast.RegisterNode{:name r15, :width 8}
- %r15w #sybilant.ast.RegisterNode{:name r15, :width 16}
- %r15d #sybilant.ast.RegisterNode{:name r15, :width 32}
- %r15 #sybilant.ast.RegisterNode{:name r15, :width 64}
+ %r15l {:name r15, :width 8}
+ %r15w {:name r15, :width 16}
+ %r15d {:name r15, :width 32}
+ %r15 {:name r15, :width 64}
 
- %rip #sybilant.ast.RegisterNode{:name rip, :width 64}}
+ %rip {:name rip, :width 64}}

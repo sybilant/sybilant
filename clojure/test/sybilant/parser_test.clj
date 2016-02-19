@@ -8,7 +8,7 @@
 ;;;; by the Mozilla Public License, v. 2.0.
 (ns sybilant.parser-test
   (:require
-   [clojure.test :refer :all]
+   [clojure.test :refer [assert-expr deftest do-report is testing use-fixtures]]
    [schema.test :refer [validate-schemas]]
    [sybilant.ast :as ast]
    [sybilant.parser :refer :all]))
