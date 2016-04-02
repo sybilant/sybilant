@@ -57,19 +57,51 @@
 (deftest t-parse-int-tag-with-three-args
   (is (syntax-error? (parse-int-tag '(%int 1 2 3)))))
 
-(deftest t-parse-sint-tag
-  (let [m {:file "foo.syb" :line 1 :column 5}
-        form (with-meta '(%sint 1 2) m)
-        exp (parse-int-tag form)]
-    (is (ast/sint-tag? exp))
-    (is (meta? m exp))))
-
 (deftest t-parse-uint-tag
   (let [m {:file "foo.syb" :line 1 :column 5}
         form (with-meta '(%uint 1 2) m)
         exp (parse-int-tag form)]
     (is (ast/uint-tag? exp))
-    (is (meta? m exp))))
+    (is (meta? m exp)))
+  (testing "with width 8"
+    (let [exp (parse-int-tag '(%uint8 1 2))]
+      (is (ast/uint-tag? exp))
+      (is (= 8 (:width exp)))))
+  (testing "with width 16"
+    (let [exp (parse-int-tag '(%uint16 1 2))]
+      (is (ast/uint-tag? exp))
+      (is (= 16 (:width exp)))))
+  (testing "with width 32"
+    (let [exp (parse-int-tag '(%uint32 1 2))]
+      (is (ast/uint-tag? exp))
+      (is (= 32 (:width exp)))))
+  (testing "with width 64"
+    (let [exp (parse-int-tag '(%uint64 1 2))]
+      (is (ast/uint-tag? exp))
+      (is (= 64 (:width exp))))))
+
+(deftest t-parse-sint-tag
+  (let [m {:file "foo.syb" :line 1 :column 5}
+        form (with-meta '(%sint 1 2) m)
+        exp (parse-int-tag form)]
+    (is (ast/sint-tag? exp))
+    (is (meta? m exp)))
+  (testing "with width 8"
+    (let [exp (parse-int-tag '(%sint8 1 2))]
+      (is (ast/sint-tag? exp))
+      (is (= 8 (:width exp)))))
+  (testing "with width 16"
+    (let [exp (parse-int-tag '(%sint16 1 2))]
+      (is (ast/sint-tag? exp))
+      (is (= 16 (:width exp)))))
+  (testing "with width 32"
+    (let [exp (parse-int-tag '(%sint32 1 2))]
+      (is (ast/sint-tag? exp))
+      (is (= 32 (:width exp)))))
+  (testing "with width 64"
+    (let [exp (parse-int-tag '(%sint64 1 2))]
+      (is (ast/sint-tag? exp))
+      (is (= 64 (:width exp))))))
 
 (deftest t-parse-tuple-tag
   (let [m {:file "foo.syb" :line 1 :column 5}

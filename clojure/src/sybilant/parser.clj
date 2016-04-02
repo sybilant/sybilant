@@ -12,7 +12,7 @@
    [clojure.edn :as edn]
    [clojure.java.io :as io]
    [clojure.string :as str]
-   [schema.core :refer [Bool defn maybe one Str Symbol]]
+   [schema.core :refer [Bool defn maybe one optional-key Str Symbol]]
    [sybilant.ast :as ast]))
 
 (defmacro try-parse
@@ -73,31 +73,73 @@
                   (example ast/+uint64-max-value+)))
   form)
 
-(def ^:const sint-tag-sym
-  '%sint)
+(def ^:const int-tag-sym
+  '%int)
 
 (def ^:const uint-tag-sym
   '%uint)
 
+(def ^:const uint8-tag-sym
+  '%uint8)
+
+(def ^:const uint16-tag-sym
+  '%uint16)
+
+(def ^:const uint32-tag-sym
+  '%uint32)
+
+(def ^:const uint64-tag-sym
+  '%uint64)
+
+(def ^:const sint-tag-sym
+  '%sint)
+
+(def ^:const sint8-tag-sym
+  '%sint8)
+
+(def ^:const sint16-tag-sym
+  '%sint16)
+
+(def ^:const sint32-tag-sym
+  '%sint32)
+
+(def ^:const sint64-tag-sym
+  '%sint64)
+
 (def ^:const int-tag-syms
-  #{'%int sint-tag-sym uint-tag-sym})
+  #{int-tag-sym
+    uint-tag-sym uint8-tag-sym uint16-tag-sym uint32-tag-sym uint64-tag-sym
+    sint-tag-sym sint8-tag-sym sint16-tag-sym sint32-tag-sym sint64-tag-sym})
 
 (defn int-tag-form? :- Bool
   [obj]
   (and (list? obj)
        (contains? int-tag-syms (first obj))))
 
+(defn parse-int-tag-sym :- {(optional-key :signedness) ast/Signedness
+                            (optional-key :width) ast/Width}
+  [tag-sym :- Symbol]
+  (condp = tag-sym
+    int-tag-sym {}
+    uint-tag-sym {:signedness :unsigned}
+    uint8-tag-sym {:signedness :unsigned :width 8}
+    uint16-tag-sym {:signedness :unsigned :width 16}
+    uint32-tag-sym {:signedness :unsigned :width 32}
+    uint64-tag-sym {:signedness :unsigned :width 64}
+    sint-tag-sym {:signedness :signed}
+    sint8-tag-sym {:signedness :signed :width 8}
+    sint16-tag-sym {:signedness :signed :width 16}
+    sint32-tag-sym {:signedness :signed :width 32}
+    sint64-tag-sym {:signedness :signed :width 64}))
+
 (defn parse-int-tag :- ast/IntTag
   [[tag-sym min max & rest :as form]]
   {:pre [(list? form)]}
   (validate-tagged-list form int-tag-syms 2 2)
-  (let [signedness (condp = tag-sym
-                     sint-tag-sym :signed
-                     uint-tag-sym :unsigned
-                     nil)
+  (let [{:keys [signedness width]} (parse-int-tag-sym tag-sym)
         min (parse-int-value min)
         max (parse-int-value max)]
-    (with-form-meta form (ast/int-tag min max signedness))))
+    (with-form-meta form (ast/int-tag min max signedness width))))
 
 (declare parse-tag)
 
