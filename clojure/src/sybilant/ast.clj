@@ -330,9 +330,9 @@
 
 (defn valid-address? :- Bool
   [{:keys [base index scale disp]} :- Address*]
-  (and (or base index scale disp)
-       (or (nil? scale) index)
-       (or (nil? index) disp)))
+  (boolean (and (or base index scale disp)
+                (or (nil? scale) index)
+                (or (nil? index) disp))))
 
 (defschema Address
   (constrained Address* valid-address? 'valid-address?))

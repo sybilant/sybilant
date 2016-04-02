@@ -135,6 +135,40 @@
         (is (ast/defdata? exp))
         (is (meta? m exp))))))
 
+(deftest t-parse-address
+  (testing "disp"
+    (let [exp (parse-address '(%addr 7))]
+      (is (ast/address? exp))
+      (is (ast/int? (:disp exp)))))
+  (testing "base"
+    (let [exp (parse-address '(%addr %rax))]
+      (is (ast/address? exp))
+      (is (ast/register? (:base exp)))))
+  (testing "base + disp"
+    (let [exp (parse-address '(%addr %rax 7))]
+      (is (ast/address? exp))
+      (is (ast/register? (:base exp)))
+      (is (ast/int? (:disp exp)))))
+  (testing "(index * scale) + disp"
+    (let [exp (parse-address '(%addr %rbx 4 7))]
+      (is (ast/address? exp))
+      (is (ast/register? (:index exp)))
+      (is (ast/int? (:scale exp)))
+      (is (ast/int? (:disp exp)))))
+  (testing "base + index + disp"
+    (let [exp (parse-address '(%addr %rax %rbx 7))]
+      (is (ast/address? exp))
+      (is (ast/register? (:base exp)))
+      (is (ast/register? (:index exp)))
+      (is (ast/int? (:disp exp)))))
+  (testing "base + (index * scale) + disp"
+    (let [exp (parse-address '(%addr %rax %rbx 4 7))]
+      (is (ast/address? exp))
+      (is (ast/register? (:base exp)))
+      (is (ast/register? (:index exp)))
+      (is (ast/int? (:scale exp)))
+      (is (ast/int? (:disp exp))))))
+
 (deftest t-parse-deftext
   (let [m {:file "foo.syb" :line 1 :column 1}]
     (let [form (with-meta '(%deftext (%label foo {%rax (%int 1 2)})
