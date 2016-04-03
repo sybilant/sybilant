@@ -154,15 +154,21 @@
     (is (ast/defconst? exp))
     (is (meta? m exp))))
 
+(deftest t-parse-defdata-without-label-tag
+  (is (syntax-error? (parse-defdata '(%defdata (%label foo))))))
+
+(deftest t-parse-defdata-with-label-tag-with-no-width
+  (is (syntax-error? (parse-defdata '(%defdata (%label foo [(%int 1 2)]))))))
+
 (deftest t-parse-defdata
   (let [m {:file "foo.syb" :line 1 :column 1}]
-    (let [form (with-meta '(%defdata (%label foo [(%int 1 2)]) [1]) m)
+    (let [form (with-meta '(%defdata (%label foo [(%sint8 1 2)]) [1]) m)
           exp (parse-defdata form)]
       (is (ast/defdata? exp))
       (is (meta? m exp)))
     (testing "without value"
       (let [m {:file "foo.syb" :line 1 :column 1}
-            form (with-meta '(%defdata (%label foo [(%int 1 2)])) m)
+            form (with-meta '(%defdata (%label foo [(%sint8 1 2)])) m)
             exp (parse-defdata form)]
         (is (ast/defdata? exp))
         (is (meta? m exp))))))

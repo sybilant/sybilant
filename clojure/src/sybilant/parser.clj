@@ -266,10 +266,16 @@
       (parse-const-value value))))
 
 (defn parse-data-label :- ast/DataLabel
-  [[_ name tag? :as form]]
+  [[_ _ tag? :as form]]
   (let [label (parse-label form)]
-    (when-not (or (nil? (:tag label)) (ast/tuple-tag? (:tag label)))
+    (when-not (some? (:tag label))
+      (syntax-error "Data label expects a tuple tag, but got none"))
+    (when-not (ast/tuple-tag? (:tag label))
       (syntax-error "Data label expects a tuple tag, but got" (example tag?)))
+    (doseq [tag (:tags (:tag label))]
+      (when-not (:width tag)
+        (syntax-error "Data label expects a tag with defined width, but got"
+                      (example tag?))))
     label))
 
 (defn parse-data-value :- ast/DataValue
