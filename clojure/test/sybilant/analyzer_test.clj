@@ -37,7 +37,7 @@
 
 (use-fixtures :once validate-schemas)
 
-(deftest t-analyze-checks-symbols
+(deftest t-analyze-checks-for-undefined-symbols
   (are [exp]
       (ex-info?
        {:error :undefined-symbol
@@ -79,3 +79,30 @@
                              (%call foo)
                              (%ret)))
                  env))))
+
+(deftest t-analyze-checks-for-duplicate-locals
+  (is (ex-info?
+       {:error :duplicate-definition
+        :symbol 'foo
+        :previous-definition (parser/parse-label '(%label foo))}
+       (analyze (parser/parse-top-level
+                 '(%deftext (%label foo)
+                            (%add %rax 1)
+                            (%label foo)
+                            (%ret)))
+                (atom (env/new))))))
+
+(deftest t-analyze-checks-for-duplicate-globals
+  (let [env (atom (env/new))
+        exp (parser/parse-deftext
+             '(%deftext (%label foo)
+                        (%ret)))]
+    (is (analyze exp env))
+    (is (ex-info?
+         {:error :duplicate-definition
+          :symbol 'foo
+          :previous-definition exp}
+         (analyze (parser/parse-deftext
+                   '(%deftext (%label foo)
+                              (%ret)))
+                  env)))))

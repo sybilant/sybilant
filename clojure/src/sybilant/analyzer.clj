@@ -28,7 +28,13 @@
         [(collect-locals
            [exp]
            (when (ast/label? exp)
-             (swap! locals assoc (:name exp) exp))
+             (let [label-name (:name exp)]
+               (if-let [previous-definition (get @locals label-name)]
+                 (throw (ex-info (str "Duplicate symbol '" label-name "'")
+                                 {:error :duplicate-definition
+                                  :symbol label-name
+                                  :previous-definition previous-definition}))
+                 (swap! locals assoc (:name exp) exp))))
            exp)]
       (zip/dfs-visit exp collect-locals))
     (vary-meta exp assoc :locals @locals)))
@@ -66,7 +72,12 @@
          [exp]
          (when (definition? exp)
            (let [name (definition-name exp)]
-             (swap! env env/assoc-global name exp)))
+             (if-let [previous-definition (env/get-global @env name)]
+               (throw (ex-info (str "Duplicate symbol '" name "'")
+                               {:error :duplicate-definition
+                                :symbol name
+                                :previous-definition previous-definition}))
+               (swap! env env/assoc-global name exp))))
          exp)]
     (zip/dfs-visit exp define-globals)))
 
