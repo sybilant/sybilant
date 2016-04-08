@@ -376,6 +376,13 @@
 (defschema Deftext
   (pred #'deftext? 'deftext?))
 
+(defn top-level? :- Bool
+  [obj]
+  (or (defimport? obj) (defconst? obj) (defdata? obj) (deftext? obj)))
+
+(defschema TopLevel
+  (pred #'top-level? 'top-level?))
+
 (defn int-tag :- IntTag
   ([min :- IntValue
     max :- IntValue]

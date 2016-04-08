@@ -32,6 +32,13 @@
   [form]
   (str "'" (pr-str form) "'"))
 
+(defn tagged-list? :- Bool
+  [obj tag]
+  (and (list? obj)
+       (if (set? tag)
+         (contains? tag (first obj))
+         (= tag (first obj)))))
+
 (defn validate-tagged-list
   ([form tag-sym min-args]
    (validate-tagged-list form tag-sym min-args nil))
@@ -113,8 +120,7 @@
 
 (defn int-tag-form? :- Bool
   [obj]
-  (and (list? obj)
-       (contains? int-tag-syms (first obj))))
+  (tagged-list? obj int-tag-syms))
 
 (defn parse-int-tag-sym :- {(optional-key :signedness) ast/Signedness
                             (optional-key :width) ast/Width}
@@ -211,8 +217,7 @@
 
 (defn label-form? :- Bool
   [form]
-  (and (list? form)
-       (= label-sym (first form))))
+  (tagged-list? form label-sym))
 
 (defn parse-label :- ast/Label
   [[_ sym tag? :as form]]
@@ -229,6 +234,10 @@
 
 (def ^:const defimport-sym
   '%defimport)
+
+(defn defimport-form? :- Bool
+  [form]
+  (tagged-list? form defimport-sym))
 
 (defn parse-defimport :- ast/Defimport
   [[_ label :as form]]
@@ -251,6 +260,10 @@
 
 (def ^:const defconst-sym
   '%defconst)
+
+(defn defconst-form? :- Bool
+  [form]
+  (tagged-list? form defconst-sym))
 
 (defn parse-defconst :- ast/Defconst
   [[_ name value :as form]]
@@ -287,6 +300,10 @@
 
 (def ^:const defdata-sym
   '%defdata)
+
+(defn defdata-form? :- Bool
+  [form]
+  (tagged-list? form defdata-sym))
 
 (defn parse-defdata :- ast/Defdata
   [[_ data-label data-value? :as form]]
@@ -378,8 +395,7 @@
 
 (defn address-form? :- Bool
   [form]
-  (and (list? form)
-       (= addr-sym (first form))))
+  (tagged-list? form addr-sym))
 
 (defn parse-address :- ast/Address
   [[sym & args :as form]]
@@ -419,6 +435,10 @@
 (def ^:const deftext-sym
   '%deftext)
 
+(defn deftext-form? :- Bool
+  [form]
+  (tagged-list? form deftext-sym))
+
 (defn parse-deftext :- ast/Deftext
   [[_ label & statements? :as form]]
   (validate-tagged-list form deftext-sym 1)
@@ -428,3 +448,11 @@
   (with-form-meta form
     (ast/deftext (parse-label label)
       (mapv parse-statement statements?))))
+
+(defn parse-top-level :- ast/TopLevel
+  [form]
+  (cond
+    (defimport-form? form) (parse-defimport form)
+    (defconst-form? form) (parse-defconst form)
+    (defdata-form? form) (parse-defdata form)
+    (deftext-form? form) (parse-deftext form)))
