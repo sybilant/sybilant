@@ -28,6 +28,10 @@
   [env]
   (:locals env))
 
+(defn assoc-global
+  [env name :- Symbol exp]
+  (assoc-in env [:globals name] exp))
+
 (defn get-global
   [env name :- Symbol]
   (get-in env [:globals name]))

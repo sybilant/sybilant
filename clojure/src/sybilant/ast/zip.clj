@@ -68,7 +68,7 @@
     value (assoc :value value)))
 
 (defmethod make-node :defdata :- ast/Defdata
-  [node :- ast/Defdata [label value]]
+  [node :- ast/Defdata [label & value]]
   (cond-> (assoc (dissoc node :value) :label label)
     value (assoc :value value)))
 

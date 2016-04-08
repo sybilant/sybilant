@@ -67,3 +67,15 @@
                   '(%defdata (%label foo [(%sint8 0 1)]) [foo]))
                  (atom (env/new)))
         "should find %defdata's label")))
+
+(deftest t-analyze-defines-globals
+  (let [env (atom (env/new))]
+    (is (analyze (parser/parse-deftext
+                  '(%deftext (%label foo)
+                             (%ret)))
+                 env))
+    (is (analyze (parser/parse-deftext
+                  '(%deftext (%label bar)
+                             (%call foo)
+                             (%ret)))
+                 env))))

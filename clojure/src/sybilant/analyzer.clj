@@ -9,7 +9,7 @@
 (ns sybilant.analyzer
   (:refer-clojure :exclude [defn])
   (:require
-   [schema.core :refer [Bool defn defschema pred]]
+   [schema.core :refer [Bool defn defschema pred Symbol]]
    [sybilant.ast :as ast]
    [sybilant.ast.zip :as zip]
    [sybilant.analyzer.environment :as env]))
@@ -44,11 +44,35 @@
                (throw (ex-info (str "Could not resolve '" exp "'")
                                {:error :undefined-symbol :symbol exp}))))
            exp)]
-      (zip/dfs-visit exp check-symbols)))
-  exp)
+      (zip/dfs-visit exp check-symbols))))
+
+(defn definition? :- Bool
+  [exp]
+  (or (ast/defimport? exp)
+      (ast/defconst? exp)
+      (ast/defdata? exp)
+      (ast/deftext? exp)))
+
+(defn definition-name :- Symbol
+  [exp]
+  (if (ast/defconst? exp)
+    (:name exp)
+    (get-in exp [:label :name])))
+
+(defn define-globals
+  [exp env :- Atom]
+  (letfn
+      [(define-globals
+         [exp]
+         (when (definition? exp)
+           (let [name (definition-name exp)]
+             (swap! env env/assoc-global name exp)))
+         exp)]
+    (zip/dfs-visit exp define-globals)))
 
 (defn analyze
   [exp env :- Atom]
   (let [exp (collect-locals exp env)
-        exp (check-symbols exp env)]
+        exp (check-symbols exp env)
+        exp (define-globals exp env)]
     exp))
