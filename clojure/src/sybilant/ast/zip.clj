@@ -58,14 +58,13 @@
   (fn [node children]
     (node-type node)))
 
-(defmethod make-node :defimport :- ast/Label
-  [node :- ast/Label [label]]
+(defmethod make-node :defimport :- ast/Defimport
+  [node :- ast/Defimport [label]]
   (assoc node :label label))
 
 (defmethod make-node :defconst :- ast/Defconst
   [node :- ast/Defconst [name value]]
-  (cond-> (assoc (dissoc node :value) :name name)
-    value (assoc :value value)))
+  (assoc node :name name :value value))
 
 (defmethod make-node :defdata :- ast/Defdata
   [node :- ast/Defdata [label & value]]
