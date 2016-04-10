@@ -247,6 +247,13 @@
                   "but got" (example label)))
   (with-form-meta form (ast/defimport (parse-label label))))
 
+(defn parse-const-label :- ast/ConstLabel
+  [[_ _ tag? :as form]]
+  (let [label (parse-label form)]
+    (when (and (:tag label) (not (ast/int-tag? (:tag label))))
+      (syntax-error "Const label expects an int tag, but got" (example tag?)))
+    label))
+
 (defn const-value-form? :- Bool
   [obj]
   (or (int-form? obj) (symbol-form? obj)))
@@ -266,16 +273,16 @@
   (tagged-list? form defconst-sym))
 
 (defn parse-defconst :- ast/Defconst
-  [[_ name value :as form]]
+  [[_ const-label value :as form]]
   (validate-tagged-list form defconst-sym 2 2)
-  (when-not (symbol-form? name)
-    (syntax-error defconst-sym "expects a symbol as its first argument, but got"
-                  (example name)))
+  (when-not (label-form? const-label)
+    (syntax-error defconst-sym "expects a label as its first argument, but got"
+                  (example const-label)))
   (when-not (const-value-form? value)
     (syntax-error defconst-sym "expects a constant value as its second"
                   "argument, but got" (example value)))
   (with-form-meta form
-    (ast/defconst (parse-symbol name)
+    (ast/defconst (parse-const-label const-label)
       (parse-const-value value))))
 
 (defn parse-data-label :- ast/DataLabel

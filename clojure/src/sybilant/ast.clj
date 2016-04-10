@@ -217,11 +217,21 @@
 (def Defimport
   DefimportNode)
 
+(defn const-label? :- Bool
+  [obj]
+  (and (label? obj)
+       (let [tag (:tag obj)]
+         (or (nil? tag)
+             (int-tag? tag)))))
+
+(defschema ConstLabel
+  (constrained Label const-label? 'const-label?))
+
 (defschema ConstValue
   (cond-pre Int Symbol))
 
 (defrecord DefconstNode
-    [name :- Symbol
+    [label :- ConstLabel
      value :- ConstValue])
 
 (defn defconst? :- Bool
@@ -448,9 +458,9 @@
   (->DefimportNode label))
 
 (defn defconst :- Defconst
-  [name :- Symbol
+  [label :- Label
    value :- ConstValue]
-  (->DefconstNode name value))
+  (->DefconstNode label value))
 
 (defn defdata :- Defdata
   ([label :- Label]

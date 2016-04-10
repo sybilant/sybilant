@@ -149,7 +149,7 @@
 
 (deftest t-parse-defconst
   (let [m {:file "foo.syb" :line 1 :column 1}
-        form (with-meta '(%defconst PI 3) m)
+        form (with-meta '(%defconst (%label PI) 3) m)
         exp (parse-defconst form)]
     (is (ast/defconst? exp))
     (is (meta? m exp))))

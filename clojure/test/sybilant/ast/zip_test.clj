@@ -21,7 +21,7 @@
     (parser/parse-defimport
      '(%defimport (%label foo)))
     (parser/parse-defconst
-     '(%defconst foo 5))
+     '(%defconst (%label foo) 5))
     (parser/parse-defdata
      '(%defdata (%label foo [(%sint8 0 1)]) [1]))
     (parser/parse-deftext

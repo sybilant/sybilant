@@ -61,9 +61,7 @@
 
 (defn definition-name :- Symbol
   [exp]
-  (if (ast/defconst? exp)
-    (:name exp)
-    (get-in exp [:label :name])))
+  (get-in exp [:label :name]))
 
 (defn define-globals
   [exp env :- Atom]

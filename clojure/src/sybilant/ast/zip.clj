@@ -35,8 +35,8 @@
   [label])
 
 (defmethod children :defconst
-  [{:keys [name value]} :- ast/Defconst]
-  [name value])
+  [{:keys [label value]} :- ast/Defconst]
+  [label value])
 
 (defmethod children :defdata
   [{:keys [label value]} :- ast/Defdata]
@@ -63,8 +63,8 @@
   (assoc node :label label))
 
 (defmethod make-node :defconst :- ast/Defconst
-  [node :- ast/Defconst [name value]]
-  (assoc node :name name :value value))
+  [node :- ast/Defconst [label value]]
+  (assoc node :label label :value value))
 
 (defmethod make-node :defdata :- ast/Defdata
   [node :- ast/Defdata [label & value]]
