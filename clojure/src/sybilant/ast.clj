@@ -120,7 +120,7 @@
     (<= max (int-max-value width (or signedness :unsigned)))))
 
 (defschema IntTag
-  (-> IntTag*
+  (-> IntTagNode
       (constrained min-less-than-or-equal-to-max?
                    'min-less-than-or-equal-to-max?)
       (constrained min-greater-than-or-equal-to-type-min?
@@ -143,8 +143,8 @@
   [obj]
   (instance? TupleTagNode obj))
 
-(defschema TupleTag
-  (pred #'tuple-tag? 'tuple-tag?))
+(def TupleTag
+  TupleTagNode)
 
 (defrecord RegisterNode
     [name :- Symbol
@@ -154,8 +154,8 @@
   [obj]
   (instance? RegisterNode obj))
 
-(defschema Register
-  (pred #'register? 'register?))
+(def Register
+  RegisterNode)
 
 (defrecord TextTagNode
     [tags :- {Register Tag}])
@@ -164,8 +164,8 @@
   [obj]
   (instance? TextTagNode obj))
 
-(defschema TextTag
-  (pred #'text-tag? 'text-tag?))
+(def TextTag
+  TextTagNode)
 
 (defschema Tag*
   (cond-pre IntTag TupleTag TextTag))
@@ -190,7 +190,7 @@
   (<= value max))
 
 (defschema Int
-  (-> Int*
+  (-> IntNode
       (constrained value-greater-than-or-equal-to-min?
                    'value-greater-than-or-equal-to-min?)
       (constrained value-less-than-or-equal-to-max?
@@ -204,8 +204,8 @@
   [obj]
   (instance? LabelNode obj))
 
-(defschema Label
-  (pred #'label? 'label?))
+(def Label
+  LabelNode)
 
 (defrecord DefimportNode
     [label :- Label])
@@ -214,8 +214,8 @@
   [obj]
   (instance? DefimportNode obj))
 
-(defschema Defimport
-  (pred #'defimport? 'defimport?))
+(def Defimport
+  DefimportNode)
 
 (defschema ConstValue
   (cond-pre Int Symbol))
@@ -228,8 +228,8 @@
   [obj]
   (instance? DefconstNode obj))
 
-(defschema Defconst
-  (pred #'defconst? 'defconst?))
+(def Defconst
+  DefconstNode)
 
 (defn data-label? :- Bool
   [obj]
@@ -253,8 +253,8 @@
   [obj]
   (instance? DefdataNode obj))
 
-(defschema Defdata
-  (pred #'defdata? 'defdata?))
+(def Defdata
+  DefdataNode)
 
 (defrecord OperatorNode
     [name :- Symbol])
@@ -263,8 +263,8 @@
   [obj]
   (instance? OperatorNode obj))
 
-(defschema Operator
-  (pred #'operator? 'operator?))
+(def Operator
+  OperatorNode)
 
 (defn base-register-name? :- Bool
   [obj]
@@ -335,7 +335,7 @@
                 (or (nil? index) disp))))
 
 (defschema Address
-  (constrained Address* valid-address? 'valid-address?))
+  (constrained AddressNode valid-address? 'valid-address?))
 
 (defschema Operand
   (cond-pre Int Register Address Symbol))
@@ -348,8 +348,8 @@
   [obj]
   (instance? InstructionNode obj))
 
-(defschema Instruction
-  (pred #'instruction? 'instruction?))
+(def Instruction
+  InstructionNode)
 
 (defschema Statement
   (cond-pre Label Instruction))
@@ -373,8 +373,8 @@
   [obj]
   (instance? DeftextNode obj))
 
-(defschema Deftext
-  (pred #'deftext? 'deftext?))
+(def Deftext
+  DeftextNode)
 
 (defn top-level? :- Bool
   [obj]
