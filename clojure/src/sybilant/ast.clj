@@ -254,7 +254,7 @@
   (instance? DefdataNode obj))
 
 (defschema Defdata
-  (pred #'defdata? 'defconst?))
+  (pred #'defdata? 'defdata?))
 
 (defrecord OperatorNode
     [name :- Symbol])
