@@ -21,6 +21,34 @@
 (defschema Atom
   (pred atom? 'atom?))
 
+(defn long-symbol? :- Bool
+  [sym :- Symbol]
+  (> (count (name sym)) 31))
+
+(defn valid-symbol? :- Bool
+  [sym :- Symbol]
+  (and (nil? (namespace sym))
+       (boolean (re-matches #"[_a-z][_a-zA-Z0-9]{0,30}" (name sym)))))
+
+(defn duplicate-definition
+  [symbol previous-definition]
+  (ex-info (str "Duplicate symbol '" symbol "'")
+           {:sybilant/error :duplicate-definition
+            :sybilant/symbol symbol
+            :sybilant/previous-definition previous-definition}))
+
+(defn symbol-too-long
+  [symbol]
+  (ex-info (str "Symbol is too long '" symbol "'")
+           {:sybilant/error :long-symbol
+            :sybilant/symbol symbol}))
+
+(defn symbol-invalid
+  [symbol]
+  (ex-info (str "Symbol is invalid '" symbol "'")
+           {:sybilant/error :invalid-symbol
+            :sybilant/symbol symbol}))
+
 (defn collect-locals
   [exp env :- Atom]
   (let [locals (atom {})]
@@ -29,15 +57,22 @@
            [exp]
            (when (ast/label? exp)
              (let [label-name (:name exp)]
-               (if-let [previous-definition (get @locals label-name)]
-                 (throw (ex-info (str "Duplicate symbol '" label-name "'")
-                                 {:error :duplicate-definition
-                                  :symbol label-name
-                                  :previous-definition previous-definition}))
-                 (swap! locals assoc (:name exp) exp))))
+               (when-let [previous-definition (get @locals label-name)]
+                 (throw (duplicate-definition label-name previous-definition)))
+               (when (long-symbol? label-name)
+                 (throw (symbol-too-long label-name)))
+               (when-not (valid-symbol? label-name)
+                 (throw (symbol-invalid label-name)))
+               (swap! locals assoc (:name exp) exp)))
            exp)]
       (zip/dfs-visit exp collect-locals))
     (vary-meta exp assoc :locals @locals)))
+
+(defn undefined-symbol
+  [symbol]
+  (ex-info (str "Could not resolve '" symbol "'")
+           {:sybilant/error :undefined-symbol
+            :sybilant/symbol symbol}))
 
 (defn check-symbols
   [exp env :- Atom]
@@ -47,8 +82,7 @@
            [exp]
            (when (symbol? exp)
              (when-not (env/resolve @env exp)
-               (throw (ex-info (str "Could not resolve '" exp "'")
-                               {:error :undefined-symbol :symbol exp}))))
+               (throw (undefined-symbol exp))))
            exp)]
       (zip/dfs-visit exp check-symbols))))
 
@@ -71,10 +105,7 @@
          (when (definition? exp)
            (let [name (definition-name exp)]
              (if-let [previous-definition (env/get-global @env name)]
-               (throw (ex-info (str "Duplicate symbol '" name "'")
-                               {:error :duplicate-definition
-                                :symbol name
-                                :previous-definition previous-definition}))
+               (throw (duplicate-definition name previous-definition))
                (swap! env env/assoc-global name exp))))
          exp)]
     (zip/dfs-visit exp define-globals)))

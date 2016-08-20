@@ -40,8 +40,8 @@
 (deftest t-analyze-checks-for-undefined-symbols
   (are [exp]
       (ex-info?
-       {:error :undefined-symbol
-        :symbol 'bar}
+       {:sybilant/error :undefined-symbol
+        :sybilant/symbol 'bar}
        (analyze (parser/parse-top-level exp)
                 (atom (env/new))))
     '(%deftext (%label foo)
@@ -70,10 +70,9 @@
 
 (deftest t-analyze-defines-globals
   (let [env (atom (env/new))]
-    (is (analyze (parser/parse-deftext
-                  '(%deftext (%label foo)
-                             (%ret)))
-                 env))
+    (analyze (parser/parse-defimport
+              '(%defimport (%label foo)))
+             env)
     (is (analyze (parser/parse-deftext
                   '(%deftext (%label bar)
                              (%call foo)
@@ -82,9 +81,9 @@
 
 (deftest t-analyze-checks-for-duplicate-locals
   (is (ex-info?
-       {:error :duplicate-definition
-        :symbol 'foo
-        :previous-definition (parser/parse-label '(%label foo))}
+       {:sybilant/error :duplicate-definition
+        :sybilant/symbol 'foo
+        :sybilant/previous-definition (parser/parse-label '(%label foo))}
        (analyze (parser/parse-top-level
                  '(%deftext (%label foo)
                             (%add %rax 1)
@@ -97,12 +96,40 @@
         exp (parser/parse-deftext
              '(%deftext (%label foo)
                         (%ret)))]
-    (is (analyze exp env))
+    (analyze exp env)
     (is (ex-info?
-         {:error :duplicate-definition
-          :symbol 'foo
-          :previous-definition exp}
+         {:sybilant/error :duplicate-definition
+          :sybilant/symbol 'foo
+          :sybilant/previous-definition exp}
          (analyze (parser/parse-deftext
                    '(%deftext (%label foo)
                               (%ret)))
                   env)))))
+
+(deftest t-analyze-checks-for-invalid-symbols
+  (is (ex-info?
+       {:sybilant/error :invalid-symbol
+        :sybilant/symbol 'foo-bar}
+       (analyze (parser/parse-deftext
+                 '(%deftext (%label foo-bar)
+                            (%ret)))
+                (atom (env/new))))
+      "should not allow invalid characters")
+  (is (ex-info?
+       {:sybilant/error :invalid-symbol
+        :sybilant/symbol 'foo/bar}
+       (analyze (parser/parse-deftext
+                 '(%deftext (%label foo/bar)
+                            (%ret)))
+                (atom (env/new))))
+      "should not allow qualified symbols"))
+
+(deftest t-analyze-checks-for-long-symbols
+  (is (ex-info?
+       {:sybilant/error :long-symbol
+        :sybilant/symbol 'f1234567890123456789012345678901}
+       (analyze (parser/parse-deftext
+                 '(%deftext (%label f1234567890123456789012345678901)
+                            (%ret)))
+                (atom (env/new))))
+      "should not allow symbols longer than 31 characters"))
