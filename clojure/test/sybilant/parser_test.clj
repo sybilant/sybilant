@@ -11,30 +11,10 @@
    [clojure.test :refer [assert-expr deftest do-report is testing use-fixtures]]
    [schema.test :refer [validate-schemas]]
    [sybilant.ast :as ast]
-   [sybilant.parser :refer :all]))
+   [sybilant.parser :refer :all]
+   [sybilant.test]))
 
 (use-fixtures :once validate-schemas)
-
-(defmethod assert-expr 'syntax-error?
-  [msg [_ form]]
-  `(let [msg# ~msg]
-     (try
-       ~form
-       (do-report {:type :fail :message msg#
-                   :expected '~form :actual nil})
-       (catch Exception e#
-         (if (= :syntax-error (:sybilant/error (ex-data e#)))
-           (do-report {:type :pass :message msg#
-                       :expected '~form :actual e#})
-           (throw e#))))))
-
-(defmethod assert-expr 'meta?
-  [msg [_ expected exp]]
-  `(let [{file# :file line# :line column# :column} ~expected
-         m# (meta ~exp)]
-     (is (~'= file# (:file m#)) "file does not match")
-     (is (~'= line# (:line m#)) "line does not match")
-     (is (~'= column# (:column m#)) "column does not match")))
 
 (deftest t-parse-int-value
   (is (= 12 (parse-int-value 12)))

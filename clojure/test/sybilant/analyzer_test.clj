@@ -13,25 +13,8 @@
    [schema.test :refer [validate-schemas]]
    [sybilant.analyzer :refer :all]
    [sybilant.analyzer.environment :as env]
-   [sybilant.parser :as parser]))
-
-(defmethod assert-expr 'ex-info?
-  [msg [_ expected form]]
-  `(let [msg# ~msg]
-     (try
-       ~form
-       (do-report {:type :fail :message msg#
-                   :expected '~expected :actual nil})
-       (catch Exception e#
-         (if-let [data# (ex-data e#)]
-           (let [expected# ~expected]
-             (if-not (= expected# (select-keys data# (keys expected#)))
-               (do-report {:type :fail :message msg#
-                           :expected expected# :actual data#})
-               (do-report {:type :pass :message msg#
-                           :expected '~expected :actual data#})))
-           (do-report {:type :fail :message msg#
-                       :expected '~expected :actual e#}))))))
+   [sybilant.parser :as parser]
+   [sybilant.test]))
 
 (use-fixtures :once validate-schemas)
 
