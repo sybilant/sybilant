@@ -20,13 +20,13 @@
   `(try
      ~body
      (catch Exception e#
-       (if (= :syntax-error (:error (ex-data e#)))
+       (if (= :syntax-error (:sybilant/error (ex-data e#)))
          ~clause
          (throw e#)))))
 
 (defn syntax-error
   [& msg]
-  (throw (ex-info (str/join " " msg) {:error :syntax-error})))
+  (throw (ex-info (str/join " " msg) {:sybilant/error :syntax-error})))
 
 (defn example :- Str
   [form]

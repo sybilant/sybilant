@@ -23,7 +23,7 @@
        (do-report {:type :fail :message msg#
                    :expected '~form :actual nil})
        (catch Exception e#
-         (if (= :syntax-error (:error (ex-data e#)))
+         (if (= :syntax-error (:sybilant/error (ex-data e#)))
            (do-report {:type :pass :message msg#
                        :expected '~form :actual e#})
            (throw e#))))))
