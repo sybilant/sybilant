@@ -13,9 +13,7 @@
    [schema.test :refer [validate-schemas]]
    [sybilant.analyzer :refer :all]
    [sybilant.analyzer.environment :as env]
-   [sybilant.parser :as parser])
-  (:import
-   clojure.lang.ExceptionInfo))
+   [sybilant.parser :as parser]))
 
 (defmethod assert-expr 'ex-info?
   [msg [_ expected form]]
