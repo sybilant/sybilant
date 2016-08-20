@@ -18,59 +18,59 @@
 
 (use-fixtures :once validate-schemas)
 
+(defn analyze-top-level
+  ([form]
+   (analyze-top-level form nil))
+  ([form env]
+   (analyze (parser/parse-top-level form) (or env (atom (env/new))))))
+
+(defmethod assert-expr 'analyze-error?
+  [msg [_ expected form env]]
+  (let [env (or env '(atom (env/new)))]
+    `(is (~'ex-info? ~expected (analyze-top-level ~form ~env)))))
+
 (deftest t-analyze-checks-for-undefined-symbols
   (are [exp]
-      (ex-info?
+      (analyze-error?
        {:sybilant/error :undefined-symbol
         :sybilant/symbol 'bar}
-       (analyze (parser/parse-top-level exp)
-                (atom (env/new))))
+       exp)
     '(%deftext (%label foo)
                (%add bar 1)
                (%ret))
     '(%defdata (%label foo [(%sint8 0 1)]) [bar]))
   (testing "with %deftext"
-    (is (analyze (parser/parse-deftext
-                  '(%deftext (%label foo)
-                             (%jmp bar)
-                             (%label bar)
-                             (%ret)))
-                 (atom (env/new)))
+    (is (analyze-top-level '(%deftext (%label foo)
+                                      (%jmp bar)
+                                      (%label bar)
+                                      (%ret)))
         "should find label")
-    (is (analyze (parser/parse-deftext
-                  '(%deftext (%label foo)
-                             (%jmp foo)
-                             (%ret)))
-                 (atom (env/new)))
+    (is (analyze-top-level '(%deftext (%label foo)
+                                      (%jmp foo)
+                                      (%ret)))
         "should find %deftext's label"))
   (testing "with %defdata"
-    (is (analyze (parser/parse-defdata
-                  '(%defdata (%label foo [(%sint8 0 1)]) [foo]))
-                 (atom (env/new)))
+    (is (analyze-top-level '(%defdata (%label foo [(%sint8 0 1)]) [foo]))
         "should find %defdata's label")))
 
 (deftest t-analyze-defines-globals
   (let [env (atom (env/new))]
-    (analyze (parser/parse-defimport
-              '(%defimport (%label foo)))
-             env)
-    (is (analyze (parser/parse-deftext
-                  '(%deftext (%label bar)
-                             (%call foo)
-                             (%ret)))
-                 env))))
+    (analyze-top-level '(%defimport (%label foo))
+                       env)
+    (is (analyze-top-level '(%deftext (%label bar)
+                                      (%call foo)
+                                      (%ret))
+                           env))))
 
 (deftest t-analyze-checks-for-duplicate-locals
-  (is (ex-info?
+  (is (analyze-error?
        {:sybilant/error :duplicate-definition
         :sybilant/symbol 'foo
         :sybilant/previous-definition (parser/parse-label '(%label foo))}
-       (analyze (parser/parse-top-level
-                 '(%deftext (%label foo)
-                            (%add %rax 1)
-                            (%label foo)
-                            (%ret)))
-                (atom (env/new))))))
+       '(%deftext (%label foo)
+                  (%add %rax 1)
+                  (%label foo)
+                  (%ret)))))
 
 (deftest t-analyze-checks-for-duplicate-globals
   (let [env (atom (env/new))
@@ -78,39 +78,32 @@
              '(%deftext (%label foo)
                         (%ret)))]
     (analyze exp env)
-    (is (ex-info?
+    (is (analyze-error?
          {:sybilant/error :duplicate-definition
           :sybilant/symbol 'foo
           :sybilant/previous-definition exp}
-         (analyze (parser/parse-deftext
-                   '(%deftext (%label foo)
-                              (%ret)))
-                  env)))))
+         '(%deftext (%label foo)
+                    (%ret))
+         env))))
 
 (deftest t-analyze-checks-for-invalid-symbols
-  (is (ex-info?
+  (is (analyze-error?
        {:sybilant/error :invalid-symbol
         :sybilant/symbol 'foo-bar}
-       (analyze (parser/parse-deftext
-                 '(%deftext (%label foo-bar)
-                            (%ret)))
-                (atom (env/new))))
+       '(%deftext (%label foo-bar)
+                  (%ret)))
       "should not allow invalid characters")
-  (is (ex-info?
+  (is (analyze-error?
        {:sybilant/error :invalid-symbol
         :sybilant/symbol 'foo/bar}
-       (analyze (parser/parse-deftext
-                 '(%deftext (%label foo/bar)
-                            (%ret)))
-                (atom (env/new))))
+       '(%deftext (%label foo/bar)
+                  (%ret)))
       "should not allow qualified symbols"))
 
 (deftest t-analyze-checks-for-long-symbols
-  (is (ex-info?
+  (is (analyze-error?
        {:sybilant/error :long-symbol
         :sybilant/symbol 'f1234567890123456789012345678901}
-       (analyze (parser/parse-deftext
-                 '(%deftext (%label f1234567890123456789012345678901)
-                            (%ret)))
-                (atom (env/new))))
+       '(%deftext (%label f1234567890123456789012345678901)
+                  (%ret)))
       "should not allow symbols longer than 31 characters"))

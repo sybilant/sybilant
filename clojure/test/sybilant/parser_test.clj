@@ -16,6 +16,10 @@
 
 (use-fixtures :once validate-schemas)
 
+(defmethod assert-expr 'syntax-error?
+  [msg [_ form]]
+  `(is (~'ex-info? {:sybilant/error :syntax-error} ~form)))
+
 (deftest t-parse-int-value
   (is (= 12 (parse-int-value 12)))
   (is (syntax-error? (parse-int-value (dec' ast/+sint64-min-value+))))

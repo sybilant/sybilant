@@ -34,7 +34,3 @@
      (is (~'= file# (:file m#)) "file does not match")
      (is (~'= line# (:line m#)) "line does not match")
      (is (~'= column# (:column m#)) "column does not match")))
-
-(defmethod assert-expr 'syntax-error?
-  [msg [_ form]]
-  `(is (~'ex-info? {:sybilant/error :syntax-error} ~form)))
