@@ -33,34 +33,51 @@
   (are [exp]
       (analyze-error?
        {:sybilant/error :undefined-symbol
-        :sybilant/symbol 'bar}
+        :sybilant/symbol 'undefined}
        exp)
     '(%deftext (%label foo)
-               (%add bar 1)
+               (%add undefined 1)
                (%ret))
-    '(%defdata (%label foo [(%sint8 0 1)]) [bar]))
+    '(%defdata (%label foo [(%sint8 0 1)]) [undefined])
+    ;; %defconst cannot refer to itself
+    '(%defconst (%label undefined) undefined))
   (testing "with %deftext"
+    (is (analyze-top-level '(%deftext (%label foo)
+                                      (%jmp foo)
+                                      (%ret)))
+        "should find %deftext's label")
     (is (analyze-top-level '(%deftext (%label foo)
                                       (%jmp bar)
                                       (%label bar)
                                       (%ret)))
-        "should find label")
-    (is (analyze-top-level '(%deftext (%label foo)
-                                      (%jmp foo)
-                                      (%ret)))
-        "should find %deftext's label"))
+        "should find label statement"))
   (testing "with %defdata"
+    ;; this would really only work with a recursive type
     (is (analyze-top-level '(%defdata (%label foo [(%sint8 0 1)]) [foo]))
         "should find %defdata's label")))
 
 (deftest t-analyze-defines-globals
-  (let [env (atom (env/new))]
-    (analyze-top-level '(%defimport (%label foo))
-                       env)
-    (is (analyze-top-level '(%deftext (%label bar)
-                                      (%call foo)
-                                      (%ret))
-                           env))))
+  (testing "%defimport"
+    (let [env (atom (env/new))]
+      (analyze-top-level '(%defimport (%label foo))
+                         env)
+      (is (env/get-global @env 'foo) "should define global")))
+  (testing "%defconst"
+    (let [env (atom (env/new))]
+      (analyze-top-level '(%defconst (%label foo) 1)
+                         env)
+      (is (env/get-global @env 'foo) "should define global")))
+  (testing "%defdata"
+    (let [env (atom (env/new))]
+      (analyze-top-level '(%defdata (%label foo [(%sint8 0 1)]) [1])
+                         env)
+      (is (env/get-global @env 'foo) "should define global")))
+  (testing "%deftext"
+    (let [env (atom (env/new))]
+      (analyze-top-level '(%deftext (%label foo)
+                                    (%ret))
+                         env)
+      (is (env/get-global @env 'foo) "should define global"))))
 
 (deftest t-analyze-checks-for-duplicate-locals
   (is (analyze-error?
@@ -70,40 +87,183 @@
        '(%deftext (%label foo)
                   (%add %rax 1)
                   (%label foo)
-                  (%ret)))))
+                  (%ret)))
+      "should check %deftext label")
+  (is (analyze-error?
+       {:sybilant/error :duplicate-definition
+        :sybilant/symbol 'bar
+        :sybilant/previous-definition (parser/parse-label '(%label bar))}
+       '(%deftext (%label foo)
+                  (%add %rax 1)
+                  (%label bar)
+                  (%add %rax 2)
+                  (%label bar)
+                  (%ret)))
+      "should check %deftext statements"))
 
 (deftest t-analyze-checks-for-duplicate-globals
   (let [env (atom (env/new))
-        exp (parser/parse-deftext
-             '(%deftext (%label foo)
-                        (%ret)))]
+        exp (parser/parse-defimport
+             '(%defimport (%label foo)))
+        error {:sybilant/error :duplicate-definition
+               :sybilant/symbol 'foo
+               :sybilant/previous-definition exp}]
     (analyze exp env)
-    (is (analyze-error?
-         {:sybilant/error :duplicate-definition
-          :sybilant/symbol 'foo
-          :sybilant/previous-definition exp}
-         '(%deftext (%label foo)
-                    (%ret))
-         env))))
+    (testing "%defimport"
+      (is (analyze-error?
+           error
+           '(%defimport (%label foo))
+           env)))
+    (testing "%defconst"
+      (is (analyze-error?
+           error
+           '(%defconst (%label foo) 1)
+           env)))
+    (testing "%defdata"
+      (is (analyze-error?
+           error
+           '(%defdata (%label foo [(%sint8 0 1)]) [1])
+           env)))
+    (testing "%deftext"
+      (is (analyze-error?
+           error
+           '(%deftext (%label foo)
+                      (%ret))
+           env)))))
 
-(deftest t-analyze-checks-for-invalid-symbols
-  (is (analyze-error?
-       {:sybilant/error :invalid-symbol
-        :sybilant/symbol 'foo-bar}
-       '(%deftext (%label foo-bar)
-                  (%ret)))
-      "should not allow invalid characters")
-  (is (analyze-error?
-       {:sybilant/error :invalid-symbol
-        :sybilant/symbol 'foo/bar}
-       '(%deftext (%label foo/bar)
-                  (%ret)))
-      "should not allow qualified symbols"))
+(deftest t-analyze-checks-for-invalid-characters
+  (let [error {:sybilant/error :invalid-symbol
+               :sybilant/symbol 'foo-bar}]
+    (testing "%defimport"
+      (is (analyze-error?
+           error
+           '(%defimport (%label foo-bar)))
+          "should not allow invalid characters in label"))
+    (testing "%defconst"
+      (is (analyze-error?
+           error
+           '(%defconst (%label foo-bar) 1))
+          "should not allow invalid characters in label")
+      (is (analyze-error?
+           error
+           '(%defconst (%label foo) foo-bar))
+          "should not allow invalid characters in value"))
+    (testing "%defdata"
+      (is (analyze-error?
+           error
+           '(%defdata (%label foo-bar [(%sint8 0 1)]) [1]))
+          "should not allow invalid characters in label")
+      (is (analyze-error?
+           error
+           '(%defdata (%label foo [(%sint8 0 1)]) [foo-bar]))
+          "should not allow invalid characters in value"))
+    (testing "%deftext"
+      (is (analyze-error?
+           error
+           '(%deftext (%label foo-bar)
+                      (%ret)))
+          "should not allow invalid characters in label")
+      (is (analyze-error?
+           error
+           '(%deftext (%label foo)
+                      (%label foo-bar)
+                      (%ret)))
+          "should not allow invalid characters in statements")
+      (is (analyze-error?
+           error
+           '(%deftext (%label foo)
+                      (%mov %rax foo-bar)
+                      (%ret)))
+          "should not allow invalid characters in statements"))))
+
+(deftest t-analyze-checks-for-qualified-symbols
+  (let [error {:sybilant/error :invalid-symbol
+               :sybilant/symbol 'foo/bar}]
+    (testing "%defimport"
+      (is (analyze-error?
+           error
+           '(%defimport (%label foo/bar)))
+          "should not allow qualified symbols in label"))
+    (testing "%defconst"
+      (is (analyze-error?
+           error
+           '(%defconst (%label foo/bar) 1))
+          "should not allow qualified symbols in label")
+      (is (analyze-error?
+           error
+           '(%defconst (%label foo) foo/bar))
+          "should not allow qualified symbols in value"))
+    (testing "%defdata"
+      (is (analyze-error?
+           error
+           '(%defdata (%label foo/bar [(%sint8 0 1)]) [1]))
+          "should not allow qualified symbols in label")
+      (is (analyze-error?
+           error
+           '(%defdata (%label foo [(%sint8 0 1)]) [foo/bar]))
+          "should not allow qualified symbols in value"))
+    (testing "%deftext"
+      (is (analyze-error?
+           error
+           '(%deftext (%label foo/bar)
+                      (%ret)))
+          "should not allow qualified symbols in label")
+      (is (analyze-error?
+           error
+           '(%deftext (%label foo)
+                      (%label foo/bar)
+                      (%ret)))
+          "should not allow qualified symbols in statements")
+      (is (analyze-error?
+           error
+           '(%deftext (%label foo)
+                      (%mov %rax foo/bar)
+                      (%ret)))
+          "should not allow qualified symbols in statements"))))
 
 (deftest t-analyze-checks-for-long-symbols
-  (is (analyze-error?
-       {:sybilant/error :long-symbol
-        :sybilant/symbol 'f1234567890123456789012345678901}
-       '(%deftext (%label f1234567890123456789012345678901)
-                  (%ret)))
-      "should not allow symbols longer than 31 characters"))
+  (let [error {:sybilant/error :long-symbol
+               :sybilant/symbol 'f1234567890123456789012345678901}]
+    (testing "%defimport"
+      (is (analyze-error?
+           error
+           '(%defimport (%label f1234567890123456789012345678901)))
+          "should not allow long symbols in label"))
+    (testing "%defconst"
+      (is (analyze-error?
+           error
+           '(%defconst (%label f1234567890123456789012345678901) 1))
+          "should not allow long symbols in label")
+      (is (analyze-error?
+           error
+           '(%defconst (%label foo) f1234567890123456789012345678901))
+          "should not allow long symbols in value"))
+    (testing "%defdata"
+      (is (analyze-error?
+           error
+           '(%defdata (%label f1234567890123456789012345678901 [(%sint8 0 1)])
+                      [1]))
+          "should not allow long symbols in label")
+      (is (analyze-error?
+           error
+           '(%defdata (%label foo [(%sint8 0 1)])
+                      [f1234567890123456789012345678901]))
+          "should not allow long symbols in value"))
+    (testing "%deftext"
+      (is (analyze-error?
+           error
+           '(%deftext (%label f1234567890123456789012345678901)
+                      (%ret)))
+          "should not allow long symbols in label")
+      (is (analyze-error?
+           error
+           '(%deftext (%label foo)
+                      (%label f1234567890123456789012345678901)
+                      (%ret)))
+          "should not allow long symbols in statements")
+      (is (analyze-error?
+           error
+           '(%deftext (%label foo)
+                      (%mov %rax f1234567890123456789012345678901)
+                      (%ret)))
+          "should not allow long symbols in statements"))))

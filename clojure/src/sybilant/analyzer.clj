@@ -14,21 +14,43 @@
    [sybilant.ast.zip :as zip]
    [sybilant.analyzer.environment :as env]))
 
-(defn atom? :- Bool
-  [obj]
-  (instance? clojure.lang.IAtom obj))
-
-(defschema Atom
-  (pred atom? 'atom?))
-
 (defn long-symbol? :- Bool
   [sym :- Symbol]
   (> (count (name sym)) 31))
 
+(defn symbol-too-long
+  [symbol]
+  (ex-info (str "Symbol is too long '" symbol "'")
+           {:sybilant/error :long-symbol
+            :sybilant/symbol symbol}))
+
 (defn valid-symbol? :- Bool
   [sym :- Symbol]
   (and (nil? (namespace sym))
-       (boolean (re-matches #"[_a-z][_a-zA-Z0-9]{0,30}" (name sym)))))
+       (boolean (re-matches #"[_a-z][_a-zA-Z0-9]*" (name sym)))))
+
+(defn symbol-invalid
+  [symbol]
+  (ex-info (str "Symbol is invalid '" symbol "'")
+           {:sybilant/error :invalid-symbol
+            :sybilant/symbol symbol}))
+
+(defn validate-symbols
+  [exp]
+  (letfn
+      [(validate-symbols
+         [exp]
+         (cond
+           (ast/label? exp)
+           (validate-symbols (:name exp))
+           (symbol? exp)
+           (do (when (long-symbol? exp)
+                 (throw (symbol-too-long exp)))
+               (when-not (valid-symbol? exp)
+                 (throw (symbol-invalid exp)))))
+         exp)]
+    (zip/dfs-visit exp validate-symbols))
+  exp)
 
 (defn duplicate-definition
   [symbol previous-definition]
@@ -37,36 +59,33 @@
             :sybilant/symbol symbol
             :sybilant/previous-definition previous-definition}))
 
-(defn symbol-too-long
-  [symbol]
-  (ex-info (str "Symbol is too long '" symbol "'")
-           {:sybilant/error :long-symbol
-            :sybilant/symbol symbol}))
+(defn atom? :- Bool
+  [obj]
+  (instance? clojure.lang.IAtom obj))
 
-(defn symbol-invalid
-  [symbol]
-  (ex-info (str "Symbol is invalid '" symbol "'")
-           {:sybilant/error :invalid-symbol
-            :sybilant/symbol symbol}))
+(defschema Atom
+  (pred atom? 'atom?))
 
 (defn collect-locals
   [exp env :- Atom]
-  (let [locals (atom {})]
-    (letfn
-        [(collect-locals
-           [exp]
-           (when (ast/label? exp)
-             (let [label-name (:name exp)]
-               (when-let [previous-definition (get @locals label-name)]
-                 (throw (duplicate-definition label-name previous-definition)))
-               (when (long-symbol? label-name)
-                 (throw (symbol-too-long label-name)))
-               (when-not (valid-symbol? label-name)
-                 (throw (symbol-invalid label-name)))
-               (swap! locals assoc (:name exp) exp)))
-           exp)]
-      (zip/dfs-visit exp collect-locals))
-    (vary-meta exp assoc :locals @locals)))
+  (if (ast/deftext? exp)
+    (let [locals (atom {})]
+      (letfn
+          [(collect-locals
+             [exp deftext-label]
+             (when (ast/label? exp)
+               (let [label-name (:name exp)]
+                 (when-let [previous-definition (get @locals label-name)]
+                   (throw (duplicate-definition label-name
+                                                previous-definition)))
+                 (when (= label-name (:name deftext-label))
+                   (throw (duplicate-definition label-name deftext-label)))
+                 (swap! locals assoc (:name exp) exp)))
+             exp)]
+        (doseq [statement (:statements exp)]
+          (zip/dfs-visit statement collect-locals (:label exp))))
+      (vary-meta exp assoc :locals @locals))
+    exp))
 
 (defn undefined-symbol
   [symbol]
@@ -76,7 +95,10 @@
 
 (defn check-symbols
   [exp env :- Atom]
-  (let [env (atom (env/assoc-locals @env (:locals (meta exp))))]
+  (let [locals (cond-> (:locals (meta exp))
+                 (or (ast/defdata? exp) (ast/deftext? exp))
+                 (assoc (get-in exp [:label :name]) (:label exp)))
+        env (atom (env/assoc-locals @env locals))]
     (letfn
         [(check-symbols
            [exp]
@@ -112,7 +134,8 @@
 
 (defn analyze
   [exp env :- Atom]
-  (let [exp (collect-locals exp env)
+  (let [exp (validate-symbols exp)
+        exp (collect-locals exp env)
         exp (check-symbols exp env)
         exp (define-globals exp env)]
     exp))
