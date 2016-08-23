@@ -21,8 +21,9 @@
 (defn symbol-too-long
   [symbol]
   (ex-info (str "Symbol is too long '" symbol "'")
-           {:sybilant/error :long-symbol
-            :sybilant/symbol symbol}))
+           (merge {:sybilant/error :long-symbol
+                   :sybilant/symbol symbol}
+                  (select-keys (meta symbol) [:file :line :column]))))
 
 (defn valid-symbol? :- Bool
   [sym :- Symbol]
@@ -32,8 +33,9 @@
 (defn symbol-invalid
   [symbol]
   (ex-info (str "Symbol is invalid '" symbol "'")
-           {:sybilant/error :invalid-symbol
-            :sybilant/symbol symbol}))
+           (merge {:sybilant/error :invalid-symbol
+                   :sybilant/symbol symbol}
+                  (select-keys (meta symbol) [:file :line :column]))))
 
 (defn validate-symbols
   [exp]
@@ -55,9 +57,10 @@
 (defn duplicate-definition
   [symbol previous-definition]
   (ex-info (str "Duplicate symbol '" symbol "'")
-           {:sybilant/error :duplicate-definition
-            :sybilant/symbol symbol
-            :sybilant/previous-definition previous-definition}))
+           (merge {:sybilant/error :duplicate-definition
+                   :sybilant/symbol symbol
+                   :sybilant/previous-definition previous-definition}
+                  (select-keys (meta symbol) [:file :line :column]))))
 
 (defn atom? :- Bool
   [obj]
@@ -90,8 +93,9 @@
 (defn undefined-symbol
   [symbol]
   (ex-info (str "Could not resolve '" symbol "'")
-           {:sybilant/error :undefined-symbol
-            :sybilant/symbol symbol}))
+           (merge {:sybilant/error :undefined-symbol
+                   :sybilant/symbol symbol}
+                  (select-keys (meta symbol) [:file :line :column]))))
 
 (defn check-symbols
   [exp env :- Atom]
