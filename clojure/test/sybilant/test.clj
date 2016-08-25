@@ -26,11 +26,3 @@
                (do-report {:type :pass :message msg#
                            :expected '~expected :actual data#})))
            (throw e#))))))
-
-(defmethod assert-expr 'meta?
-  [msg [_ expected exp]]
-  `(let [{file# :file line# :line column# :column} ~expected
-         m# (meta ~exp)]
-     (is (~'= file# (:file m#)) "file does not match")
-     (is (~'= line# (:line m#)) "line does not match")
-     (is (~'= column# (:column m#)) "column does not match")))

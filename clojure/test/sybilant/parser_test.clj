@@ -20,6 +20,14 @@
   [msg [_ form]]
   `(is (~'ex-info? {:sybilant/error :syntax-error} ~form)))
 
+(defmethod assert-expr 'meta?
+  [msg [_ expected exp]]
+  `(let [{file# :file line# :line column# :column} ~expected
+         m# (meta ~exp)]
+     (is (~'= file# (:file m#)) "file does not match")
+     (is (~'= line# (:line m#)) "line does not match")
+     (is (~'= column# (:column m#)) "column does not match")))
+
 (deftest t-parse-int-value
   (is (= 12 (parse-int-value 12)))
   (is (syntax-error? (parse-int-value (dec' ast/+sint64-min-value+))))
