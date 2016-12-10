@@ -12,47 +12,8 @@
    [schema.core :refer [Bool defn defschema pred Symbol]]
    [sybilant.ast :as ast]
    [sybilant.ast.zip :as zip]
-   [sybilant.analyzer.environment :as env]))
-
-(defn long-symbol? :- Bool
-  [sym :- Symbol]
-  (> (count (name sym)) 31))
-
-(defn symbol-too-long
-  [symbol]
-  (ex-info (str "Symbol is too long '" symbol "'")
-           (merge {:sybilant/error :long-symbol
-                   :sybilant/symbol symbol}
-                  (select-keys (meta symbol) [:file :line :column]))))
-
-(defn valid-symbol? :- Bool
-  [sym :- Symbol]
-  (and (nil? (namespace sym))
-       (boolean (re-matches #"[_a-z][_a-zA-Z0-9]*" (name sym)))))
-
-(defn symbol-invalid
-  [symbol]
-  (ex-info (str "Symbol is invalid '" symbol "'")
-           (merge {:sybilant/error :invalid-symbol
-                   :sybilant/symbol symbol}
-                  (select-keys (meta symbol) [:file :line :column]))))
-
-(defn validate-symbols
-  [exp]
-  (letfn
-      [(validate-symbols
-         [exp]
-         (cond
-           (ast/label? exp)
-           (validate-symbols (:name exp))
-           (symbol? exp)
-           (do (when (long-symbol? exp)
-                 (throw (symbol-too-long exp)))
-               (when-not (valid-symbol? exp)
-                 (throw (symbol-invalid exp)))))
-         exp)]
-    (zip/dfs-visit exp validate-symbols))
-  exp)
+   [sybilant.analyzer.environment :as env]
+   [sybilant.analyzer.syntax :refer [check-syntax]]))
 
 (defn duplicate-definition
   [symbol previous-definition]
@@ -138,7 +99,7 @@
 
 (defn analyze
   [exp env :- Atom]
-  (let [exp (validate-symbols exp)
+  (let [exp (check-syntax exp env)
         exp (collect-locals exp env)
         exp (check-symbols exp env)
         exp (define-globals exp env)]
