@@ -1,0 +1,8 @@
+{:aliases
+ {:test
+  {:extra-deps
+   {io.github.cognitect-labs/test-runner {:git/tag "v0.5.1" :git/sha "dfb30dd"}
+    org.clojure/test.check               {:mvn/version "1.1.1"}}
+   :extra-paths ["test"]}}
+ :deps  {org.clojure/clojure {:mvn/version "1.11.0"}}
+ :paths ["src"]}
