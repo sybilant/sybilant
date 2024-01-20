@@ -11,9 +11,9 @@
 
 (defn make
   ([name]
-   {:type  +type+ :name name})
+   {:type +type+ :name name})
   ([namespace name]
-   {:type  +type+ :namespace namespace :name name}))
+   {:type +type+ :namespace namespace :name name}))
 
 (def +value-regex+
   #"(?U)[^\p{Digit}\p{Space}\p{Cntrl}][^\p{Space}&&[^\p{Cntrl}]]{0,99}")
