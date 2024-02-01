@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+## Copyright © 2024 Paul Stadig
+##
+## This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.  If a copy
+## of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+##
+## This Source Code Form is "Incompatible With Secondary Licenses", as defined by the Mozilla Public
+## License, v. 2.0.
+set -euo pipefail
+
+if [ -n "$*" ]; then
+  for t in $@; do
+    test_files="$test_files sybilant/test/$t.syb.asm"
+  done
+  skip_lein=true
+else
+  test_files=$(ls sybilant/test/*.syb.asm 2>/dev/null)
+fi
+
+if [[ -v NIX_CC ]]; then
+  linker="$(cat $NIX_CC/nix-support/dynamic-linker)"
+else
+  linker="/lib64/ld-linux-x86-64.so.2"
+fi
+
+function assemble {
+  yasm -g dwarf2 -f elf64 -o $2 $1 &&
+    ld -dynamic-linker ${linker} -lc -o $3 $2
+}
+
+echo "== Sybilant tests"
+if [[ -v debug ]]; then
+  debug=-d
+fi
+
+for test_file in $test_files; do
+  name=$(basename $test_file .syb)
+  echo -n "$name..."
+  bin_file=$(dirname $test_file)/../../target/sybilant/test/$name
+  mkdir -p $(dirname $bin_file)
+  object_file=$bin_file.o
+  stats_file=$bin_file.stats
+  if (assemble $test_file $object_file $bin_file &&
+        /usr/bin/env time -v -o $stats_file ./$bin_file); then
+    echo "passed ($(grep "Elapsed (wall clock) time" $stats_file | \
+                        cut -f8 -d" "))"
+    failed=""
+  else
+    echo "failed!!"
+    failed=true
+  fi
+done
+
+if [ -z "$failed" ]; then
+  echo "== Testing complete"
+else
+  echo "!! Tests failed"
+fi
