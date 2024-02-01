@@ -1,0 +1,5 @@
+* Sybilant
+** Running tests on NixOS
+: nix-shell -p yasm binutils libc
+
+From within the shell run the ~test-sybilant~ script.
