@@ -12,16 +12,17 @@
    [clojure.test :refer [deftest is]]
    [sybilant.compile :as compile]))
 
-(defn- read-lines
-  [f]
+(defn- read-instructions
+  "Read instructions from file while trimming whitespace and ignoring comments and blank lines."
+  [file]
   (let [comment? #(str/starts-with? % ";")]
     (into []
       (comp
         (map str/trim)
         (remove str/blank?)
         (remove comment?))
-      (line-seq (io/reader (io/file f))))))
+      (line-seq (io/reader (io/file file))))))
 
 (deftest t-compile
-  (let [lines (read-lines "sybilant/test/exit0.syb.asm")]
+  (let [lines (read-instructions "sybilant/test/exit0.syb.asm")]
     (is (= lines (compile/compile-files ["sybilant/test/exit0.syb"])))))

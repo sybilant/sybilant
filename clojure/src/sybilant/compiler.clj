@@ -10,11 +10,21 @@
   that can be assembled and linked with external programs."
   (:refer-clojure :exclude [compile]))
 
+(defn emit-exp
+  "Emit exp as a sequence of assembly instructions."
+  [exp]
+  (case (first exp)
+    sybilant.x86-64/defimport
+    ["section .text"
+     "extern exit"]
+    sybilant.x86-64/deftext
+    ["section .text"
+     "global _start"
+     "_start:"
+     "mov rdi, 0"
+     "jmp exit"]))
+
 (defn compile-forms
-  [_forms]
-  ["section .text"
-   "extern exit"
-   "global _start"
-   "_start:"
-   "mov rdi, 0"
-   "jmp exit"])
+  "Compile forms into a sequence of assembly instructions."
+  [forms]
+  (mapcat emit-exp forms))

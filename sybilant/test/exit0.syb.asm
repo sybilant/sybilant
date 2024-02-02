@@ -7,8 +7,9 @@
 ;; License, v. 2.0.
 section .text
 extern exit
-global _start
 
+section .text
+global _start
 _start:
     mov rdi, 0
     jmp exit

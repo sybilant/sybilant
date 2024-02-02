@@ -11,6 +11,7 @@
    [sybilant.compiler :as compiler]))
 
 (defn read-file
+  "Read file as forms."
   [file]
   (with-open [f (-> file io/file io/reader java.io.PushbackReader.)]
     (into []
@@ -18,10 +19,12 @@
       (repeatedly #(read f false ::eof)))))
 
 (defn compile-files
+  "Read and compile files into assembly instructions."
   [files]
   (compiler/compile-forms (mapcat read-file files)))
 
 (defn -main
+  "Read and compile files and print resulting assembly instructions to stdout."
   [& files]
   (doseq [line (compile-files files)]
     (println line))
