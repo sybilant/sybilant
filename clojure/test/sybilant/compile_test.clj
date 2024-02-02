@@ -5,12 +5,12 @@
 ;;
 ;; This Source Code Form is "Incompatible With Secondary Licenses", as defined by the Mozilla Public
 ;; License, v. 2.0.
-(ns sybilant.compiler-test
+(ns sybilant.compile-test
   (:require
    [clojure.string :as str]
    [clojure.java.io :as io]
    [clojure.test :refer [deftest is]]
-   [sybilant.compiler :as compiler]))
+   [sybilant.compile :as compile]))
 
 (defn- read-lines
   [f]
@@ -24,4 +24,4 @@
 
 (deftest t-compile
   (let [lines (read-lines "sybilant/test/exit0.syb.asm")]
-    (is (= lines (compiler/compile "sybilant/test/exit0.syb")))))
+    (is (= lines (compile/compile-files ["sybilant/test/exit0.syb"])))))

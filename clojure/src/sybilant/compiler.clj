@@ -10,8 +10,8 @@
   that can be assembled and linked with external programs."
   (:refer-clojure :exclude [compile]))
 
-(defn compile
-  [_files]
+(defn compile-forms
+  [_forms]
   ["section .text"
    "extern exit"
    "global _start"
