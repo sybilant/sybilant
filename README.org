@@ -1,5 +1,46 @@
 * Sybilant
-** Running tests on NixOS
-: nix-shell -p yasm binutils libc
+I'm developing on NixOS, so this all starts with a ~nix-shell~:
+#+begin_example
+nix-shell -p binutils clojure libc yasm
+#+end_example
+** Running sybilant tests
+Run the ~./bin/test-sybilant~ script:
 
-From within the shell run the ~test-sybilant~ script.
+#+begin_example
+[nix-shell:~/src/sybilant]$ ./bin/test-sybilant
+== Sybilant tests
+exit0.syb.asm...passed (0:00.00)
+== Testing complete
+#+end_example
+** Running clojure tests
+Run the ~./bin/test-clojure~ script:
+
+#+begin_example
+[nix-shell:~/src/sybilant]$ ./bin/test-clojure
+
+Running tests in #{"clojure/test"}
+
+Testing sybilant.compiler-test
+
+Ran 1 tests containing 1 assertions.
+0 failures, 0 errors.
+#+end_example
+** Running the compiler
+Run the ~sybilant.compile/-main~ function using ~clojure~ passing in one or more files and the
+resulting assembly will print to stdout:
+
+#+begin_example
+clojure -M -m sybilant.compile [FILE]...
+#+end_example
+
+For example, to compile ~sybilant/test/exit0.syb~:
+
+#+begin_example
+[nix-shell:~/src/sybilant]$ clojure -M -m sybilant.compile sybilant/test/exit0.syb
+section .text
+extern exit
+global _start
+_start:
+mov rdi, 0
+jmp exit
+#+end_example

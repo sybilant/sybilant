@@ -1,8 +1,17 @@
+;; Copyright © 2024 Paul Stadig
+;;
+;; This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.  If a copy
+;; of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+;;
+;; This Source Code Form is "Incompatible With Secondary Licenses", as defined by the Mozilla Public
+;; License, v. 2.0.
 {:aliases
  {:test
-  {:extra-deps
+  {:exec-fn cognitect.test-runner.api/test
+   :extra-deps
    {io.github.cognitect-labs/test-runner {:git/tag "v0.5.1" :git/sha "dfb30dd"}
     org.clojure/test.check               {:mvn/version "1.1.1"}}
-   :extra-paths ["clojure/test"]}}
+   :extra-paths ["clojure/test"]
+   :main-opts ["-m" "cognitect.test-runner"]}}
  :deps  {org.clojure/clojure {:mvn/version "1.11.0"}}
  :paths ["clojure/src"]}

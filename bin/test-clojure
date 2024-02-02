@@ -6,4 +6,4 @@
 ##
 ## This Source Code Form is "Incompatible With Secondary Licenses", as defined by the Mozilla Public
 ## License, v. 2.0.
-clojure -M:test -m cognitect.test-runner
+clojure -X:test :dirs '["clojure/test"]'

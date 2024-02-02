@@ -5,12 +5,16 @@
 ;;
 ;; This Source Code Form is "Incompatible With Secondary Licenses", as defined by the Mozilla Public
 ;; License, v. 2.0.
-(ns sybilant.compile
-  (:require
-   [sybilant.compiler :as compiler]))
+(ns sybilant.compiler
+  "A whole program compiler for Sybilant.  It compiles one or more files into a single assembly file
+  that can be assembled and linked with external programs."
+  (:refer-clojure :exclude [compile]))
 
-(defn -main
-  [& files]
-  (doseq [line (compiler/compile files)]
-    (println line))
-  (System/exit 0))
+(defn compile
+  [_files]
+  ["section .text"
+   "extern exit"
+   "global _start"
+   "_start:"
+   "mov rdi, 0"
+   "jmp exit"])
