@@ -6,7 +6,7 @@
 ;;
 ;; This Source Code Form is "Incompatible With Secondary Licenses", as defined by the Mozilla Public
 ;; License, v. 2.0.
-(sybilant.x86-64/defimport exit)
+(sybilant.x86-64/deftext (label exit))
 
 (sybilant.x86-64/deftext (label _start)
   (mov rdi 0)

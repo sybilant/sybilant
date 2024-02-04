@@ -13,11 +13,9 @@
 (defn emit-exp
   "Emit exp as a sequence of assembly instructions."
   [exp]
-  (case (first exp)
-    sybilant.x86-64/defimport
+  (if (= (count exp) 2)
     ["section .text"
      "extern exit"]
-    sybilant.x86-64/deftext
     ["section .text"
      "global _start"
      "_start:"
