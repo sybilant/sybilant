@@ -24,7 +24,7 @@ else
 fi
 
 function assemble {
-  yasm -g dwarf2 -f elf64 -o $2 $1 &&
+  as --gdwarf-2 --64 -o $2 $1 &&
     ld -dynamic-linker ${linker} -lc -o $3 $2
 }
 

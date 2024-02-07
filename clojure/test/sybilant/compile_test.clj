@@ -8,20 +8,20 @@
 (ns sybilant.compile-test
   (:require
    [clojure.string :as str]
-   [clojure.java.io :as io]
    [clojure.test :refer [deftest is]]
    [sybilant.compile :as compile]))
 
 (defn- read-instructions
   "Read instructions from file while trimming whitespace and ignoring comments and blank lines."
   [file]
-  (let [comment? #(str/starts-with? % ";")]
-    (into []
-      (comp
-        (map str/trim)
-        (remove str/blank?)
-        (remove comment?))
-      (line-seq (io/reader (io/file file))))))
+  (into []
+    (comp
+      (map str/trim)
+      (remove str/blank?))
+    (-> file
+      slurp
+      (str/replace #"#.*" "")
+      (str/split #"\n"))))
 
 (deftest t-compile
   (let [lines (read-instructions "sybilant/test/exit0.syb.asm")]

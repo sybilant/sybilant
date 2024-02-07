@@ -1,7 +1,7 @@
 * Sybilant
 I'm developing on NixOS, so this all starts with a ~nix-shell~:
 #+begin_example
-nix-shell -p binutils clojure libc yasm
+nix-shell -p binutils clojure
 #+end_example
 ** Running sybilant tests
 Run the ~./bin/test-sybilant~ script:
@@ -37,10 +37,10 @@ For example, to compile ~sybilant/test/exit0.syb~:
 
 #+begin_example
 [nix-shell:~/src/sybilant]$ clojure -M -m sybilant.compile sybilant/test/exit0.syb
-section .text
-extern exit
-global _start
+.text
+.global _start
 _start:
-mov rdi, 0
-jmp exit
+movl $1, %eax
+movl $0, %ebx
+int $0x80
 #+end_example

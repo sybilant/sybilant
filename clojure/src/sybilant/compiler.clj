@@ -12,15 +12,13 @@
 
 (defn emit-exp
   "Emit exp as a sequence of assembly instructions."
-  [exp]
-  (if (= (count exp) 2)
-    ["section .text"
-     "extern exit"]
-    ["section .text"
-     "global _start"
-     "_start:"
-     "mov rdi, 0"
-     "jmp exit"]))
+  [_exp]
+  [".text"
+   ".global _start"
+   "_start:"
+   "movl $1, %eax"
+   "movl $0, %ebx"
+   "int $0x80"])
 
 (defn compile-forms
   "Compile forms into a sequence of assembly instructions."
