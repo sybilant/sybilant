@@ -9,7 +9,7 @@ Run the ~./bin/test-sybilant~ script:
 #+begin_example
 [nix-shell:~/src/sybilant]$ ./bin/test-sybilant
 == Sybilant tests
-exit0.syb.asm...passed (0:00.00)
+syscall.syb.asm...passed (0:00.00)
 == Testing complete
 #+end_example
 ** Running clojure tests
@@ -20,7 +20,7 @@ Run the ~./bin/test-clojure~ script:
 
 Running tests in #{"clojure/test"}
 
-Testing sybilant.compiler-test
+Testing sybilant.compile-test
 
 Ran 1 tests containing 1 assertions.
 0 failures, 0 errors.
@@ -33,10 +33,10 @@ resulting assembly will print to stdout:
 clojure -M -m sybilant.compile [FILE]...
 #+end_example
 
-For example, to compile ~sybilant/test/exit0.syb~:
+For example, to compile ~sybilant/test/syscall.syb~:
 
 #+begin_example
-[nix-shell:~/src/sybilant]$ clojure -M -m sybilant.compile sybilant/test/exit0.syb
+[nix-shell:~/src/sybilant]$ clojure -M -m sybilant.compile sybilant/test/syscall.syb
 .text
 .global _start
 _start:

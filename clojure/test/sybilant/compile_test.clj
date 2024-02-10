@@ -24,5 +24,5 @@
       (str/split #"\n"))))
 
 (deftest t-compile
-  (let [lines (read-instructions "sybilant/test/exit0.syb.asm")]
-    (is (= lines (compile/compile-files ["sybilant/test/exit0.syb"])))))
+  (let [lines (read-instructions "sybilant/test/syscall.syb.asm")]
+    (is (= lines (compile/compile-files ["sybilant/test/syscall.syb"])))))
