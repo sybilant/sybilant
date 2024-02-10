@@ -7,8 +7,10 @@
 ### This Source Code Form is "Incompatible With Secondary Licenses", as defined by the Mozilla
 ### Public License, v. 2.0.
         .text
+        .extern exit
+
+        .text
         .global _start
 _start:
-        movl $1, %eax           # 1 ("exit") -> EAX
-        movl $0, %ebx           # 0 (with success) -> EBX
-        int $128                # invoke kernel's syscall
+        mov $0, %rdi            # 0 (with success) -> RDI
+        jmp exit                # call exit

@@ -8,19 +8,48 @@
 (ns sybilant.compiler
   "A whole program compiler for Sybilant.  It compiles one or more files into a single assembly file
   that can be assembled and linked with external programs."
-  (:refer-clojure :exclude [compile]))
+  (:refer-clojure :exclude [compile])
+  (:require
+   [clojure.string :as str]))
+
+(defn register?
+  [operand]
+  (contains?
+   '#{rdi eax ebx}
+   operand))
+
+(defn emit-operand
+  [operand]
+  (cond
+    (number? operand)
+    (format "$%s" operand)
+    (register? operand)
+    (format "%%%s" operand)
+    (symbol? operand)
+    (format "%s" operand)))
+
+(defn emit-operands
+  [operands]
+  (when (seq operands)
+    (format " %s" (str/join ", " (map emit-operand operands)))))
+
+(defn emit-statement
+  [[op & operands]]
+  (str op (emit-operands operands)))
 
 (defn emit-exp
-  "Emit exp as a sequence of assembly instructions."
-  [_exp]
-  [".text"
-   ".global _start"
-   "_start:"
-   "movl $1, %eax"
-   "movl $0, %ebx"
-   "int $0x80"])
+  "Emit exp as a sequence of assembly statements."
+  [[_ [_ sym] & statements]]
+  (if (seq statements)
+    (into [".text"
+           (format ".global %s" sym)
+           (format "%s:" sym)]
+          (map emit-statement)
+          statements)
+    [".text"
+     (format ".extern %s" sym)]))
 
 (defn compile-forms
-  "Compile forms into a sequence of assembly instructions."
+  "Compile forms into a sequence of assembly statements."
   [forms]
   (mapcat emit-exp forms))
