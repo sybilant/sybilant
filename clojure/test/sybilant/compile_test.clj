@@ -8,7 +8,7 @@
 (ns sybilant.compile-test
   (:require
    [clojure.string :as str]
-   [clojure.test :refer [deftest is]]
+   [clojure.test :refer [deftest is testing]]
    [sybilant.compile :as compile]))
 
 (defn- read-instructions
@@ -24,6 +24,9 @@
       (str/split #"\n"))))
 
 (deftest t-compile
-  (doseq [file ["exit0" "syscall"]]
-    (let [lines (read-instructions (format "sybilant/test/%s.syb.asm" file))]
-      (is (= lines (compile/compile-files [(format "sybilant/test/%s.syb" file)]))))))
+  (doseq [file ["exit0" "syscall"]
+          :let [syb-file (format "sybilant/test/%s.syb" file)
+                asm-file (format "sybilant/test/%s.syb.asm" file)]]
+    (testing syb-file
+      (let [lines (read-instructions asm-file)]
+        (is (= lines (compile/compile-files [syb-file])))))))
