@@ -1,0 +1,2450 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Gerald Jay Sussman ©1975 (text and code)" />
+  <meta name="author" content="Guy Lewis Steele Jr ©1975 (text and code)" />
+  <meta name="author" content="Roger Turner ©2025 (markup and transcriber notes)" />
+  <meta name="keywords" content="actors, LISP, SCHEME, lambda
+calculus, side effects, multiprocessing, process
+synchronization, lexical scoping, applicative order, interpreter" />
+  <title>SCHEME An Interpreter For Extended Lambda Calculus (The Lambda
+Papers)</title>
+  <style>
+html {
+font-size: 12pt;
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: blue;
+}
+a:visited {
+color: blue;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+background-color: #1a1a1a;
+border: none;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+</style>
+  <style>
+:root { 
+background-color: color-mix(in oklab, Canvas 85%, #808080 15%);
+color: color-mix(in oklab, CanvasText 85%, #808080 15%);
+color-scheme: light dark; }
+@media print {
+hr, .pb {
+break-before: always;
+page-break-before: always }
+div.box, div.npb, section.npb, pre, img {
+break-inside: avoid-page;
+page-break-inside: avoid }
+img {
+object-fit: scale-down }
+body {
+padding-top: 25px;
+padding-bottom: 25px }
+}
+code {
+font-family: Greybeard, Menlo, Monaco, Consolas, "Lucida Console", monospace }
+body {
+font-family: Bodoni, serif;
+text-wrap: pretty;
+max-width: 40em;
+padding-right: 30px;
+overflow-wrap: normal;
+line-height: 1.2;
+hyphens: none }
+header {
+margin-bottom: 1.0em }
+h1 {
+font-size: 1.2em;
+margin-top: 0;
+margin-bottom: 0.5em }
+h2 {
+font-size: 1.2em;
+margin-top: 1.0em }
+h4 { margin-top: 0.85em;
+margin-bottom: 0;
+padding-bottom: 0 }
+h4 + p {
+margin-top: 0;
+margin-bottom: 0.85em }
+#notes p, #references p, #bibliography p {
+margin-top: 0 }
+hr {
+margin-top: 3em }
+dd {
+margin-bottom: 0.85em }
+pre code { 
+text-wrap: nowrap;
+overflow-x: scroll;
+font-size: 75% }
+p code, .line-block code, figcaption code, h3 code, dt code { 
+font-size: 85% }
+code em {
+font-style: italic } 
+.large {
+font-size: 150% }
+.small {
+font-size: 80% }
+.sc { 
+font-size: 92% }
+.in {
+margin-left: 1em }
+.in5 {
+margin-left: 5em }
+.ti {
+text-indent: -1em;
+padding-left: 1em;
+margin-top: -0.85em }
+.ti5 {
+text-indent: -5em;
+padding-left: 5em;
+margin-top: -0.85em }
+div.ti2 p {
+text-indent: -2em;
+padding-left: 2em;
+margin-top: -0.85em }
+.fr {
+float: right }
+.fl {
+float: left }
+.fwn {
+font-weight: normal }
+li::marker {
+content: '(' counters(list-item) ') '; }
+div.box {
+padding: 0 0 0.5em 1em;
+border: 1px solid }
+figure {
+margin: 1em 0;
+width: 100% }
+figcaption {
+padding-top: 1em;
+text-align: center }
+a:hover {
+text-decoration: underline }
+a:any-link {
+color: AccentColor }
+</style>
+</head>
+<body>
+<p><div style="text-align: center"> MASSACHUSETTS INSTITUTE OF
+TECHNOLOGY<br />
+ARTIFICIAL INTELLIGENCE LABORATORY </div></p>
+<p>AI Memo No. 349 <span class="fr">December 1975</span></p>
+<div style="text-align: center">
+<h1>
+<p><span class="large">SCHEME</span></p>
+AN INTERPRETER FOR EXTENDED LAMBDA CALCULUS
+</h1>
+<p>by</p>
+<p>Gerald Jay Sussman and Guy Lewis Steele Jr. </div></p>
+<section id="abstract" class="level2">
+<h2>Abstract:</h2>
+<p>Inspired by <span class="sc">ACTORS</span> [<a href="#greif-and-hewitt-1-2" id="xgreif-and-hewitt1" title="[1] Greif and Hewitt 1975, Actor Semantics of Planner-73">Greif
+and Hewitt</a>] [<a href="#smith-and-hewitt-1-2-3-4-5-6" id="xsmith1" title="[1] Smith and Hewitt 1975, A PLASMA Primer (draft)">Smith and
+Hewitt</a>], we have implemented an interpreter for a <span class="sc">LISP</span>-like language, <span class="sc">SCHEME</span>,
+based on the lambda calculus [<a href="#church-1-2" id="xchurch1" title="[1] Church 1941, The Calculi of Lambda Conversion">Church</a>],
+but extended for side effects, multiprocessing, and process
+synchronization. The purpose of this implementation is tutorial. We wish
+to:</p>
+<ol type="1">
+<li>alleviate the confusion caused by <span class="sc">Micro-PLANNER</span>, <span class="sc">CONNIVER</span>, etc.
+by clarifying the embedding of non-recursive control structures in a
+recursive host language like <span class="sc">LISP</span>.</li>
+<li>explain how to use these control structures, independent of such
+issues as pattern matching and data base manipulation.</li>
+<li>have a simple concrete experimental domain for certain issues of
+programming semantics and style.</li>
+</ol>
+<p>This paper is organized into sections. The first section is a short
+“reference manual” containing specifications for all the unusual
+features of <span class="sc">SCHEME</span>. Next, we present a sequence
+of programming examples which illustrate various programming styles, and
+how to use them. This will raise certain issues of semantics which we
+will try to clarify with lambda calculus in the third section. In the
+fourth section we will give a general discussion of the issues facing an
+implementor of an interpreter for a language based on lambda calculus.
+Finally, we will present a completely annotated interpreter for <span class="sc">SCHEME</span>, written in <span class="sc">MacLISP</span> [<a href="#moon-1-2-3-4-5" id="xmoon1" title="[1] Moon 1974, MACLISP Reference Manual, Revision 0">Moon</a>],
+to acquaint programmers with the tricks of the trade of implementing
+non-recursive control structures in a recursive language like <span class="sc">LISP</span>.<br />
+</p>
+<p>This report describes research done at the Artificial Intelligence
+Laboratory of the Massachusetts Institute of Technology. Support for the
+laboratory’s artificial intelligence research is provided in part by the
+Advanced Research Projects Agency of the Department of Defense under
+Office of Naval Research contract N00014-75-C-0643.<br />
+<br />
+</p>
+<div id="licence" class="ti small">
+<p>{{<a href="https://dspace.mit.edu/bitstream/handle/1721.1/5794/AIM-349.pdf" title="Original pdf at MIT: dspace.mit.edu/bitstream/handle/1721.1/5794/AIM-349.pdf">SCHEME:
+An Interpreter for Extended Lambda Calculus</a> © 1975 by Gerald Jay
+Sussman and Guy Lewis Steele Jr, and this transcription, licensed
+<a href="https://creativecommons.org/licenses/by-nc/4.0/" title="Creative Commons license deed: creativecommons.org/licenses/by-nc/4.0/">CC
+BY-NC 4.0</a>
+<svg id="Layer_1" role="img" aria-label alt style="max-width: 1em;max-height:1em;margin-left: .2em;" x="0px" y="0px" width="64px" height="64px" viewBox="5.5 -3.5 64 64" enable-background="new 5.5 -3.5 64 64" xml:space="preserve">
+<g>
+	<circle fill="#FFFFFF" cx="37.785" cy="28.501" r="28.836"></circle>
+	<path d="M37.441-3.5c8.951,0,16.572,3.125,22.857,9.372c3.008,3.009,5.295,6.448,6.857,10.314
+		c1.561,3.867,2.344,7.971,2.344,12.314c0,4.381-0.773,8.486-2.314,12.313c-1.543,3.828-3.82,7.21-6.828,10.143
+		c-3.123,3.085-6.666,5.448-10.629,7.086c-3.961,1.638-8.057,2.457-12.285,2.457s-8.276-0.808-12.143-2.429
+		c-3.866-1.618-7.333-3.961-10.4-7.027c-3.067-3.066-5.4-6.524-7-10.372S5.5,32.767,5.5,28.5c0-4.229,0.809-8.295,2.428-12.2
+		c1.619-3.905,3.972-7.4,7.057-10.486C21.08-0.394,28.565-3.5,37.441-3.5z M37.557,2.272c-7.314,0-13.467,2.553-18.458,7.657
+		c-2.515,2.553-4.448,5.419-5.8,8.6c-1.354,3.181-2.029,6.505-2.029,9.972c0,3.429,0.675,6.734,2.029,9.913
+		c1.353,3.183,3.285,6.021,5.8,8.516c2.514,2.496,5.351,4.399,8.515,5.715c3.161,1.314,6.476,1.971,9.943,1.971
+		c3.428,0,6.75-0.665,9.973-1.999c3.219-1.335,6.121-3.257,8.713-5.771c4.99-4.876,7.484-10.99,7.484-18.344
+		c0-3.543-0.648-6.895-1.943-10.057c-1.293-3.162-3.18-5.98-5.654-8.458C50.984,4.844,44.795,2.272,37.557,2.272z M37.156,23.187
+		l-4.287,2.229c-0.458-0.951-1.019-1.619-1.685-2c-0.667-0.38-1.286-0.571-1.858-0.571c-2.856,0-4.286,1.885-4.286,5.657
+		c0,1.714,0.362,3.084,1.085,4.113c0.724,1.029,1.791,1.544,3.201,1.544c1.867,0,3.181-0.915,3.944-2.743l3.942,2
+		c-0.838,1.563-2,2.791-3.486,3.686c-1.484,0.896-3.123,1.343-4.914,1.343c-2.857,0-5.163-0.875-6.915-2.629
+		c-1.752-1.752-2.628-4.19-2.628-7.313c0-3.048,0.886-5.466,2.657-7.257c1.771-1.79,4.009-2.686,6.715-2.686
+		C32.604,18.558,35.441,20.101,37.156,23.187z M55.613,23.187l-4.229,2.229c-0.457-0.951-1.02-1.619-1.686-2
+		c-0.668-0.38-1.307-0.571-1.914-0.571c-2.857,0-4.287,1.885-4.287,5.657c0,1.714,0.363,3.084,1.086,4.113
+		c0.723,1.029,1.789,1.544,3.201,1.544c1.865,0,3.18-0.915,3.941-2.743l4,2c-0.875,1.563-2.057,2.791-3.541,3.686
+		c-1.486,0.896-3.105,1.343-4.857,1.343c-2.896,0-5.209-0.875-6.941-2.629c-1.736-1.752-2.602-4.19-2.602-7.313
+		c0-3.048,0.885-5.466,2.658-7.257c1.77-1.79,4.008-2.686,6.713-2.686C51.117,18.558,53.938,20.101,55.613,23.187z" />
+</g>
+</svg>
+<svg id="Layer_1" role="img" aria-label alt style="max-width: 1em;max-height:1em;margin-left: .2em;" x="0px" y="0px" width="64px" height="64px" viewBox="5.5 -3.5 64 64" enable-background="new 5.5 -3.5 64 64" xml:space="preserve">
+<g>
+	<circle fill="#FFFFFF" cx="37.637" cy="28.806" r="28.276"></circle>
+	<g>
+		<path d="M37.443-3.5c8.988,0,16.57,3.085,22.742,9.257C66.393,11.967,69.5,19.548,69.5,28.5c0,8.991-3.049,16.476-9.145,22.456
+			C53.879,57.319,46.242,60.5,37.443,60.5c-8.649,0-16.153-3.144-22.514-9.43C8.644,44.784,5.5,37.262,5.5,28.5
+			c0-8.761,3.144-16.342,9.429-22.742C21.101-0.415,28.604-3.5,37.443-3.5z M37.557,2.272c-7.276,0-13.428,2.553-18.457,7.657
+			c-5.22,5.334-7.829,11.525-7.829,18.572c0,7.086,2.59,13.22,7.77,18.398c5.181,5.182,11.352,7.771,18.514,7.771
+			c7.123,0,13.334-2.607,18.629-7.828c5.029-4.838,7.543-10.952,7.543-18.343c0-7.276-2.553-13.465-7.656-18.571
+			C50.967,4.824,44.795,2.272,37.557,2.272z M46.129,20.557v13.085h-3.656v15.542h-9.944V33.643h-3.656V20.557
+			c0-0.572,0.2-1.057,0.599-1.457c0.401-0.399,0.887-0.6,1.457-0.6h13.144c0.533,0,1.01,0.2,1.428,0.6
+			C45.918,19.5,46.129,19.986,46.129,20.557z M33.042,12.329c0-3.008,1.485-4.514,4.458-4.514s4.457,1.504,4.457,4.514
+			c0,2.971-1.486,4.457-4.457,4.457S33.042,15.3,33.042,12.329z" />
+	</g>
+</g>
+</svg>
+<svg id="Layer_1" role="img" aria-label alt style="max-width: 1em;max-height:1em;margin-left: .2em;" x="0px" y="0px" width="64px" height="64px" viewBox="5.5 -3.5 64 64" enable-background="new 5.5 -3.5 64 64" xml:space="preserve">
+<g>
+	<circle fill="#FFFFFF" cx="37.47" cy="28.736" r="29.471"></circle>
+	<g>
+		<path d="M37.442-3.5c8.99,0,16.571,3.085,22.743,9.256C66.393,11.928,69.5,19.509,69.5,28.5c0,8.992-3.048,16.476-9.145,22.458
+			C53.88,57.32,46.241,60.5,37.442,60.5c-8.686,0-16.19-3.162-22.513-9.485C8.644,44.728,5.5,37.225,5.5,28.5
+			c0-8.762,3.144-16.343,9.429-22.743C21.1-0.414,28.604-3.5,37.442-3.5z M12.7,19.872c-0.952,2.628-1.429,5.505-1.429,8.629
+			c0,7.086,2.59,13.22,7.77,18.4c5.219,5.144,11.391,7.715,18.514,7.715c7.201,0,13.409-2.608,18.63-7.829
+			c1.867-1.79,3.332-3.657,4.398-5.602l-12.056-5.371c-0.421,2.02-1.439,3.667-3.057,4.942c-1.622,1.276-3.535,2.011-5.744,2.2
+			v4.915h-3.714v-4.915c-3.543-0.036-6.782-1.312-9.714-3.827l4.4-4.457c2.094,1.942,4.476,2.913,7.143,2.913
+			c1.104,0,2.048-0.246,2.83-0.743c0.78-0.494,1.172-1.312,1.172-2.457c0-0.801-0.287-1.448-0.858-1.943l-3.085-1.315l-3.771-1.715
+			l-5.086-2.229L12.7,19.872z M37.557,2.214c-7.276,0-13.428,2.571-18.457,7.714c-1.258,1.258-2.439,2.686-3.543,4.287L27.786,19.7
+			c0.533-1.676,1.542-3.019,3.029-4.028c1.484-1.009,3.218-1.571,5.2-1.686V9.071h3.715v4.915c2.934,0.153,5.6,1.143,8,2.971
+			l-4.172,4.286c-1.793-1.257-3.619-1.885-5.486-1.885c-0.991,0-1.876,0.191-2.656,0.571c-0.781,0.381-1.172,1.029-1.172,1.943
+			c0,0.267,0.095,0.533,0.285,0.8l4.057,1.83l2.8,1.257l5.144,2.285l16.397,7.314c0.535-2.248,0.801-4.533,0.801-6.857
+			c0-7.353-2.552-13.543-7.656-18.573C51.005,4.785,44.831,2.214,37.557,2.214z" />
+	</g>
+</g>
+</svg>
+(Attribution-NonCommercial 4.0 International).<br /> Transcription by
+Roger Turner: links, Contents page, some <em>subheadings</em>, and
+{{transcriber notes}} added; see also <a href="#republication" title="Go to note at end of document">1998 republication</a> }}</p>
+</div>
+<hr>
+<header>
+<div class="small">
+<p><span class="fl">Sussman and Steele</span>
+<span style="text-align: center">December 22, 1975 </span><span class="fr">The SCHEME Reference Manual</span></p>
+</div>
+</header>
+</section>
+<section id="contents" class="level2">
+<h2>Contents</h2>
+<div style="line-height: 1.3">
+<div class="line-block"><br />
+<a href="#section-1-the-scheme-reference-manual">Section 1: The <span class="sc">SCHEME</span> Reference Manual</a><br />
+1.1   <a href="#primitive-operators"><em>Primitive
+Operators</em></a><br />
+1.2   <a href="#special-primitives"><em>Special
+Primitives</em></a><br />
+1.3   <a href="#multiprocessing-primitives"><em>Multiprocessing
+Primitives</em></a><br />
+1.4   <a href="#macro-primitives"><em>Macro Primitives</em></a><br />
+1.5   <a href="#using-scheme"><em>Using <span class="sc">SCHEME</span></em></a><br />
+<br />
+<a href="#section-2-some-scheme-programming-examples">Section 2: Some
+<span class="sc">SCHEME</span> Programming Examples</a><br />
+2.1   <a href="#traditional-recursion">Traditional Recursion</a><br />
+2.2   <a href="#what-about-iteration">What About Iteration?</a><br />
+2.3   <a href="#another-way-to-do-recursion">Another Way To Do
+Recursion</a><br />
+2.4   <a href="#apparently-hairy-control-structure">Apparently “Hairy”
+Control Structure</a><br />
+2.5   <a href="#a-pattern-matcher"><em>A Pattern Matcher</em></a><br />
+2.6   <a href="#a-useless-multiprocessing-example">A Useless
+Multiprocessing Example</a><br />
+<br />
+<a href="#section-3-substitution-semantics-and-programming-styles">Section
+3: Substitution Semantics and Programming Styles</a><br />
+3.1   <a href="#reviewing-the-lambda-calculus">Reviewing the Lambda
+Calculus</a><br />
+3.2   <a href="#recursive-programs">Recursive programs</a><br />
+3.3   <a href="#now-what-about-iteration">Now, What About
+Iteration?</a><br />
+3.4   <a href="#continuation-passing-recursion">Continuation Passing
+Recursion</a><br />
+<br />
+<a href="#section-4-some-implementation-issues">Section 4: Some
+Implementation Issues</a><br />
+4.1   <a href="#environments-and-closures"><em>Environments and
+Closures</em></a><br />
+4.2   <a href="#control"><em>Control</em></a><br />
+4.3   <a href="#normal-and-applicative-order"><em>Normal and Applicative
+Order</em></a><br />
+4.4   <a href="#extensions"><em>Extensions</em></a><br />
+<br />
+<a href="#section-5-the-implementation-of-the-interpreter">Section 5:
+The Implementation of the Interpreter</a><br />
+5.1   <a href="#registers"><em>Registers</em></a><br />
+5.2   <a href="#main-loop-and-scheduler"><em>Main Loop and
+Scheduler</em></a><br />
+5.3   <a href="#evaluation-and-primitive-operators"><em>Evaluation and
+Primitive Operators</em></a><br />
+5.4   <a href="#special-primitives"><em>Special
+Primitives</em></a><br />
+5.5   <a href="#multiprocessing-primitives"><em>Multiprocessing
+Primitives</em></a><br />
+<br />
+<a href="#acknowledgements">Acknowledgements</a><br />
+<br />
+<a href="#bibliography">Bibliography</a></div>
+</div>
+<p><hr></p>
+</section>
+<section id="section-1-the-scheme-reference-manual" class="level2">
+<h2><a href="#contents" title="Go to Contents">Section 1: The <span class="sc">SCHEME</span> Reference Manual</a></h2>
+<p><span class="sc">SCHEME</span> is essentially a full-funarg <span class="sc">LISP</span>. <code>LAMBDA</code> expressions need not be
+<code>QUOTE</code>d, <code>FUNCTION</code>ed, or
+<code>*FUNCTION</code>ed when passed as arguments or returned as values;
+they will evaluate to closures of themselves.</p>
+<section id="primitive-operators" class="level3">
+<h3>1.1 <a href="#contents" title="Go to Contents"><em>Primitive
+Operators</em></a></h3>
+<p>All <span class="sc">LISP</span> functions (i.e., <code>EXPR</code>s,
+<code>SUBR</code>s, and <code>LSUBR</code>s, but <em>not</em>
+<code>FEXPR</code>s, <code>FSUBR</code>s, or <code>MACRO</code>s) are
+primitive operators in <span class="sc">SCHEME</span>, and have the same
+meaning as they have in <span class="sc">LISP</span>. Like
+<code>LAMBDA</code> expressions, primitive operators and numbers are
+self-evaluating (they evaluate to trivial closures of themselves).</p>
+</section>
+<section id="special-primitives" class="level3">
+<h3>1.2 <a href="#contents" title="Go to Contents"><em>Special
+Primitives</em></a></h3>
+<p>There are a number of special primitives known as <code>AINT</code>s
+which are to <span class="sc">SCHEME</span> as <code>FSUBR</code>s are
+to <span class="sc">LISP</span>. We will enumerate them here.</p>
+<p><strong><code>IF</code></strong><br />
+This is the primitive conditional operator. It takes three arguments. If
+the first evaluates to non-<code>NIL</code>, it evaluates the second
+expression, and otherwise the third.</p>
+<p><strong><code>QUOTE</code></strong><br />
+As in <span class="sc">LISP</span>, this quotes the argument form so
+that it will be passed verbatim as data. The abbreviation
+“<code>&#39;FOO</code>” may be used instead of
+“<code>(QUOTE FOO)</code>”.</p>
+<p><strong><code>DEFINE</code></strong><br />
+This is analogous to the <span class="sc">MacLISP</span>
+<code>DEFUN</code> primitive (but note that the <code>LAMBDA</code> must
+appear explicitly!). It is used for defining a function in the “global
+environment” permanently, as opposed to <code>LABELS</code> (see below),
+which is used for temporary definitions in a local environment.
+<code>DEFINE</code> takes a name and a lambda expression; it closes the
+lambda expression in the global environment and stores the closure in
+the <span class="sc">LISP</span> value cell of the name (which is a
+<span class="sc">LISP</span> atom).</p>
+<p><strong><code>LABELS</code></strong><br />
+We have decided not to use the traditional <code>LABEL</code> primitive
+in this interpreter because it is difficult to define several mutually
+recursive functions using only <code>LABEL</code>. The solution, which
+Hewitt [<a href="#smith-and-hewitt-1-2-3-4-5-6" id="xsmith2" title="[2] Smith and Hewitt 1975, A PLASMA Primer (draft)">Smith and
+Hewitt</a>] also uses, is to adopt an <span class="sc">ALGOL</span>esque
+block syntax:</p>
+<pre><code>    (LABELS &lt;function definition list&gt; &lt;expression&gt;)</code></pre>
+<p>This has the effect of evaluating the expression in an environment
+where all the functions are defined as specified by the definitions
+list. Furthermore, the functions are themselves closed in that
+environment, and not in the outer environment; this allows the functions
+to call themselves <em>and each other</em> recursively. For example,
+consider a function which counts all the atoms in a list structure
+recursively to all levels, but which doesn’t count the <code>NIL</code>s
+which terminate lists (but <code>NIL</code>s in the <code>CAR</code> of
+some list count). In order to perform this we use two mutually recursive
+functions, one to count the car and one to count the cdr, as
+follows:</p>
+<pre><code>    (DEFINE COUNT
+        (LAMBDA (L)
+            (LABELS ((COUNTCAR
+                      (LAMBDA (L)
+                          (IF (ATOM L) 1
+                              (+ (COUNTCAR (CAR L))
+                                (COUNTCDR (CDR L))))))
+                    (COUNTCDR
+                      (LAMBDA (L)
+                          (IF (ATOM L)
+                              (IF (NULL L) 0 1)
+                              (+ (COUNTCAR (CAR L))
+                                  (COUNTCDR (CDR L)))))))
+              (COUNTCDR L))))               ;Note: COUNTCDR is defined here.</code></pre>
+<p><strong><code>ASET</code></strong><br />
+This is the side effect primitive. It is analogous to the <span class="sc">LISP</span> function <code>SET</code>. For example, to define
+a <strong>cell</strong> [<a href="#smith-and-hewitt-1-2-3-4-5-6" id="xsmith3" title="[3] Smith and Hewitt 1975, A PLASMA Primer (draft)">Smith and
+Hewitt</a>], we may use <code>ASET</code> as follows:</p>
+<pre><code>    (DEFINE CONS-CELL
+        (LAMBDA (CONTENTS)
+            (LABELS ((THE-CELL
+                      (LAMBDA (MSG)
+                          (IF (EQ MSG &#39;CONTENTS?) CONTENTS
+                              (IF (EQ MSG &#39;CELL?) &#39;YES
+                                  (IF (EQ (CAR MSG) &#39;&lt;-)
+                                      (BLOCK (ASET &#39;CONTENTS (CADR MSG))
+                                             THE-CELL)
+                                      (ERROR &#39;|UNRECOGNIZED MESSAGE - CELL|
+                                              MSG
+                                              &#39;WRNG-TYPE-ARG)))))))
+                     THE-CELL)))</code></pre>
+<p>Those of you who may complain about the lack of <code>ASETQ</code>
+are invited to write <code>(ASET&#39; foo bar)</code> instead of
+<code>(ASET &#39;foo bar)</code>.</p>
+<p><strong><code>EVALUATE</code></strong><br />
+This is similar to the <span class="sc">LISP</span> function
+<code>EVAL</code>. It evaluates its argument, and then evaluates the
+resulting s-expression as <span class="sc">SCHEME</span> code.</p>
+<p><strong><code>CATCH</code></strong><br />
+This is the “escape operator” which gives the user a handle on the
+control structure of the interpreter. The expression:</p>
+<pre><code>    (CATCH &lt;identifier&gt; &lt;expression&gt;)</code></pre>
+<p>evaluates <code>&lt;expression&gt;</code> in an environment where
+<code>&lt;identifier&gt;</code> is bound to a continuation which is
+“just about to return from the <code>CATCH</code>”; that is, if the
+continuation is called as a function of one argument, then control
+proceeds as if the <code>CATCH</code> expression had returned with the
+supplied (evaluated) argument as its value. For example, consider the
+following obscure definition of <code>SQRT</code> (Sussman’s favorite
+style/Steele’s least favorite):</p>
+<pre><code>    (DEFINE SQRT
+        (LAMBDA (X EPSILON)
+            ((LAMBDA (ANS LOOPTAG)
+                 (CATCH RETURNTAG
+                        (PROGN
+                         (ASET &#39;LOOPTAG (CATCH M M))        ;CREATE PROG TAG
+                         (IF (&lt; (ABS (-*$(#S ANS ANS) X)) EPSILON)
+                             (RETURNTAG ANS)                ;RETURN
+                             NIL)                           ;JFCL
+                         (ASET &#39;ANS (//$ (+$ (//$ X ANS) ANS) 2.0))
+                         (LOOPTAG LOOPTAG))))               ;GOTO
+            1.0
+            NIL)))</code></pre>
+<p>Anyone who doesn’t understand how this manages to work probably
+should not attempt to use <code>CATCH</code>. <sup>{{<a href="#republication" id="xnote1" title="In addition to the funny structure of this program there are a number of strange features and jokes that are incidental to its structure... https://doi.org/10.1023/A:1010035624696">1998
+note 1</a>}}</sup></p>
+<p>As another example, we can define a <code>THROW</code> function,
+which may then be used with <code>CATCH</code> much as they are in <span class="sc">LISP</span>:</p>
+<pre><code>    (DEFINE THROW (LAMBDA (TAG RESULT) (TAG RESULT)))</code></pre>
+</section>
+<section id="multiprocessing-primitives" class="level3 npb">
+<h3>1.3 <a href="#contents" title="Go to Contents"><em>Multiprocessing
+Primitives</em></a></h3>
+<p><strong><code>CREATE!PROCESS</code></strong><br />
+This is the process generator for multiprocessing. It takes one
+argument, an expression to be evaluated in the current environment as a
+separate parallel process. If the expression ever returns a value, the
+process automatically terminates. The value of
+<code>CREATE!PROCESS</code> is a process id for the newly generated
+process. Note that the newly created process will not actually run until
+it is explicitly started.</p>
+</section>
+<p><strong><code>START!PROCESS</code></strong><br />
+This takes one argument, a process id, and starts up that process. It
+then runs.</p>
+<p><strong><code>STOP!PROCESS</code></strong><br />
+This also takes a process id, but stops the process. The stopped process
+may be continued from where it was stopped by using
+<code>START!PROCESS</code> again on it. The magic global variable
+<code>**PROCESS**</code> always contains the process id of the currently
+running process; thus a process can stop itself by doing
+<code>(STOP!PROCESS **PROCESS**)</code>. A stopped process is garbage
+collected if no live process has a pointer to its process id.</p>
+<p><strong><code>EVALUATE!UNINTERRUPTIBLY</code></strong><br />
+This is the synchronization primitive. It evaluates an expression
+uninterruptibly; i.e. no other process may run until the expression has
+returned a value. Note that if a funarg is returned from the scope of an
+<code>EVALUATE!UNINTERRUPTIBLY</code>, then that funarg will be
+uninterruptible when it is applied; that is, the uninterruptibility
+property follows the rules of variable scoping. For example, consider
+the following function:</p>
+<pre><code>    (DEFINE SEMGEN
+        (LAMBDA (SEMVAL)
+            (LIST (LAMBDA ()
+                      (EVALUATE!UNINTERRUPTIBLY
+                          (ASET&#39; SEMVAL (+ SEMVAL 1))))
+                  (LABELS (P (LAMBDA ()
+                                 (EVALUATE!UNINTERRUPTIBLY
+                                     (IF (PLUSP SEMVAL)
+                                         (ASET&#39; SEMVAL (- SEMVAL 1))
+                                         (P)))))
+                          P))))</code></pre>
+<p>This returns a pair of functions which are <code>V</code> and
+<code>P</code> operations on a newly created semaphore. The argument to
+<code>SEMGEN</code> is the initial value for the semaphore. Note that
+<code>P</code> busy-waits by iterating if necessary; because
+<code>EVALUATE!UNINTERRUPTIBLY</code> uses variable-scoping rules, other
+processes have a chance to get in at the beginning of each iteration.
+This busy-wait can be made much more efficient by replacing the
+expression <code>(P)</code> in the definition of <code>P</code> with</p>
+<pre><code>    ((LAMBDA (ME)
+             (BLOCK (START!PROCESS (CREATE!PROCESS &#39;(START!PROCESS ME)))
+                    (STOP!PROCESS ME)
+                    (P)))
+      **PROCESS**)</code></pre>
+<p>Let’s see you figure this one out! Note that a
+<code>STOP!PROCESS</code> within an
+<code>EVALUATE!UNINTERRUPTIBLY</code> forces the process to be swapped
+out even if it is the current one, and so other processes get to run;
+but as soon as it gets swapped in again, others are locked out as
+before.</p>
+<section id="macro-primitives" class="level3 npb">
+<h3>1.4 <a href="#contents" title="Go to Contents"><em>Macro
+Primitives</em></a></h3>
+<p>Besides the <code>AINT</code>s, <span class="sc">SCHEME</span> has a
+class of primitives known as <code>AMACRO</code>s. These are similar to
+<span class="sc">MacLISP</span> <code>MACRO</code>s, in that they are
+expanded into equivalent code before being executed. Some
+<code>AMACRO</code>s supplied with the <span class="sc">SCHEME</span>
+interpreter:</p>
+<p><strong><code>COND</code></strong><br />
+This is like the <span class="sc">MacLISP</span> <code>COND</code>
+statement, except that singleton clauses (where the result of the
+predicate is the returned value) are not allowed.</p>
+</section>
+<p><strong><code>AND</code>, <code>OR</code></strong><br />
+These are also as in <span class="sc">MacLISP</span>.</p>
+<p><strong><code>BLOCK</code></strong><br />
+This is like the <span class="sc">MacLISP</span> <code>PROGN</code>, but
+arranges to evaluate its last argument without an extra net control
+frame (explained later), so that the last argument may be involved in an
+iteration. Note that in <span class="sc">SCHEME</span>, unlike <span class="sc">MacLISP</span>, the body of a <code>LAMBDA</code> expression
+is <em>not</em> an implicit <code>PROGN</code>. <sup>{{<a href="#republication" id="xnote2" title="In the initial definition of SCHEME, we tried to make each primitive construct as simple as possible... https://doi.org/10.1023/A:1010035624696">1998
+note 2</a>}}</sup></p>
+<p><strong><code>DO</code></strong><br />
+This is like the <span class="sc">MacLISP</span> “new-style”
+<code>DO</code>; old-style <code>DO</code> is not supported.</p>
+<p><strong><code>AMAPCAR</code>, <code>AMAPLIST</code></strong><br />
+These are like <code>MAPCAR</code> and <code>MAPLIST</code>, but they
+expect a <span class="sc">SCHEME</span> lambda closure for the first
+argument.</p>
+<section id="using-scheme" class="level3 npb">
+<h3>1.5 <a href="#contents" title="Go to Contents"><em>Using <span class="sc">SCHEME</span></em></a></h3>
+<p>To use <span class="sc">SCHEME</span>, simply incant at DDT (on
+MIT-AI): <sup>{{<a href="#republication" id="xnote3" title="MIT-AI was the name of the DEC PDP-10 computer that we were using for our research. DDT was a command shell and assembly language debugger rolled into one. https://doi.org/10.1023/A:1010035624696">1998
+note 3</a>}}</sup></p>
+<pre><code>    :LISP LIBLSP;SCHEME</code></pre>
+<p>which will load up the current version of <span class="sc">SCHEME</span>, which will announce itself and give a prompt.
+If you want to escape to <span class="sc">LISP</span>, merely hit ^G. To
+restart <span class="sc">SCHEME</span>, type <code>(SCHEME)</code>.
+Sometimes one does need to use a <span class="sc">LISP</span>
+<code>FSUBR</code> such as <code>UREAD</code>; this may be accomplished
+by typing, for example, <sup>{{<a href="#republication" id="xnote4" title="There is a tiny joke here: we wrote (EVAL&#39; (UREAD FOO BAR DSK LOSER)) instead of the more customary (EVAL &#39;(UREAD FOO BAR DSK LOSER)) so that the operation could be pronounced “evalquote”. https://doi.org/10.1023/A:1010035624696">1998
+note 4</a>}}</sup></p>
+<pre><code>    (EVAL&#39; (UREAD FOO BAR DSK LOSER))</code></pre>
+<p>After doing this, typing ^Q will, of course, cause <span class="sc">SCHEME</span> to read from the file.</p>
+<p>This concludes the <span class="sc">SCHEME</span> Reference
+Manual.</p>
+</section>
+<p><hr></p>
+</section>
+<section id="section-2-some-scheme-programming-examples" class="level2">
+<h2><a href="#contents" title="Go to Contents">Section 2: Some <span class="sc">SCHEME</span> Programming Examples</a></h2>
+<section id="traditional-recursion" class="level3">
+<h3>2.1 <a href="#contents" title="Go to Contents">Traditional
+Recursion</a></h3>
+<p>Here is the good old familiar recursive definition of factorial,
+written in <span class="sc">SCHEME</span>.</p>
+<pre><code>    (DEFINE FACT
+       (LAMBDA (N) (IF (= N 0) 1
+                       (* N (FACT (- N 1))))))</code></pre>
+</section>
+<section id="what-about-iteration" class="level3">
+<h3>2.2 <a href="#contents" title="Go to Contents">What About
+Iteration?</a></h3>
+<p>There are many other ways to compute factorial. One important way is
+through the use of <em>iteration</em>. Consider the following definition
+of <code>FACT</code>. Although it appears to be recursive, since it
+“calls itself”, it captures the essence of our intuitive notion of
+iteration, because execution of this program will not produce internal
+structures (e.g. stacks or variable bindings) which increase in size
+with the number of iteration steps. This surprising fact will be
+explained in two ways.</p>
+<ol type="1">
+<li>We will consider programming styles in terms of substitution
+semantics of the lambda calculus (<a href="#section-3-substitution-semantics-and-programming-styles" title="Section 3: Substitution Semantics and Programming Styles">Section
+3</a>).</li>
+<li>We will show how the <span class="sc">SCHEME</span> interpreter is
+implemented (<a href="#section-4-some-implementation-issues" title="Section 4: Some Implementation Issues">Sections 4</a>, <a href="#section-5-the-implementation-of-the-interpreter" title="Section 5: The Implementation of the Interpreter">5</a>).</li>
+</ol>
+<pre><code>    (DEFINE FACT
+       (LAMBDA (N)
+           (LABELS ((FACT1 (LAMBDA (M ANS)
+                               (IF (= M 0) ANS
+                                       (FACT1 (- M 1)
+                                              (* M ANS))))))
+                    (FACT1 N 1))))</code></pre>
+<p>A common iterative construct is the <code>DO</code> loop. The most
+general form we have seen in any programming language is the <span class="sc">MacLISP</span> <code>DO</code> [<a href="#moon-1-2-3-4-5" id="xmoon2" title="[2] Moon 1974, MACLISP Reference Manual, Revision 0">Moon</a>].
+It permits the simultaneous initialization of any number of control
+variables and the simultaneous stepping of these variables by arbitrary
+functions at each iteration step. The loop is terminated by an arbitrary
+predicate, and an arbitrary value may be returned. The <code>DO</code>
+loop may have a body, a series of expressions executed for effect on
+each iteration.</p>
+<p>The general form of a <span class="sc">MacLISP</span> <code>DO</code>
+is:</p>
+<pre><code>    (DO ((&lt;var1&gt; &lt;init1&gt; &lt;step1&gt;)
+         (&lt;var2&gt; &lt;init2&gt; &lt;step2&gt;)
+         ...
+         (&lt;varn&gt; &lt;initn&gt; &lt;stepn&gt;))
+        (&lt;pred&gt; &lt;value&gt;)
+        &lt;body&gt;)</code></pre>
+<p>The semantics of this are that the variables are bound and
+initialized to the values of the <code>&lt;initi&gt;</code> expressions,
+which must all be evaluated in the environment outside the
+<code>DO</code>; then the predicate <code>&lt;pred&gt;</code> is
+evaluated in the new environment, and if <code>TRUE</code>, the
+<code>&lt;value&gt;</code> is evaluated and returned. Otherwise the body
+is evaluated, then each of the steppers <code>&lt;stepi&gt;</code> is
+evaluated in the current environment, all the variables made to have the
+results as their values, and the predicate evaluated again, and so
+on.</p>
+<p>For example, the following <span class="sc">MacLISP</span>
+function:</p>
+<pre><code>    (DEFUN REV (L)
+           (DO ((L1 L (CDR L1))
+                (ANS NIL (CONS (CAR L1) ANS)))
+               ((NULL L1) ANS)))</code></pre>
+<p>computes the reverse of a list. In <span class="sc">SCHEME</span>, we
+could write the same function, in the same iterative style, as
+follows:</p>
+<pre><code>(DEFINE REV
+    (LAMBDA (L)
+        (LABELS ((DOLOOP (LAMBDA (L1 ANS)
+                             (IF (NULL L1) ANS
+                                 (DOLOOP (CDR L1)
+                                         (CONS (CAR L1) ANS))))))
+                (DOLOOP L NIL))))</code></pre>
+<p>From this we can infer a general way to express iterations in <span class="sc">SCHEME</span> in a manner isomorphic to the <span class="sc">MacLISP</span> <code>DO</code>:</p>
+<pre><code>(LABELS ((DOLOOP
+          (LAMBDA (&lt;dummy&gt; &lt;var1&gt; &lt;var2&gt; ... &lt;varn&gt;)
+              (IF &lt;pred&gt; &lt;value&gt;
+                  (DOLOOP &lt;body&gt; &lt;step1&gt; &lt;step2&gt; ... &lt;stepn&gt;)))))
+        (DOLOOP NIL &lt;init1&gt; &lt;init2&gt; ... &lt;initn&gt;))</code></pre>
+<p>This is in fact what the supplied <code>DO</code> <code>AMACRO</code>
+expands into. Note that there are no side effects in the steppings of
+the iteration variables.</p>
+</section>
+<section id="another-way-to-do-recursion" class="level3 npb">
+<h3>2.3 <a href="#contents" title="Go to Contents">Another Way To Do
+Recursion</a></h3>
+<p>Now consider the following alternative definition of
+<code>FACT</code>. It has an extra argument, the
+<strong>continuation</strong> [<a href="#reynolds-1-2" id="xreynolds1" title="[1] Reynolds 1972, Definitional Interpreters for Higher Order Programming Languages">Reynolds</a>],
+which is a function to call with the answer, when we have it, rather
+than return a value; that is, rather than ultimately reducing to the
+desired value, it reduces to a combination which is the application of
+the continuation to the desired value.</p>
+</section>
+<pre><code>    (DEFINE FACT
+       (LAMBDA (N C)
+          (IF (= N 0) (C 1)
+              (FACT (- N 1)
+                    (LAMBDA (A) (C (* N A)))))))</code></pre>
+<p>Note that we can call this like an ordinary function if we supply
+<code>(LAMBDA (X) X)</code> as the second argument. For example,
+<code>(FACT 3 (LAMBDA (X) X))</code> returns 6.</p>
+<section id="apparently-hairy-control-structure" class="level3 npb">
+<h3>2.4 <a href="#contents" title="Go to Contents">Apparently “Hairy”
+Control Structure</a></h3>
+<p>A classic problem difficult to solve in most programming languages,
+including standard (stack-oriented) <span class="sc">LISP</span>, is the
+<strong>samefringe</strong> problem [<a href="#smith-and-hewitt-1-2-3-4-5-6" id="xsmith4" title="[4] Smith and Hewitt 1975, A PLASMA Primer (draft)">Smith and
+Hewitt</a>]. The problem is to determine whether the fringes of two
+trees are the same, even if the internal structures of the trees are
+not. This problem is easy to solve if one merely computes the fringe of
+each tree separately as a list, and then compares the two lists. We
+would like to solve the problem so that the fringes are generated and
+compared incrementally. This is important if the fringes of the trees
+are very large, but differ, say, in the first position.</p>
+</section>
+<p>Consider the following obscure solution to <code>samefringe</code>,
+which is in fact isomorphic to the one written by Shrobe and presented
+by Smith and Hewitt. Note that <span class="sc">SCHEME</span> does not
+have the packagers of <span class="sc">PLASMA</span>, and so we were
+forced to use continuations; rather than using packages and a
+<strong>next</strong> operator, we pass a fringe a continuation (called
+the “getter”) which will get the next and the rest of the fringe as its
+two arguments.</p>
+<pre><code>    (DEFINE FRINGE
+       (LAMBDA (TREE)
+           (LABELS ((FRINGEN
+                     (LAMBDA (NODE ALT)
+                         (LAMBDA (GETTER)
+                             (IF (ATOM NODE)
+                                 (GETTER NODE ALT)
+                                 ((FRINGEN (CAR NODE)
+                                           (LAMBDA (GETTER1)
+                                               ((FRINGEN (CDR NODE)
+                                                         ALT)
+                                                GETTER1)))
+                                  GETTER))))))
+                   (FRINGEN TREE
+                            (LAMBDA (GETTER)
+                                (GETTER &#39;(EXHAUSTED) NIL))))))</code></pre>
+<pre><code>    (DEFINE SAMEFRINGE
+       (LAMBDA (TREE1 TREE2)
+           (LABELS ((SAME
+                     (LAMBDA (S1 S2)
+                         (S1 (LAMBDA (X1 R1)
+                                 (S2 (LAMBDA (X2 R2)
+                                         (IF (EQUAL X1 X2)
+                                             (IF (EQUAL X1 &#39;(EXHAUSTED))
+                                                 T
+                                                 (SAME R1 R2))
+                                             NIL))))))))
+                    (SAME (FRINGE TREE1)
+                          (FRINGE TREE2)))))</code></pre>
+<p>Now let us consider an alternative solution to the
+<code>samefringe</code> problem. We believe that this solution is
+clearer for two reasons:</p>
+<ol type="1">
+<li>the implementation of <code>SAMEFRINGE</code> is more clearly
+iterative;</li>
+<li>rather than returning an object which will return both the
+<strong>first</strong> and the <strong>rest</strong> of a fringe to a
+given continuation, <code>FRINGE</code> returns an object which will
+deliver up a component in response to a request for that component.</li>
+</ol>
+<pre><code>    (DEFINE FRINGE
+        (LAMBDA (TREE)
+            (LABELS ((FRINGE1
+                      (LAMBDA (NODE ALT)
+                         (IF (ATOM NODE)
+                             (LAMBDA (MSG)
+                                 (IF (EQ MSG &#39;FIRST) NODE
+                                     (IF (EQ MSG &#39;NEXT) (ALT) (ERROR))))
+                             (FRINGE1 (CAR NODE)
+                                      (LAMBDA () (FRINGE1 (CDR NODE) ALT)))))))
+                     (FRINGE1 TREE
+                              (LAMBDA ()
+                                  (LAMBDA (MSG) (IF (EQ MSG &#39;FIRST) &#39;*EOF* 
+                                                                    (ERROR))))))))
+
+    (DEFINE SAMEFRINGE
+        (LAMBDA (TI T2)
+            (DO ((C1 (FRINGE TI) (C1 &#39;NEXT))
+                 (C2 (FRINGE T2) (C2 &#39;NEXT)))
+                ((OR (NOT (EQ (C1 &#39;FIRST) (C2 &#39;FIRST)))
+                     (EQ (C1 &#39;FIRST) &#39;*EOF*)
+                     (EQ (C2 &#39;FIRST) &#39;*EOF*))
+                 (EQ (C1 &#39;FIRST) (C2 &#39;FIRST))))))</code></pre>
+<section id="a-pattern-matcher" class="level3 npb">
+<h3>2.5 <a href="#contents" title="Go to Contents"><em>A Pattern
+Matcher</em></a></h3>
+<p>A much simpler and more probable problem is that of building a
+pattern matcher with backtracking for segment matches. The matcher
+presented below is intended for matching single-level list structure
+patterns against lists of atoms. A pattern is a list containing three
+types of elements:</p>
+<ol type="1">
+<li>constant atoms, which match themselves only.</li>
+<li><code>(THV x)</code>, which matches any single element in the
+expression consistently. We may abbreviate this as <code>?x</code> by
+means of a <span class="sc">LISP</span> reader macro character.
+<sup>{{<a href="#republication" id="xnote5" title="Both (THV x) and ?x are bits of syntax from the MicroPLANNER language, which used pattern matching as an essential part of its control structure. https://doi.org/10.1023/A:1010035624696">1998
+note 5</a>}}</sup></li>
+<li><code>(THV* x)</code>, which matches any segment of zero or more
+elements in the expression consistently. We may abbreviate this as
+<code>!x</code>.</li>
+</ol>
+</section>
+<p>The matcher returns either <code>NIL</code>, meaning no match is
+possible, or a list of two items, an <code>alist</code> specifying the
+bindings of the match variables, and a continuation to call, if you
+don’t like this particular set of bindings, which will attempt to find
+another match. Thus, for example, the invocation</p>
+<pre><code>    (MATCH &#39;(A !B ?C ?C !B !E)
+           &#39;(A X Y Q Q X Y Z Z X Y Q Q X Y R))</code></pre>
+<p>would return the result</p>
+<pre><code>    (((E (Z Z X Y Q Q X Y R))
+      (C Q)
+      (B X Y))
+     &lt;continuation1&gt;)</code></pre>
+<p>where calling <code>&lt;continuation1&gt;</code> as a function of no
+arguments would produce the result</p>
+<pre><code>    (((E (R))
+      (C Z)
+      (B (X Y Q Q X Y)))
+     &lt;continuation2&gt;)</code></pre>
+<p>where calling <code>&lt;continuation2&gt;</code> would produce
+<code>NIL</code>.</p>
+<p>The <code>MATCH</code> function makes use of two auxiliary functions
+called <code>NIRST</code> and <code>NREST</code>. The former returns a
+list of the first n elements of a given list, while the latter returns
+the tail of the given list after the first n elements.</p>
+<pre><code>    (DEFINE NFIRST
+       (LAMBDA (E N)
+           (IF (= N 0) NIL
+               (CONS (CAR E) (NFIRST (CDR E) (- N 1))))))
+
+    (DEFINE NREST
+       (LAMBDA (E N)
+           (IF (= N 0) E
+               (NREST (CDR E) (- N 1)))))</code></pre>
+<p>The main <code>MATCH</code> function also uses a subfunction called
+<code>MATCH1</code> which takes four arguments: the tail of the pattern
+yet to be matched; the tail of the expression yet to be matched; the
+alist of match bindings made so far; and a continuation to call if the
+match fails at this point. A subfunction of <code>MATCH</code>, called
+<code>MATCH*</code>, handles the matching of segments of the expression
+against <code>THV*</code> match variables. It is in the matching of
+segments that the potential need for backtracking enters, for segments
+of various lengths may have to be tried. After <code>MATCH*</code>
+matches a segment, it calls <code>MATCH1</code> to continue the match,
+giving it a failure continuation which will back up and try to match a
+longer segment if possible. A failure can occur if a constant fails to
+match, or if one or the other of pattern and expression runs out before
+the other one does.</p>
+<pre style="font-size:95%"><code>(DEFINE MATCH
+   (LAMBDA (PATTERN EXPRESSION)
+       (LABELS ((MATCH1
+           (LAMBDA (P E ALIST LOSE)
+               (IF (NULL P) (IF (NULL E) (LIST ALIST LOSE) (LOSE))
+                   (IF (ATOM (CAR P))
+                       (IF (NULL E) (LOSE)
+                           (IF (EQ (CAR E) (CAR P))
+                               (MATCH1 (CDR P) (CDR E) ALIST LOSE)
+                               (LOSE)))
+                       (IF (EQ (CAAR P) &#39;THV)
+                           (IF (NULL E) (LOSE)
+                               ((LAMBDA (V)
+                                    (IF V (IF (EQ (CAR E) (CADR V))
+                                              (MATCH1 (CDR P) (CDR E) ALIST LOSE)
+                                              (LOSE))
+                                        (MATCH1 (CDR P) (CDR E)
+                                                (CONS (LIST (CADAR P) (CAR E)) ALIST)
+                                                LOSE)))
+                                (ASSQ (CADAR P) ALIST)))
+                           (IF (EQ (CAAR P) &#39;THV*)
+                               ((LAMBDA (V)
+                                    (IF V
+                                        (IF (&lt; (LENGTH E) (LENGTH (CADR V))) (LOSE)
+                                            (IF (EQUAL (NFIRST E (LENGTH (CADR V)))
+                                                       (CADR V))
+                                                (MATCH1 (CDR P)
+                                                        (NREST E (LENGTH (CADR V)))
+                                                        ALIST
+                                                        LOSE)
+                                                (LOSE)))
+                                        (LABELS ((MATCH*
+                                            (LAMBDA (N)
+                                                (IF (&gt; N (LENGTH E)) (LOSE)
+                                                    (MATCH1 (CDR P) (NREST E N)
+                                                            (CONS (LIST (CADAR P)
+                                                                        (NFIRST E N))
+                                                                  ALIST)
+                                                            (LAMBDA ()
+                                                                (MATCH* (+ N 1))))))))
+                                                (MATCH* 0))))
+                                (ASSQ (CADAR P) ALIST))
+                               (LOSE))))))))
+              (MATCH1 PATTERN
+                      EXPRESSION
+                      NIL
+                      (LAMBDA () NIL)))))</code></pre>
+<section id="a-useless-multiprocessing-example" class="level3 npb">
+<h3>2.6 <a href="#contents" title="Go to Contents">A Useless
+Multiprocessing Example</a></h3>
+<p>One thing we might want to use multiprocessing for is to try two
+things in parallel, and terminate as soon as one succeeds. We can do
+this with the following function.</p>
+<pre><code>(DEFINE TRY!TWO!THINGS!IN!PARALLEL
+    (LAMBDA (F1 F2)
+        (CATCH C
+           ((LAMBDA (P1 P2)
+               ((LAMBDA (F1 F2)
+                    (EVALUATE!UNINTERRUPTIBLY
+                     (BLOCK (ASET &#39;P1 (CREATE!PROCESS &#39;(F1)))
+                            (ASET &#39;P2 (CREATE!PROCESS &#39;(F2)))
+                            (START!PROCESS P1)
+                            (START!PROCESS P2)
+                            (STOP!PROCESS **PROCESS**))))
+                (LAMBDA ()
+                   ((LAMBDA (VALUE)
+                       (EVALUATE!UNINTERRUPTIBLY
+                        (BLOCK (STOP!PROCESS P2) (C VALUE))))
+                    (F1)))
+                (LAMBDA ()
+                   ((LAMBDA (VALUE)
+                       (EVALUATE!UNINTERRUPTIBLY
+                        (BLOCK (STOP!PROCESS P2) (C VALUE))))
+                    (F2)))))
+            NIL NIL))))</code></pre>
+</section>
+<p><code>TRY!TWO!THINGS!IN!PARALLEL</code> takes two functions of no
+arguments (in order to pass an unevaluated expression and its
+environment in for later use, so as to avoid variable conflicts). It
+creates two processes to run them, and returns the value of whichever
+completes first.</p>
+<p>As an example of how to misuse
+<code>TRY!TWO!THINGS!IN!PARALLEL</code>, here is a function which
+determines the sign of an integer using only <code>ADD1</code>,
+<code>SUB1</code>, and <code>EQUAL</code>.</p>
+<pre><code>    (DEFINE SIGN
+        (LAMBDA (N)
+            (IF (EQUAL N O) &#39;ZERO
+                (TRY!TWO!THINGS!IN!PARALLEL
+                    (LAMBDA ()
+                        (DO ((I 0 (ADD1 I)))
+                            ((EQUAL I N) &#39;POSITIVE)))
+                    (LAMBDA ()
+                        (DO ((I 0 (SUB1 I)))
+                            ((EQUAL I N) &#39;NEGATIVE)))))))</code></pre>
+<p><hr></p>
+</section>
+<section id="section-3-substitution-semantics-and-programming-styles" class="level2">
+<h2><a href="#contents" title="Go to Contents">Section 3: Substitution
+Semantics and Programming Styles</a></h2>
+<p>In the previous section we showed several different <span class="sc">SCHEME</span> programs for computing the factorial function.
+How are they different? We intuitively distinguish recursive from
+iterative programs, for example, by noting that recursive programs “call
+themselves” but in the last section we claimed to do iteration with a
+seemingly recursive program. Experienced programmers “know” that
+recursion uses up “stack” so a program implemented recursively will run
+out of stack on a sufficiently large problem. Can we make these ideas
+more precise? One traditional approach is to model the computation with
+lambda calculus.</p>
+<section id="reviewing-the-lambda-calculus" class="level3">
+<h3>3.1 <a href="#contents" title="Go to Contents">Reviewing the Lambda
+Calculus</a></h3>
+<p>Traditionally language constructs are broken up into two distinct
+classes: imperative constructs and those with side-effects – such as
+assignment and go-to; and applicative constucts – those executed for
+value – such as arithmetic expressions. In addition, compiled languages
+often require a third class, declarative constructs, but these are
+provided primarily to guide the compilation process and do not directly
+affect the semantics of execution, and so will not concern us here.</p>
+<p>Lambda calculus is a model for the applicative component of
+programming languages. It models all non-imperative constructs as
+applications of functions and specifies the semantics of such
+expressions by a set of axioms or rewrite rules. ’One axiom states that
+a combination, i.e. an expression formed by a function applied to some
+arguments, is equivalent to the body of that function with the
+appropriate arguments substituted for the free occurrences of the formal
+parameters of the function in its body:</p>
+<pre><code>    ((LAMBDA &lt;vars&gt; &lt;body&gt;) &lt;args&gt;) = Subst[&lt;args&gt; &lt;vars&gt; &lt;body&gt;]</code></pre>
+<p>Another axiom requires that the meaning of an expression be
+independent of the names of the formal parameters bound in the
+expression:</p>
+<pre><code>    (LAMBDA &lt;vars&gt; &lt;body&gt;)
+            = (LAMBDA &lt;newvars&gt; Subst[&lt;newvars&gt; &lt;vars&gt; &lt;body&gt;])
+    provided that none of &lt;newvars&gt; appears free in &lt;body&gt;.</code></pre>
+<p>These constraints force <code>Subst</code> to be defined in such a
+way that an important kind of <em>referential transparency</em> is
+obtained. Besides these “structural” axioms, others are provided which
+specify the result of certain primitive functions applied to specific
+arguments. We shall not be concerned with these problems here – we will
+assume a small reasonable set of primitive functions.</p>
+</section>
+<section id="recursive-programs" class="level3 npb">
+<h3>3.2 <a href="#contents" title="Go to Contents">Recursive
+programs</a></h3>
+<p>Now, let’s see how lambda calculus may be used (informally) to model
+a computation. Consider the standard definition of the factorial
+function:</p>
+<pre><code>    (DEFINE FACT
+       (LAMBDA (N) (IF (= N 0) 1
+                       (* N (FACT (- N 1))))))</code></pre>
+<p>We are being <em>very</em> informal – lambda calculus as presented by
+[<a href="#church-1-2" id="xchurch2" title="[2] Church 1941, The Calculi of Lambda Conversion">Church</a>]
+does not include such constucts as <code>DEFINE</code>, <code>IF</code>,
+or <code>=</code>, <code>*</code>, or even <code>1</code>! The “usual”
+lambda calculus construct for defining recursive functions is a rather
+obscure object called the “fixed-point” operator. We have been lax to
+avoid the hassle of “rigor mortis” in this tutorial paper. Similarly,
+<code>IF</code> is the <span class="sc">SCHEME</span> conditional
+construct we will use for convenience, it reduces to its second or third
+argument depending on whether the first reduces to <code>TRUE</code> or
+<code>FALSE</code>. The objects <code>*,</code> <code>=,</code>
+<code>0</code>, <code>1</code>, etc. may be thought of as abbreviations
+for complex lambda expressions (such as Church numerals) whose details
+we are not interested in. On the other hand, we may think of them as
+primitive expressions, defined by additional axioms; this viewpoint
+leads to practical interpreter implementations.</p>
+</section>
+<p>Now let’s reduce the expression <code>(FACT 3)</code>. We will
+perform the expression reductions, except for the <code>IF</code>
+primitive, in Applicative Order (call by value), though this is not
+necessary, as we will discuss later. We display a “trace” of the
+substitutions:</p>
+<pre><code>  =&gt;    (FACT 3)
+  =&gt;    (IF (= 3 0) 1 (* 3 (FACT (- 3 1))))
+  =&gt;    (* 3 (FACT (- 3 1)))
+  =&gt;    (* 3 (FACT 2))
+  =&gt;    (* 3 (IF (= 2 0) 1 (* 2 (FACT (-2 1)))))
+  =&gt;    (* 3 (* 2 (FACT (- 2 1))))
+  =&gt;    (* 3 (* 2 (FACT 1)))
+  =&gt;    (* 3 (* 2 (IF (= 1 0) 1 (* 1 (FACT (- 1 1))))))
+  =&gt;    (* 3 (* 2 (* 1 (FACT (- 1 1)))))
+  =&gt;    (* 3 (* 2 (* 1 (FACT 0))))
+  =&gt;    (* 3 (* 2 (* 1 (IF (= 0 0) 1 (* 0 (FACT (- 0 1))))))
+  =&gt;    (* 3 (* 2 (* 1 1)))
+  =&gt;    (* 3 (* 2 1))
+  =&gt;    (* 3 2)
+  =&gt;    6</code></pre>
+<p>You will note that we have calculated <code>(fact 3)</code> by a
+process wherein <em>each expression is replaced</em> by an expression
+which is provably equivalent to it via an axiom or which is produced by
+application of a primitive function.</p>
+<section id="now-what-about-iteration" class="level3 npb">
+<h3>3.3 <a href="#contents" title="Go to Contents">Now, What About
+Iteration?</a></h3>
+<p>Consider the “iterative” definition of <code>FACT</code>. Although it
+appears to be recursive, since it “calls itself”, we will see that it
+captures the essence of our intuitive notion of iteration.</p>
+<pre><code>    (DEFINE FACT
+       (LAMBDA (N)
+           (LABELS ((FACT1 
+                                 (LAMBDA (M ANS)
+                         (IF (= M 0) ANS
+                             (FACT1 (- M 1) (* M ANS))))))
+                (FACT1 N 1))))</code></pre>
+</section>
+<p>Let us now compute <code>(fact 3)</code>.</p>
+<pre><code>  =&gt;    (FACT 3)
+  =&gt;    (FACT1 3 1)
+  =&gt;    (IF (= 3 0) 1
+            (FACT1 (- 3 1) (* 3 1)))
+  =&gt;    (FACT1 (- 3 1) (* 3 1))
+  =&gt;    (FACT1 2 (* 3 1))
+  =&gt;    (FACT1 2 3)
+  =&gt;    (IF (= 2 0) 3
+            (FACT1 (- 2 1) (* 2 3)))
+  =&gt;    (FACT1 (- 2 1) (* 2 3))
+  =&gt;    (FACT1 1 (* 2 3))
+  =&gt;    (FACT1 1 6)
+  =&gt;    (IF (= 1 0) 6
+            (FACT1 (- 1 1) (* 1 6)))
+  =&gt;    (FACT1 (- 1 1) (* 1 6))
+  =&gt;    (FACT1 0 (* 1 6))
+  =&gt;    (FACT1 0 6)
+  =&gt;    (IF (= 0 0) 6
+            (FACT1 (- 0 1) (* 0 6)))
+  =&gt;    6</code></pre>
+<p>Notice that the expressions involved have a fixed maximum size
+independent of the argument to <code>FACT</code>! In fact, as Marvin
+Minsky pointed out, successive reductions produce a cycle of expressions
+which are identical except for the numerical quantities involved.
+Looking back, we may note by way of comparison that the recursive
+version caused creation of expressions proportional in size to the
+argument. This is why we think that this version of <code>FACT</code> is
+iterative rather than recursive. At each stage of the iterative version
+the “state” of the computation is summarized in two variables, the
+counter and the answer accumulator, while at each stage of the recursive
+version the “state” contains a chain of pieces each of which contains a
+component of the state. In the recursive version of <code>FACT</code>,
+for example, the state contains the sequence of multiplications to be
+performed upon return from the bottom. It is true that the iterative
+factorial also can produce expressions of arbitrary size, since the
+number of bits needed to express factorial of n grows with n; but this
+is a property of the numbers calculated by the function which is
+implemented in iterative style, and not of the iterative control
+structure itself. A recursive control structure <em>inherently</em>
+creates expressions of unbounded size as a function of the recursion
+depth, while an iterative control structure produces a cycle of
+equivalent expressions, and so the expressions are of approximately the
+same size no matter how many iteration steps are taken. This is the
+essence of the difference between the notions of iteration and
+recursion. Hewitt [<a href="#mac" id="xmac" title="[1] MAC 1974, Project MAC Progress Report XI (July 1973 - July 1974)">MAC</a>,
+p. 234] made a similar observation in passing, expressing the difference
+in terms of storage used in program execution rather than in terms of
+intermediate expressions produced by substitution semantics.</p>
+<section id="continuation-passing-recursion" class="level3 npb">
+<h3>3.4 <a href="#contents" title="Go to Contents">Continuation Passing
+Recursion</a></h3>
+<p>Remember the other way to compute factorials?</p>
+<pre><code>    (DEFINE FACT
+       (LAMBDA (N C)
+          (IF (= N 0) (C 1)
+              (FACT (- N 1)
+                    (LAMBDA (A) (C (* N A)))))))</code></pre>
+<p>This looks iterative on the surface! but in fact it is recursive.
+Let’s compute <code>(FACT 3 ANSWER)</code>, where <code>ANSWER</code> is
+a continuation which is to receive the result of <code>FACT</code>
+applied to <code>3</code>; that is, the last thing <code>FACT</code>
+should do is apply the continuation <code>ANSWER</code> to its
+result.</p>
+</section>
+<pre><code>  =&gt;    (FACT 3 ANSWER)
+  =&gt;    (IF (= 3 0) (ANSWER 1)
+            (FACT (- 3 1) (LAMBDA (A) (ANSWER (* 3 A)))))
+  =&gt;    (FACT (- 3 1) (LAMBDA (A) (ANSWER (* 3 A))))
+  =&gt;    (FACT 2 (LAMBDA (A) (ANSWER (* 3 A))))
+  =&gt;    (IF (= 2 0) ((LAMBDA (A) (ANSWER (* 3 A))) 1)
+            (FACT (- 2 1)
+                  (LAMBDA (A)
+                          ((LAMBDA (A) (ANSWER (* 3 A)))
+                           (* 2 A)))))
+  =&gt;    (FACT (- 2 1)
+              (LAMBDA (A)
+                      ((LAMBDA (A) (ANSWER (* 3 A)))
+                       (* 2 A))))
+  =&gt;    (FACT 1
+              (LAMBDA (A)
+                      ((LAMBDA (A) (ANSWER (* 3 A)))
+                       (* 2 A))))
+  =&gt;    (IF (= 1 0)
+            ((LAMBDA (A)
+                      ((LAMBDA (A) (ANSWER (* 3 A)))
+                       (* 2 A)))
+             1)
+            (FACT (- 1 1)
+                  (LAMBDA (A)
+                          ((LAMBDA (A)
+                                   ((LAMBDA (A)
+                                            (ANSWER (* 3 A)))
+                                    (* 2 A)))
+                           (* 1 A)))))
+  =&gt;    (FACT (- 1 1)
+              (LAMBDA (A)
+                      ((LAMBDA (A)
+                               ((LAMBDA (A)
+                                        (ANSWER (* 3 A)))
+                                (* 2 A)))
+                       (* 1 A))))
+  =&gt;    (FACT 0
+              (LAMBDA (A)
+                      ((LAMBDA (A)
+                               ((LAMBDA (A)
+                                        (ANSWER (* 3 A)))
+                                (* 2 A)))
+                       (* 1 A))))
+  =&gt;    (IF (= 0 0)
+            ((LAMBDA (A)
+                    ((LAMBDA (A)
+                             ((LAMBDA (A)
+                                      (ANSWER (* 3 A)))
+                              (* 2 A)))
+                     (* 1 A)))
+             1)
+            (FACT (- 0 1)
+                  (LAMBDA (A)
+                          ((LAMBDA (A)
+                                   ((LAMBDA (A)
+                                            ((LAMBDA (A)
+                                                     (ANSWER (* 3 A)))
+                                             (* 2 A)))
+                                    (* 1 A)))
+                           (* 0 A)))))
+  =&gt;    ((LAMBDA (A)
+                 ((LAMBDA (A)
+                          ((LAMBDA (A)
+                                   (ANSWER (* 3 A)))
+                           (* 2 A)))
+                  (* 1 A)))
+         1)
+  =&gt;    ((LAMBDA (A)
+                 ((LAMBDA (A)
+                          (ANSWER (* 3 A)))
+                  (* 2 A)))
+         (* 1 1))
+  =&gt;    ((LAMBDA (A)
+                 ((LAMBDA (A)
+                          (ANSWER (* 3 A)))
+                  (* 2 A)))
+         1)
+  =&gt;    ((LAMBDA (A)
+                 (ANSWER (* 3 A)))
+         (* 2 1))
+  =&gt;    ((LAMBDA (A)
+                 (ANSWER (* 3 A)))
+         2)
+  =&gt;    (ANSWER (* 3 2))
+  =&gt;    (ANSWER 6)     Whew!</code></pre>
+<p>Note that we have computed factorial of 3 (and are about to give this
+result to the continuation), but in the process no combination with
+<code>FACT</code> in the first position has ever been reduced except as
+the outermost expression. If we think of the computation in terms of
+evaluation rather than substitution, this means that <em>we never
+returned a value from any application of the function
+<code>FACT</code>!</em> It is always possible, if we are willing to
+specify explicitly what to do with the answer, to perform any
+calculation in this way: rather than reducing to its value, it reduces
+to an application of a continuation to its value (cf. [<a href="#fischer-1-2" id="xfischer1" title="[1] Fischer 1972, Lambda Calculus Schemata">Fischer</a>]). That
+is, in this continuation-passing programming style,<sup>{{<a href="#republication" id="xnote6" title="We believe that this was the first occurrence of the term “continuation-passing style” in the literature... https://doi.org/10.1023/A:1010035624696">1998
+note 6</a>}}</sup> <em>a function always “returns” its result by
+“sending” it to another function.</em> This is the key idea.</p>
+<p>We also note that by our previous observation, this program is
+essentially recursive in that the expressions produced as intermediate
+results of the substitution semantics grow to a size proportional to the
+depth. In fact, the same information is being stored in the nested
+continuations produced by this program as in the nested products
+produced by the traditional recursion – what to do with the result.</p>
+<p>One might object that this <code>FACT</code> is not the same kind of
+object as the previous definition, since we can’t use it as a function
+in the same manner. Note, however, that if we supply the continuation
+<code>(LAMBDA (X) X)</code>, the resulting combination
+<code>(FACT 3 (LAMBDA (X) X))</code> will reduce to <code>6</code>, just
+as with traditional recursion.</p>
+<p>One might also object that we are using function values – the
+primitives <code>=</code>, <code>-</code>, and <code>*</code> are
+functions which return values, for example. But this is just a property
+of the primitives; consider a new set of primitives <code>==</code>,
+<code>--</code>, and <code>**</code> which accept continuations (indeed,
+let <code>==</code> take two continuations: if the predicate is
+<code>TRUE</code> call the first, otherwise call the second). We can
+then define fact as follows:</p>
+<pre><code>    (DEFINE FACT
+       (LAMBDA (N C)
+           (== N 0
+               (LAMBDA () (C 1))
+               (LAMBDA ()
+                   (-- N 1
+                       (LAMBDA (M)
+                           (FACT M (LAMBDA (A) (** A N C)))))))))</code></pre>
+<p>We can see here that no functional application returns a value in a
+computation of factorial in this situation. We believe that functional
+usage, where applicable (pun intended), is more perspicuous than
+continuation-passing. We shall therefore use functional primitives such
+as <code>*</code> rather than <code>**</code> wherever possible, keeping
+in mind that we could use <code>**</code> instead if we wished.</p>
+<p><hr></p>
+</section>
+<section id="section-4-some-implementation-issues" class="level2">
+<h2><a href="#contents" title="Go to Contents">Section 4: Some
+Implementation Issues</a></h2>
+<section id="environments-and-closures" class="level3">
+<h3>4.1 <a href="#contents" title="Go to Contents"><em>Environments and
+Closures</em></a></h3>
+<p>The key problem is <em>efficiency</em>. Although it is easy to build
+an inefficient interpreter which straightforwardly performs expression
+substitutions; such an interpreter performs much unnecessary copying of
+intermediate expressions. The standard solution to this problem is to
+use an auxiliary structure, called the <strong>environment</strong>,
+which represents a set of <strong>virtual substitutions</strong>. Thus,
+when evaluating an expression of the form</p>
+<div class="line-block">   <code>((LAMBDA &lt;vars&gt; &lt;body&gt;) &lt;args&gt;)</code>
+  in environment  <code>E</code></div>
+<p>instead of reducing it by performing</p>
+<div class="line-block">   <code>Subst[&lt;args&gt; &lt;vars&gt; &lt;body&gt;]</code></div>
+<p>we reduce it to</p>
+<div class="line-block">   <code>&lt;body&gt;</code>   in environment
+ <code>E&#39;</code> =
+<code>Pairlis[&lt;vars&gt; &lt;args&gt;* E]</code></div>
+<p>where <strong><code>pairlis</code></strong> creates a new environment
+<code>E&#39;</code> in which the <code>&lt;vars&gt;</code> are logically
+paired with (i.e. “bound to”) the corresponding
+<code>&lt;args&gt;*</code> (the precise meaning of
+<code>&lt;args&gt;*</code> will be explained presently), and in which
+any variables not in <code>&lt;vars&gt;</code> are bound as they were in
+<code>E</code>.</p>
+<p>When using environments, it is necessary to keep them straight. For
+example, the following expression should manage to evaluate to 7:</p>
+<pre><code>    (((LAMBDA (X) (LAMBDA (Y) (+ X Y))) 3) 4)</code></pre>
+<p>A substitution interpreter would cause the free occurrence of
+<code>x</code> in the inner lambda expression to be replaced by
+<code>3</code> before applying that lambda expression to <code>4</code>.
+An interpreter which uses environments must arrange for the expression
+<code>(+ x y)</code> to be evaluated in an environment such that
+<code>x</code> is bound to <code>3</code> and <code>y</code> is bound to
+<code>4</code>. This implies that when the inner lambda expression is
+applied to <code>4</code>, there must be associated with it an
+environment in which <code>x</code> is bound to <code>3</code>. In order
+to solve this problem we introduce the notion of a closure [<a href="#mccarthy-1-2" id="xmccarthy1" title="[1] McCarthy et al 1965, LISP 1.5 Programmer&#39;s Manual">McCarthy</a>]
+[<a href="#moses-1-2" id="xmoses1" title="[1] Moses 1970, The Function of FUNCTION in LISP">Moses</a>]
+which is a data structure containing a lambda expression, and an
+environment to be used when that lambda expression is applied to
+arguments. We will notate a closure using the <strong>beta</strong>
+construct (our own notation, but isomorphic to the <span class="sc">LISP</span> <strong>funarg</strong> construct) as
+follows:</p>
+<pre><code>    (BETA (LAMBDA &lt;vars&gt; &lt;body&gt;) &lt;environment&gt;)</code></pre>
+<p>When a lambda expression is to be evaluated, because it was passed as
+an argument, it evaluates to a closure of that lambda expression in the
+environment it is evaluated in (i.e., the environment it was passed
+from):</p>
+<div class="line-block">   <code>(LAMBDA &lt;vars&gt; &lt;body&gt;)</code>  
+in environment  <code>E</code></div>
+<p>evaluates to</p>
+<div class="line-block">   <code>(BETA (LAMBDA &lt;vars&gt; &lt;body&gt; E)</code>
+  in environment  <code>E</code></div>
+<p>When a closure is to be applied to some arguments:</p>
+<div class="line-block">   <code>((BETA (LAMBDA &lt;vars&gt; &lt;body&gt;) E1) &lt;args&gt;</code>
+  in environment  <code>E2</code></div>
+<p>this is performed by reducing the application expression to</p>
+<div class="line-block">   <code>&lt;body&gt;</code>   in environment
+ <code>Pairlis[&lt;vars&gt; &lt;args in E2&gt; E1]</code></div>
+<p>That is, any free variables in the closed lambda expression refer to
+the environment as of the time of closure (<code>E1</code>), not as of
+the time of application (<code>E2</code>), whereas the arguments are
+evaluated in the application environment as expected.</p>
+<p>This notion of <strong>closure</strong> has gone by many other names
+in other contexts. In <span class="sc">LISP</span>, for example, such a
+closure has been traditionally known as a <strong>funarg</strong>. <span class="sc">ALGOL</span> has several related ideas. Every <span class="sc">ALGOL</span> procedure is, at the time of its invocation,
+essentially a “downward funarg”. In addition, expressions which are
+passed by name instead of by value are closed through the use of
+mechanisms called <strong>thunks</strong> [<a href="#ingerman" id="xingerman" title="[1] Ingerman 1961, Thunks -- A Way of Compiling Procedure Statements with some Comments on Procedure Declarations">Ingerman</a>].
+It turns out that an <strong>actor</strong> (other than a cell or a
+serializer) is also a closure. Hewitt [<a href="#smith-and-hewitt-1-2-3-4-5-6" id="xsmith5" title="[5] Smith and Hewitt 1975, A PLASMA Primer (draft)">Smith and
+Hewitt</a>] describes an actor as consisting of a
+<strong>script</strong>, which is code to be executed, and a <strong>set
+of acquaintances</strong>, which are other actors which it knows about.
+We contend that the script is in fact identical to the lambda expression
+in a closure, and that the set of acquaintances is in effect an
+environment. As an example, consider the following code for
+<strong><code>cons</code></strong> taken from [<a href="#smith-and-hewitt-1-2-3-4-5-6" id="xsmith6" title="[6] Smith and Hewitt 1975, A PLASMA Primer (draft)">Smith and
+Hewitt</a>] (cf. [<a href="#fischer-1-2" id="xfischer2" title="[2] Fischer 1972, Lambda Calculus Schemata">Fischer</a>]):</p>
+<div class="line-block">    <code>[CONS</code> ≡<br />
+        <code>(</code>≡﹥  <code>[=A =B]</code><br />
+                  <code>(CASES</code><br />
+                      <code>(</code>≡﹥  
+<code>FIRST?</code><br />
+                                 <code>A)</code><br />
+                      <code>(</code>≡﹥  
+<code>REST?</code><br />
+                                 <code>B)</code><br />
+                      <code>(</code>≡﹥  
+<code>LIST?</code><br />
+                                 <code>YES)))]</code></div>
+<p>When the form <code>(cons x y)</code> is evaluated, the result is an
+(evaluated) <strong><code>cases</code></strong> statement, which is a
+receiver ready to accept a message such as “<code>first?</code>” or
+“<code>rest?</code>”. This resulting receiver evidently <em>knows
+about</em> the actors <code>x</code> and <code>y</code> as being bound
+to the variables <code>a</code> and <code>b</code>; it is evidently a
+<strong>closure</strong> of the cases script plus a set of acquaintances
+which includes <code>x</code> and <code>y</code> (as well as
+“<code>first?</code>” and “<code>rest?</code>” and “<code>yes</code>”,
+for example; <span class="sc">PLASMA</span> considers such “constant
+acquaintances” to be part of the set, whereas in <span class="sc">SCHEME</span> we might prefer to consider them part of the
+script). Once we realize that it is a closure and nothing more, we can
+see easily how to express the same semantics in <span class="sc">SCHEME</span>:</p>
+<pre><code>    (DEFINE CONS
+       (LAMBDA (A B)
+           (LAMBDA (M)
+               (IF (EQ M &#39;FIRST?) A
+                   (IF (EQ M &#39;REST?) B
+                       (IF (EQ M &#39;LIST?) &#39;YES
+                           (ERROR &#39;|UNRECOGNIZED MESSAGE - CONS|
+                                   M
+                                   &#39;WRNG-TYPE-ARG)))))))</code></pre>
+<p>Note that we have used explicit <strong><code>eq</code></strong>
+tests on the incoming message rather than the implicit pattern-matching
+of the <strong><code>cases</code></strong> statement, but the underlying
+semantics of the approach are the same.</p>
+<p>There are several important consequences of closing every lambda
+expression in the environment from which it is passed (i.e., in its
+“lexical” or “static” environment). First, the axioms of lambda calculus
+are automatically preserved. Thus, referential transparency is enforced.
+This in turn implies that there are no “fluid” variable bindings (as
+there are in standard stack implementations of <span class="sc">LISP</span> such as <span class="sc">MacLISP</span>). Second,
+the upward funarg problem [<a href="#moses-1-2" id="xmoses2" title="[2] Moses 1970, The Function of FUNCTION in LISP">Moses</a>]
+requires that the environment structure be potentially tree-like.
+Finally, the environment at any point in a computation can never be
+deeper than the lexical depth of the expression being evaluated at that
+time; i.e., the environment contains bindings only for variables bound
+in lambdas lexically surrounding the expression being evaluated. This is
+true <em>even if recursive functions are involved.</em> It follows that
+if list structures are used to implement environments, the time to look
+up a variable is proportional only to the lexical distance from the
+reference to the binding and not to the depth of recursion or any other
+dynamic parameter. Therefore it is not necessarily as expensive as many
+people have been led to believe. Furthermore, it is not even necessary
+to scan the environment for the variable, since its value must be in a
+known position relative to the top of the environment structure; this
+position can be computed by a compiler at compile time on the basis of
+lexical scope. The tree-like structure of an environment prevents one
+from merely indexing into it, however; it is necessary to
+<code>cdr</code> down it. (Some <span class="sc">ALGOL</span> compilers
+use a similar technique involving base registers pointing to sets of
+variables for each level of block nesting; it is necessary to determine
+the base pointer for the block desired for a variable reference, but
+then the variable is at a known offset from the base address.) It also
+follows that an iterative programming style will lead to no net
+accumulation of environment structures in the interpreter. The recursive
+style, with or without continuation-passing, <em>will</em> lead to
+accumulation of environment structures as a function of the recursion
+depth, not because any environment becomes arbitrarily deep, but rather
+because at each level of recursion it is necessary to save the
+environment at that point. It is saved by the interpreter in the case of
+traditional recursion, so that computation can continue in the correct
+environment on return from the recursive call; it is saved as part of
+the continuation closure in continuation-passing.</p>
+</section>
+<section id="control" class="level3 npb">
+<h3>4.2 <a href="#contents" title="Go to Contents"><em>Control</em></a></h3>
+<p>Another problem is concerned with control. This is a consequence of
+the <em>functional interpretation</em> of the lambda calculus, i.e. the
+view that a “expression” (combination) represents a value to be
+“returned” (to replace the combination) to its “caller” (the process
+evaluating the combination containing the original one). The interpreter
+must provide for correctly resuming the caller when the callee has
+returned its value. The state of the computation at the time of the call
+must therefore be preserved. We see, then, that part of the state of the
+computation must be (a pointer to) the preserved state of its caller; we
+will call this component of the state the
+<strong><code>clink</code></strong> [<a href="#mcdermott-and-sussman" id="xmcdermott-and-sussman" title="[1] McDermott and Sussman 1974, The CONNIVER Reference Manual">McDermott
+and Sussman</a>] [<a href="#bobrow-and-wegbreit" id="xbobrow-and-wegbreit" title="[1] Bobrow and Wegbreit 1973, A Model and Stack Implementation of Multiple Environments">Bobrow
+and Wegbreit</a>]. Just before the evaluation of a subexpression, the
+state of the current computation, including the <code>clink</code>, must
+be gathered together into a single data structure, which we will call a
+<strong>frame</strong>; the <code>clink</code> is then altered to point
+to this new frame. The evaluation of the subexpression then returns by
+restoring the state of the process from the current <code>clink</code>.
+Note that the value of the subexpression had better not be part of the
+state, for otherwise it would be lost by the state restoration. Thus, we
+only build a new frame if further computation would result in losing
+information which might be necessary. This only occurs if we must
+somehow return to that state. This in turn can only occur if we must
+evaluate an expression whose value must be obtained in order to continue
+computation in the current state.</p>
+</section>
+<p>This implies that no frame need be created in order to <em>apply</em>
+a lambda expression to its arguments. This in turn implies that the
+iterative and continuation-passing styles lead to <em>no net creation of
+frames,</em> because they are implemented <em>only</em> in terms of
+explicit lambda applications, whereas the recursive style leads to the
+creation of one net frame per level of recursive depth, because the
+recursive invocation involves the evaluation of a expression containing
+the recursive lambda application as a subexpression.</p>
+<p>A <code>clink</code> in a lambda calculus-based interpreter is in
+fact equivalent to a low-level default continuation as created by the
+<span class="sc">PLASMA</span> interpreter. Such a continuation is a
+(closed) lambda expression of one argument whose script will carry on
+the computation after receiving the value of the subexpression. The
+<code>clink</code> mechanism is therefore not necessary, if we are
+willing to transform all our programs into pure continuation-passing
+style. We could do this explicitly, by requiring the user to write his
+programs in this form; or implicitly, as <span class="sc">PLASMA</span>
+does, by creating these one-argument continuations as necessary, passing
+them as hidden extra arguments to lambda expressions which behave like
+functions. On the other hand, we may think of a <code>clink</code> as a
+highly optimized continuation, whose “script” is that carefully coded
+portion of the lambda calculus interpreter which restores the frame and
+then carries on. We find this notion useful in defining a primitive,
+<code>CATCH</code> (named for the <code>CATCH</code> construct in <span class="sc">MacLISP</span> [<a href="#moon-1-2-3-4-5" id="xmoon3" title="[3] Moon 1974, MACLISP Reference Manual, Revision 0">Moon</a>]),
+for “hairy control structure”, similar to Reynolds’ <code>ESCAPE</code>
+operator [<a href="#reynolds-1-2" id="xreynolds2" title="[2] Reynolds 1972, Definitional Interpreters for Higher Order Programming Languages">Reynolds</a>],
+which makes these low-level continuations available to the user. Note
+that <span class="sc">PLASMA</span> has a similar facility for getting
+hold of the low-level continuations, namely the
+“≡≡<code>&gt;</code>” receiver construct.</p>
+<section id="normal-and-applicative-order" class="level3 npb">
+<h3>4.3 <a href="#contents" title="Go to Contents"><em>Normal and
+Applicative Order</em></a></h3>
+<p>Another problem for the implementor of an interpreter of a lambda
+calculus based language is the order in which to perform reductions.
+There are two standard orders of evaluation (and several other
+semi-standard ones, which we will not consider here). The first is
+<strong>Normal Order</strong>, which corresponds roughly to <span class="sc">ALGOL</span>’s “call by name”, and the second is
+<strong>Applicative Order</strong>, which corresponds roughly to <span class="sc">ALGOL</span>’s “call by value” or to <span class="sc">LISP</span> functional application.</p>
+</section>
+<p>Under a call-by-name implementation, the <code>&lt;args&gt;*</code>
+mentioned above are in fact the actual argument expressions, each paired
+with the environment <code>E</code>. The evaluator has two additional
+rules:</p>
+<ol type="1">
+<li>when a variable <code>x</code> is to be evaluated in environment
+<code>E1</code>, then its associated expression-environment pair
+<code>[A,E2]</code> (which is equivalent to an <span class="sc">ALGOL</span> thunk) is looked up in <code>E1</code>, and then
+<code>A</code> is evaluated in <code>E2</code>.</li>
+<li>when a “primitive operator” is to be applied, its arguments must be
+evaluated at that time, and then the operator applied in a call-by-value
+manner.</li>
+</ol>
+<p>Under a call-by-value implementation, the <code>&lt;args&gt;*</code>
+are the values of the argument expressions; i.e., the argument
+expressions are evaluated in environment <code>E</code>, and only then
+is the lambda expression applied. Note that this leads to trouble in
+defining conditionals. Under call-by-name one may define predicates to
+return <code>(LAMBDA (X Y) X)</code> for <code>TRUE</code> and
+<code>(LAMBDA (X Y) Y)</code> for <code>FALSE</code>, and then one may
+simply write</p>
+<pre><code>    ((= A B) &lt;do this if TRUE&gt; &lt;do this if FALSE&gt;)</code></pre>
+<p>This trick depends implicitly on the order of evaluation. It will not
+work under call-by-value, nor in general under any other reductive order
+except Normal Order. It is therefore necessary to introduce a special
+primitive operator (such as “if”) which is applied in a
+<em>call-by-name</em> manner. This leads us to the interesting
+conclusion that a practical lambda calculus interpreter cannot be
+<em>purely</em> call-by-name <em>or</em> call-by-value; it is necessary
+to have at least a little of each.</p>
+<p>There is a fundamental problem, however, with using Normal Order
+evaluation in a lambda calculus interpreter, which is brought out by the
+iterative programming style. We already know that no net frames are
+created by iterative programs, and that no net environment structures
+are created either. The problem is that under a call-by-name
+implementation there may be a net <strong>thunk</strong> structure
+created proportional in size to the number of iteration steps. This
+problem is inherent in Normal Order, because Normal Order substitution
+semantics exhibit the same phenomenon of increasing expression size.
+Therefore iteration cannot be effectively modeled in a call-by-name
+interpreter. An alternative view is that a call-by-name interpreter
+remembers more than is logically necessary to perform the computations
+indicated by the original expressions. This is indicated by the fact
+that the Applicative Order substitution semantics lead to expressions of
+fixed maximum size independent of the number of iteration steps.</p>
+<p>It turns out that this conflict between call-by-name and iteration is
+resolved by the use of continuation-passing. If we use a pure
+continuation-passing programming style, then Normal Order and
+Applicative Order are the same order! In pure continuation-passing no
+combination is ever a subcombination of another combination. (This is
+the justification for the fact mentioned above that no
+<code>clink</code>s are needed if pure continuation-passing style is
+used.) Thus, if we wish to model iteration in pure lambda calculus
+without even an <strong>if</strong> primitive, we can use Normal Order
+substitutions and express the iteration in the continuation-passing
+style.</p>
+<p>Under <em>any</em> reductive order, whether Normal Order, Applicative
+Order, or any other order, it is in practice convenient to introduce a
+means of terminating the evaluation process on a given form; in order to
+do this we introduce three different and equally useful notions. The
+first is the <em>primitive operator</em> such as <code>+</code>; the
+evaluator can apply such an operator directly, without substituting a
+lambda expression for the operator and reducing the resulting form. The
+second is the <em>self-evaluating constant</em>; this is used for
+primitive objects such as numbers, which effectively behave as if always
+“bound to themselves” in any environment. The third is the <em>quoting
+function</em>, which protects its argument from reductions so that it is
+returned as is; this is used for treating forms as data in the usual
+<span class="sc">LISP</span> manner.</p>
+<p>These three ideas are not logically necessary, since the evaluation
+process will (eventually) terminate when no reductions can be made, but
+they are a great convenience for introducing various functions and data
+into the lambda calculus. Note too that some are easily defined in terms
+of the others; for example, instead of letting <code>3</code> be a
+self-evaluating constant, we could let <code>3</code> be a primitive
+operator of no arguments which returned <code>3</code>, or we could
+merely quote it; similarly, instead of quoting forms we could let forms
+be a self-evaluating data type, as in <span class="sc">MDL</span> [<a href="#galley-and-pfister" id="xgalley-and-pfister" title="[1] Galley and Pfister 1975, The MDL Language">Galley and
+Pfister</a>] (better known as <span class="sc">MUDDLE</span>), written
+with different parentheses. Because, as we have said, these constructs
+are all strictly for convenience, we will not strive for any kind of
+minimality, but will continue to use all three notions in our
+interpreter, as we already have in our examples. We provide an interface
+so that all <span class="sc">MacLISP</span> <code>subrs</code> may be
+used as primitive operators; we define numbers to be self-evaluating;
+and we will use <code>QUOTE</code> to quote forms as in <span class="sc">LISP</span> (and thus we may use the “<code>&#39;</code>”
+character as an abbreviation).</p>
+<section id="extensions" class="level3 npb">
+<h3>4.4 <a href="#contents" title="Go to Contents"><em>Extensions</em></a></h3>
+<p>One final issue which the implementor of a lambda calculus based
+interpreter should consider is that of extensions to the language, such
+as primitives for side effects, multiprocessing, and synchronization of
+processes. Note that these are ideas which are very hard, if not
+impossible, to model using the substitution semantics of the lambda
+calculus, but which are easily incorporated in other semantic models,
+including the environment interpreter and, perhaps more notably, the
+<span class="sc">ACTORS</span> model [<a href="#greif" id="xgreif" title="[1] Greif 1975, Semantics of Communicating Parallel Processes">Greif</a>]
+[<a href="#greif-and-hewitt-1-2" id="xgreif-and-hewitt2" title="[2] Greif and Hewitt 1975, Actor Semantics of Planner-73">Greif
+and Hewitt</a>]. The fundamental problem with modelling such concepts
+using substitution semantics is that substitution produces
+<em>copies</em> of expressions, and so cannot model the notion of
+<em>sharing</em> very well. In an interpreter which uses environments,
+all instances of a variable scoped in a given environment refer to the
+same virtual substitution contained in that environment, and so may be
+thought of as sharing a <strong>value cell</strong> in that environment.
+We can take advantage of this sharing by introducing a primitive
+operator which modifies the contents of a value cell; since all
+occurrences refer to the same value cell, changing the contents of that
+value cell will change the result of future references to that value
+cell (i.e., occurrences of the variable which invoke the virtual
+substitution mechanism). Such a primitive operator would then be similar
+to the <code>SET</code> function of <span class="sc">LISP</span>, or the
+<code>:=</code> of <span class="sc">ALGOL</span>. We include such an
+operator, <code>ASET</code>, in our interpreter.</p>
+</section>
+<p>Introducing multiprocessing into the interpreter is fairly
+straightforward; all that is necessary is to introduce a mechanism for
+time-slicing the interpreter among several processes. One can even model
+this in substitution semantics by supposing that there can be more than
+one expression, and at each step an expression is randomly chosen to
+perform a reduction within. (On the other hand, <em>synchronizing</em>
+of the processes is very hard to model using substitution
+semantics!)</p>
+<p>Since our value cells effectively solve the readers and writers
+problem (i.e. reads and writes of variables are indivisible) no more
+than our side effect primitive is necessary to synchronize our processes
+[<a href="#dijkstra" id="xdijkstra" title="[1] Dijkstra 1965, Solution of a Problem in Concurrent Programming Control">Dijkstra</a>]
+[<a href="#knuth" id="xknuth" title="[1] Knuth 1966, Additional Comments on a Problem in Concurrent Programning Control">Knuth</a>]
+[<a href="#lamport" id="xlamport" title="[1] Lamport 1974, A New Solution of Dijkstra&#39;s Concurrent Programming Problem">Lamport</a>].
+However, the techniques for achieving synchronization using only
+<code>:=</code> are quite cumbersome and opaque. It behooves the
+implementor to make things easier for the user by introducing a more
+tractable synchronization primitive (e.g. <code>P</code>+<code>V</code>
+or monitors or path expressions or …). Machine language programmers have
+long known that the easiest way to synchronize processes is to turn off
+the scheduling clock during the execution of critical code. We have
+introduced such a primitive, <code>EVALUATE!UNINTERRUPTIBLY</code>,
+(which is a sort of “over-anxious serializer”, because it locks out the
+whole world) into our interpreter.</p>
+<p><hr></p>
+</section>
+<section id="section-5-the-implementation-of-the-interpreter" class="level2">
+<h2><a href="#contents" title="Go to Contents">Section 5: The
+Implementation of the Interpreter</a></h2>
+<p>Here we present a real live <span class="sc">SCHEME</span>
+interpreter. This particular version was written primarily for
+expository purposes; it works, but not as efficiently as possible. The
+“production version” of <span class="sc">SCHEME</span> is coded somewhat
+more intricately, and runs about twice as fast as the interpreter
+presented below.</p>
+<p>The basic idea behind the implementation is <em>think machine
+language</em>. In particular, we must not use recursion in the
+implementation language to implement recursion in the language being
+interpreted. This is a crucial mistake which has screwed many language
+implementations (e.g. <span class="sc">Micro-PLANNER</span> [<a href="#sussman" id="xsussman" title="[1] Sussman et al 1971, Micro-PLANNER Reference Manual">Sussman</a>]).
+The reason for this is that if the implementation language does not
+support certain kinds of control structures, then we will not be able to
+effectively interpret them. Thus, for example, if the control frame
+structure in the implementation language is constrained to be
+stack-like, then modelling more general control structures in the
+interpreted language will be very difficult unless we divorce ourselves
+from the constrained structures at the outset.</p>
+<section id="registers" class="level3">
+<h3>5.1 <a href="#contents" title="Go to Contents"><em>Registers</em></a></h3>
+<p>It will be convenient to think of an implementation machine which has
+certain operations, which are “micro-coded” in <span class="sc">LISP</span>; these are used to operate on various
+“registers”, which are represented as free <span class="sc">LISP</span>
+variables. These registers are:</p>
+<p><strong><code>**EXP**</code></strong><br />
+The expression currently being evaluated.</p>
+<p><strong><code>**ENV**</code></strong><br />
+A pointer to the environment in which to evaluate
+<code>EXP</code>.<sup>{{<a href="#republication" id="xnote7" title="That is, the expression in **EXP**. https://doi.org/10.1023/A:1010035624696">1998
+note 7</a>}}</sup></p>
+<p><strong><code>**CLINK**</code></strong><br />
+A pointer to the frame for the computation of which the current one is a
+subcomputation.</p>
+<p><strong><code>**PC**</code></strong><br />
+The “program counter”. As each “instruction” is executed, it updates
+<code>**PC**</code> to point to the next instruction to be executed.</p>
+<p><strong><code>**VAL**</code></strong><br />
+The returned value of a subcomputation. This register is <em>not</em>
+saved and restored in <code>**CLINK**</code> frames; in fact, its sole
+purpose is to pass values back safely across the restoration of a
+frame.</p>
+<p><strong><code>**UNEVLIS**</code></strong>,
+<strong><code>**EVLIS**</code></strong><br />
+These are utility registers which are part of the state of the
+interpreter (they are saved in <code>**CLINK**</code> frames). They are
+used primarily for evaluation of components of combinations, but may be
+used for other purposes also.</p>
+<p><strong><code>**TEM**</code></strong><br />
+A super-temporary register, used for random purposes, and not saved in
+<code>**CLINK**</code> frames or across interrupts. It therefore may not
+be used to pass information between “instructions” of the “machine”, and
+so is best thought of as an internal hardware register.</p>
+<p><strong><code>**QUEUE**</code></strong><br />
+A list of all processes other than the one currently being
+interpreted.</p>
+<p><strong><code>**TICK**</code></strong><br />
+A magic register which a “hardware clock” sets to <code>T</code> every
+so often, used to drive the scheduler.</p>
+<p><strong><code>**PROCESS**</code></strong><br />
+This register always contains the name of the process currently swapped
+in and running.</p>
+<p><hr></p>
+</section>
+<section id="main-loop-and-scheduler" class="level3">
+<h3>5.2 <a href="#contents" title="Go to Contents"><em>Main Loop and
+Scheduler</em></a></h3>
+<p>The following declarations and macros are present only to make the
+compiler happy, and to make the version number of the <span class="sc">SCHEME</span> implementation available in the global variable
+<code>VERSION</code>.</p>
+<pre><code>(DECLARE (SPECIAL **EXP** **UNEVLIS** **ENV** **EVLIS** **PC** **CLINK** **VAL**
+                     **TEM** **TOP** **QUEUE** **TICK** **PROCESS** **QUANTUM**
+                     VERSION LISPVERSION))
+
+(DEFUN VERSION MACRO (X)
+       (COND (COMPILER-STATE (LIST &#39;QUOTE (STATUS UREAD)))
+             (T (RPLACA X &#39;QUOTE)
+                (RPLACD X (LIST VERSION))
+                (LIST &#39;QUOTE VERSION))))
+
+(DECLARE (READ))
+
+(SETQ VERSION ((LAMBDA (COMPILER-STATE) (VERSION)) T))</code></pre>
+<p>The function <code>SCHEME</code> initializes the system driver. The
+two <code>SETQ</code>’s merely set up version numbers. The top level
+loop itself is written in <span class="sc">SCHEME</span>, and is a
+<code>LABELS</code> which binds the function <code>**TOP**</code> to be
+a read-eval-print loop. The <span class="sc">LISP</span> global variable
+<code>**TOP**</code> is initialized to the closure of the
+<code>**TOP**</code> function for convenience and accessibility to
+user-defined functions.</p>
+<pre><code>(DEFUN SCHEME ()
+       (SETQ VERSION (VERSION) LISPVERSION (STATUS LISPVERSION))
+       (TERPRI)
+       (PRINC &#39;| This is SCHEME |)
+       (PRINC VERSION)
+       (PRINC &#39;| running in LISP |)
+       (PRINC LISPVERSION)
+       (SETQ **ENV** NIL **QUEUE** NIL
+             **PROCESS** (CREATE!PROCESS &#39;(**TOP** &#39;|SCHEME -- Toplevel|)))
+       (SWAPINPROCESS)
+       (ALARMCLOCK &#39;RUNTIME **QUANTUM**)
+       (MLOOP))
+
+(SETQ **TOP**
+      &#39;(BETA (LAMBDA (**MESSAGE**)
+                (LABELS ((**TOP1**
+                          (LAMBDA (**IGNORE1** **IGNORE2** **IGNORE3**)
+                             (**TOP1** (TERPRI) (PRINC &#39;|==&gt; |)
+                                       (PRINT (SET &#39;* (EVALUATE (READ))))))))
+                    (**TOP1** (TERPRI) (PRINC **MESSAGE**) NIL)))
+             NIL))</code></pre>
+<p>When the <span class="sc">LISP</span> alarmclock tick occurs, the
+global register <code>**TICK**</code> is set to <code>T</code>.
+<code>**QUANTUM**</code>, the amount of runtime between ticks, is
+measured in micro-seconds.</p>
+<pre><code>(DEFUN SETTICK (X) (SETQ **TICK** T))
+
+(SETQ **QUANTUM** 1000000. ALARMCLOCK &#39;SETTICK)</code></pre>
+<p><code>MLOOP</code> is the main loop of the interpreter. It may be
+thought of as the instruction dispatch in the micro-code of the
+implementation machine. If an alarmclock tick has occurred, and
+interrupts are allowed, then the scheduler is called to switch
+processes. Otherwise the “instruction” specified by <code>**PC**</code>
+is executed via <code>FASTCALL</code>.</p>
+<pre><code>(DEFUN MLOOP ()
+       (DO ((**TICK** NIL)) (NIL)       ;DO forever
+           (AND **TICK** (ALLOW) (SCHEDULE))
+           (FASTCALL **PC**)))</code></pre>
+<p><code>FASTCALL</code> is essentially a <code>FUNCALL</code> optimized
+for compiled “microcode”. Note the way it pulls the <code>SUBR</code>
+property to the front of the property list if possible for speed.</p>
+<pre><code>(DEFUN FASTCALL (ATSYM)
+       (COND ((EQ (CAR (CDR ATSYM)) &#39;SUBR)
+              (SUBRCALL NIL (CADR (CDR ATSYM))))
+             (T ((LAMBDA (SUBR)
+                         (COND (SUBR (REMPROP ATSYM &#39;SUBR)
+                                     (PUTPROP ATSYM SUBR &#39;SUBR)
+                                     (SUBRCALL NIL SUBR))
+                               (T (FUNCALL ATSYM))))
+                 (GET ATSYM &#39;SUBR)))))</code></pre>
+<p>Interrupts are allowed unless the variable <code>*ALLOW*</code> is
+bound to <code>NIL</code> in the current environment. This is used to
+implement the <code>EVALUATE!UNINTERRUPTIBLY</code> primitive.</p>
+<pre><code>(DEFUN ALLOW ()
+       ((LAMBDA (VCELL)
+                (COND (VCELL (CADR VCELL))
+                      (T T)))
+        (ASSQ &#39;*ALLOW* **ENV**)))</code></pre>
+<p>Next comes the scheduler. It is apparently interrupt-driven, but in
+fact is not. The key here is to <em>think microcode</em>! There is one
+place in the microcoded instruction interpretation loop which checks to
+see if there is an interrupt pending; in our “machine”, this occurs in
+<code>MLOOP</code>, where <code>**TICK**</code> is checked on every
+cycle. This is another case where we must beware of using too much of
+the power of the host language; just as we must avoid using host
+recursion directly to implement recursion, so we must avoid using host
+interrupts directly to implement interrupts. We may not modify any
+register during a host language interrupt, except one (such as
+<code>**TICk**</code>) which is specifically intended to signal
+interrupts. Thus, if we were to add an interrupt character facility to
+<span class="sc">SCHEME</span> similar to that in <span class="sc">MacLISP</span> [<a href="#moon-1-2-3-4-5" id="xmoon4" title="[4] Moon 1974, MACLISP Reference Manual, Revision 0">Moon</a>],
+the <span class="sc">MacLISP</span> interrupt character function would
+merely set a register like <code>**TICK**</code> and dismiss;
+<code>MLOOP</code> would eventually notice that this register had
+changed and dispatch to the interrupt handler. All this implies that the
+“microcode” for the interrupt handlers does not itself contain critical
+code that must be protected from host language interrupts.</p>
+<p>When the scheduler is invoked, if there is another process waiting on
+the process queue, then the current process is swapped out and put on
+the end of the queue, and a new process swapped in from the front of the
+queue. The process stored on the queue consists of an atom which has the
+current frame and <code>**VAL**</code> register on its property list.
+Note that the <code>**TEM**</code> register is <em>not</em> saved, and
+so cannot be used to pass information between instructions.</p>
+<pre><code>(DEFUN SCHEDULE ()
+       (COND (**QUEUE**
+              (SWAPOUTPROCESS)
+              (NCONC **QUEUE** (LIST **PROCESS**))
+              (SETQ **PROCESS** (CAR **QUEUE**)
+                    **QUEUE** (CDR **QUEUE**))
+              (SWAPINPROCESS)))
+       (SETQ **TICK** NIL)
+       (ALARMCLOCK &#39;RUNTIME **QUANTUM**))
+
+(DEFUN SWAPOUTPROCESS ()
+       ((LAMBDA (**CLINK**)
+                (PUTPROP **PROCESS** (SAVEUP **PC**) &#39;CLINK)
+                (PUTPROP **PROCESS** **VAL** &#39;VAL))
+        **CLINK**))
+
+(DEFUN SWAPINPROCESS ()
+       (SETQ **CLINK** (GET **PROCESS** &#39;CLINK)
+             **VAL** (GET **PROCESS** &#39;VAL))
+       (RESTORE))</code></pre>
+<p>Primitive operators are <span class="sc">LISP</span> functions,
+i.e. <code>SUBR</code>s, <code>EXPR</code>s, and
+<code>LSUBR</code>s.</p>
+<pre><code>(DEFUN PRIMOP (X) (GETL X &#39;(SUBR EXPR LSUBR)))</code></pre>
+<p><code>SAVEUP</code> conses a new frame onto the
+<code>**CLINK**</code> structure. It saves the values of all important
+registers. It takes one argument, <code>RETAG</code>, which is the
+instruction to return to when the computation is restored.</p>
+<pre><code>(DEFUN SAVEUP (RETAG)
+       (SETQ **CLINK** (LIST **EXP** **UNEVLIS** **ENV** **EVLIS** RETAG
+                             **CLINK)**)))</code></pre>
+<p><code>RESTORE</code> restores a computation from the
+<code>CLINK</code>. The use of <code>TEMP</code> is a kludge to optimize
+the compilation of the “microcode”.</p>
+<pre><code>(DEFUN RESTORE ()
+  (PROG (TEMP)
+       (SETQ TEMP (OR **CLINK**
+                     (ERROR &#39;|PROCESS RAN OUT - RESTORE|
+                             **EXP**
+                             &#39;FAIL-ACT))
+             **EXP** (CAR TEMP)
+             TEMP (CDR TEMP)
+             **UNEVLIS** (CAR TEMP)
+             TEMP (CDR TEMP)
+             **ENV** (CAR TEMP)
+             TEMP (CDR TEMP)
+             **EVLIS** (CAR TEMP)
+             TEMP (CDR TEMP)
+             **PC** (CAR TEMP)
+             TEMP (CDR TEMP)
+             **CLINK** (CAR TEMP))))</code></pre>
+</section>
+<section id="evaluation-and-primitive-operators" class="level3 npb">
+<h3>5.3 <a href="#contents" title="Go to Contents"><em>Evaluation and
+Primitive Operators</em></a></h3>
+<p>This is the central function of the <span class="sc">SCHEME</span>
+interpreter. This “instruction” expects <code>**EXP**</code> to contain
+an expression to evaluate, and <code>**ENV**</code> to contain the
+environment for the evaluation. The fact that we have arrived here
+indicates that <code>**PC**</code> contains <code>&#39;AEVAL</code>, and so
+we need not change <code>**PC**</code> if the next instruction is also
+to be <code>AEVAL</code>. Besides the obvious objects likes numbers,
+identifiers, <code>LAMBDA</code> expressions, and <code>BETA</code>
+expressions (closures), there are also several other objects of
+interest. There are primitive operators (<span class="sc">LISP</span>
+functions); <code>AINT</code>s (which are to <span class="sc">SCHEME</span> as <code>FSUBR</code>s like <code>COND</code>
+are to <span class="sc">LISP</span>); and <code>AMACRO</code>s, which
+are used to implement <code>DO</code>, <code>AND</code>,
+<code>OR</code>, <code>COND</code>, <code>BLOCK</code>, etc.<sup>{{<a href="#republication" id="xnote8" title="In the following code, the special treatment for a LAMBDA expression as the first form of a combination is inessential... https://doi.org/10.1023/A:1010035624696">1998
+note 8</a>}}</sup></p>
+</section>
+<pre><code>(DEFUN AEVAL ()
+       (COND ((ATOM **EXP**)
+              (COND ((NUMBERP **EXP**)
+                     (SETQ **VAL** **EXP**)
+                     (RESTORE))
+                    ((PRIMOP **EXP**)
+                     (SETQ **VAL** **EXP**)
+                     (RESTORE))
+                    ((SETQ **TEM** (ASSQ **EXP** **ENV**))
+                     (SETQ **VAL** (CADR **TEM**))
+                     (RESTORE))
+                    (T (SETQ **VAL** (SYMEVAL **EXP**))
+                       (RESTORE))))
+             ((ATOM (CAR **EXP**))
+              (COND ((SETQ **TEM** (GET (CAR **EXP**) ’AINT))
+                     (SETQ **PC** **TEM**))
+                    ((EQ (CAR **EXP**) &#39;LAMBDA)
+                     (SETQ **VAL** (LIST &#39;BETA **EXP** **ENV**))
+                     (RESTORE))
+                    ((SETQ **TEM** (GET (CAR **EXP**) &#39;AMACRO))
+                     (SETQ **EXP** (FUNCALL **TEM** **EXP**)))
+                    (T (SETQ **EVLIS** NIL
+                             **UNEVLIS** **EXP**
+                             **PC** ’EVLIS))))
+             ((EQ (CAAR **EXP**) &#39;LAMBDA)
+              (SETQ **EVLIS** (LIST (CAR **EXP**))
+                    **UNEVLIS** (CDR **EXP**)
+                    **PC** &#39;EVLIS))
+             (T (SETQ **EVLIS** NIL
+                      **UNEVLIS** **EXP**
+                      **PC** &#39;EVLIS))))</code></pre>
+<p>We come to <code>EVLIS</code> when a combination is encountered. The
+intention is to evaluate each component of the combination and then
+apply the resulting function to the resulting arguments. We use the
+register <code>**UNEVLIS**</code> to hold the list of components yet to
+be evaluated, and the register <code>**EVLIS**</code> to hold the list
+of evaluated components. We assume that these have been set up by
+<code>AEVAL</code>. Note that in the case of an explicit
+<code>LAMBDA</code> expression in the <code>CAR</code> of a combination
+<code>**UNEVLIS**</code> is initialized to be the list of unevaluated
+arguments and <code>**EVLIS**</code> is initialized to be the list
+containing the lambda expression.</p>
+<p><code>EVLIS</code> checks to see if there remain any more components
+yet to be evaluated. If not, it applies the function. Note that the
+primitive operators are applied using the <span class="sc">LISP</span>
+function <code>APPLY</code>. Note also how a <code>BETA</code>
+expression controls the environment in which its body is to be
+evaluated. <code>DELTA</code> expressions are <code>CATCH</code> tags
+(see <code>CATCH</code>). It is interesting that the evaluated
+components are collected in the reverse order from that which we need
+them in, and so we must reverse the list before applying the function.
+Do you see why we must not use side effects (e.g. the
+<code>NREVERSE</code> function) to reverse the list? Think about
+<code>CATCH</code>!</p>
+<p>If there remain components yet to be evaluated, <code>EVLIS</code>
+saves up a frame, so that execution can be resumed at
+<code>EVLIS1</code> when the evaluation of the component returns with a
+value. It then sets up <code>**EXP**</code> to point to the component to
+be evaluated and dispatches to <code>AEVAL</code>.<sup>{{<a href="#republication" id="xnote9" title="Here again the special treatment of a LAMBDA expression as a function object is a semantically inessential speedup hack... https://doi.org/10.1023/A:1010035624696">1998
+note 9</a>}}</sup></p>
+<pre><code>(DEFUN EVLIS ()
+       (COND ((NULL **UNEVLIS**)
+              (SETQ **EVLIS** (REVERSE **EVLIS**))
+              (COND ((ATOM (CAR **EVLIS**))
+                     (SETQ **VAL** (APPLY (CAR **EVLIS**) (CDR **EVLIS**)))
+                     (RESTORE))
+                    ((EQ (CAAR **EVLIS**) &#39;LAMBDA)
+                     (SETQ **ENV** (PAIRLIS (CADAR **EVLIS**) (CDR **EVLIS**)
+                                            **ENV**)
+                           **EXP** (CADDAR **EVLIS**)
+                           **PC** &#39;AEVAL))
+                    ((EQ (CAAR **EVLIS**) &#39;BETA)
+                     (SETQ **ENV** (PAIRLIS (CADR (CADAR **EVLIS**))
+                                            (CDR **EVLIS**)
+                                            (CADDAR **EVLIS**))
+                           **EXP** (CADDR (CADAR **EVLLS**))
+                           **PC** ’AEVAL))
+                    ((EQ (CAAR **EVLIS**) &#39;DELTA)
+                     (SETQ **CLINK** (CADAR **EVLIS**))
+                    (RESTORE))
+                    (T (ERROR &#39;|BAD FUNCTION - EVARGLIST| **EXP** &#39;FAIL-ACT))))
+             (T (SAVEUP &#39;EVLIS1)
+                (SETQ **EXP** (CAR **UNEVLIS**)
+                      **PC** &#39;AEVAL))))</code></pre>
+<p>The purpose of <code>EVLIS1</code> is to gobble up the value, passed
+in the <code>**VAL**</code> register, of the subexpression just
+evaluated. It saves this value on the list in the <code>**EVLIS**</code>
+register, pops off the unevaluated subexpression from the
+<code>**UNEVLIS**</code> register, and dispatches back to
+<code>EVLIS</code>.</p>
+<pre><code>(DEFUN EVLIS1 ()
+       (SETQ **EVLIS** (CONS **VAL** **EVLIS**)
+             **UNEVLIS** (CDR **UNEVLIS**)
+             **PC** ’EVLIS))</code></pre>
+<p>Here is the code for the various <code>AINT</code>s. On arrival at
+the instruction for an <code>AINT</code>, <code>**EXP**</code> contains
+the expression whose functional position contains the name of the
+<code>AINT</code>. None of the arguments have been evaluated, and no new
+control frame has been created. Note that each <code>AINT</code> is
+defined by the presence of an <code>AINT</code> property on the property
+list of the <span class="sc">LISP</span> atom which is its name. The
+value of this property is the LISP function which is the first
+“instruction” of the <code>AINT</code>. <code>EVALUATE</code> is similar
+to the <span class="sc">LISP</span> function <code>EVAL</code>; it
+evaluates its argument, which should result in a s-expression, which is
+then fed back into the <span class="sc">SCHEME</span> expression
+evaluator (<code>AEVAL</code>).</p>
+<pre><code>(DEFPROP EVALUATE EVALUATE AINT)
+
+(DEFUN EVALUATE ()
+       (SAVEUP &#39;EVALUATE1)
+       (SETQ **EXP** (CADR **EXP**)
+             **PC** &#39;AEVAL))
+
+(DEFUN EVALUATE1 ()
+       (SETQ **EXP** **VAL**
+             **PC** &#39;AEVAL))</code></pre>
+<p><code>IF</code> evaluates its first argument, with a return address
+of <code>IF1</code>. <code>IF1</code> examines the resulting
+<code>**VAL**</code>, and gives either the second or third argument to
+<code>AEVAL</code> depending on whether the <code>**VAL**</code> was
+non-<code>NIL</code> or <code>NIL</code>.</p>
+<pre><code>(DEFPROP IF IF AINT)
+
+(DEFUN IF ()
+       (SAVEUP &#39;IF1)
+       (SETQ **EXP** (CADR **EXP**)
+       **PC** &#39;AEVAL))
+
+(DEFUN IF1 ()
+       (COND (**VAL** (SETQ **EXP** (CADDR **EXP**)))
+             (T (SETQ **EXP** (CADDDR **EXP**))))
+       (SETQ **PC** &#39;AEVAL))</code></pre>
+<p>As it was in the beginning, is now, and ever shall be:
+<code>QUOTE</code> without end. (Amen, amen.)</p>
+<pre><code>(DEFPROP QUOTE AQUOTE AINT)
+
+(DEFUN AQUOTE ()
+       (SETQ **VAL** (CADR **EXP**))
+       (RESTORE))</code></pre>
+<p><code>LABELS</code> merely feeds its second argument to
+<code>AEVAL</code> after constructing a fiendishly clever environment
+structure. This is done in two stages: first the skeleton of the
+structure is created, with null environments in the closures of the
+bound functions; next the created environment is clobbered into each of
+the closures.</p>
+<pre><code>(DEFPROP LABELS LABELS AINT)
+
+(DEFUN LABELS ()
+       (SETQ **TEM** (MAPCAR &#39;(LAMBDA (DEF)
+                                  (LIST (CAR DEF)
+                                  (LIST &#39;BETA (CADR DEF) NIL)))
+                   (CADR **EXP**)))
+       (MAPC &#39;(LAMBDA (VC) (RPLACA (CDDADR VC) **TEM**)) **TEM**)
+       (SETQ **ENV** (NCONC **TEM** **ENV**)
+             **EXP** (CADDR **EXP**)
+             **PC** &#39;AEVAL))</code></pre>
+<p>We now come to the multiprocess primitives.</p>
+<p><code>CREATE!PROCESS</code> temporarily creates a new set of machine
+registers (by the lambda-binding mechanism of the <em>host</em>
+language), establishes the new process in those registers, swaps it out,
+and returns the new process id; returning causes the old machine
+registers to be restored.</p>
+<pre><code>(DEFUN CREATE!PROCESS (EXP)
+      ((LAMBDA (**PROCESS** **EXP** **ENV** **UNEVLIS** **EVLIS**
+                **PC** **CLINK** **VAL**)
+               (SWAPOUTPROCESS)
+               **PROCESS**)
+      (GENSYM)
+      EXP
+      **ENV**
+      NIL
+      NIL
+      &#39;AEVAL
+      NIL))
+      (LIST NIL NIL NIL NIL &#39;TERMINATE NIL)
+      NIL))
+
+(DEFUN START!PROCESS (P)
+       (COND ((OR (NOT (ATOM P)) (NOT (GET P ’CLlNK)))
+              (ERROR &#39;|BAD PROCESS -- START!PROCESS| **EXP** &#39;FAIL-ACT)))
+       (OR (EQ P **PROCESS**) (MEMQ P **QUEUE**)
+           (SETQ **QUEUE** (NCONC **QUEUE** (LIST P))))
+       P)
+
+(DEFUN STOP!PROCESS (P)
+      (COND ((MEMQ P **QUEUE**)
+             (SETQ **QUEUE** (DELQ P **QUEUE**)))
+            ((EQ P **PROCESS** (TERMINATE)))
+      P)</code></pre>
+<p><code>TERMINATE</code> is an internal microcode routine which
+terminates the current process. If the current process is the only one,
+then all processes have been stopped, and so a new <span class="sc">SCHEME</span> top level is created; otherwise
+<code>TERMINATE</code> pulls the next process off the scheduler queue
+and swaps it in. Note that we cannot use <code>SWAPINPROCESS</code>
+because a <code>RESTORE</code> will happen in <code>EVLIS</code> as soon
+as <code>TERMINATE</code> completes (this is a very deep global property
+of the interpreter, and a fine source of bugs; much care is
+required).</p>
+<pre><code>(DEFUN TERMINATE ()
+       (COND ((NULL **QUEUE**)
+              (SETQ **PROCESS**
+                    (CREATE!PROCESS &#39;(**TOP** &#39;|SCHEME - QUEUEOUT|))))
+             (T (SETQ **PROCESS** (CAR **QUEUE**)
+                      **QUEUE** (CDR **QUEUE**))))
+       (SETQ **CLINK** (GET **PROCESS** ’CLINK))
+       (SETQ **VAL** (GET **PROCESS** ’VAL))
+       &#39;TERMINATE-VALUE)</code></pre>
+<p><code>EVALUATE!UNINTERRUPTIBLY</code> merely binds the variable
+<code>*ALLOW*</code> to <code>NIL</code>, and then evaluates its
+argument. This is why this primitive follows the scoping rules for
+variables!</p>
+<pre><code>(DEFPROP EVALUATE!UNINTERRUPTIBLY EVALUATE!UNINTERRUPTIBLY AINT)
+
+(DEFUN EVALUATE!UNINTERRUPTIBLY ()
+       (SETQ **ENV** (CONS (LIST &#39;*ALLOW* NIL) **ENV**)
+             **EXP** (CADR **EXP**)
+             **PC** &#39;AEVAL))</code></pre>
+<p><code>DEFINE</code> closes the function to be defined in the null
+environment, and installs the closure in the <span class="sc">LISP</span> value cell.</p>
+<pre><code>(DEFPROP DEFINE DEFINE AINT)
+
+(DEFUN DEFINE ()
+       (SET (CADR **EXP**) (LIST &#39;BETA (CADDR **EXP**) NIL))
+       (SETQ **VAL** (CADR **EXP**))
+       (RESTORE))</code></pre>
+<p><code>ASET</code> looks up the specified variable in the current
+environment, and clobbers the value cell in the environment with the new
+value. If the variable is not bound in the current environment, the
+<span class="sc">LISP</span> value cell is set. Note that
+<code>ASET</code> does not need to be an <code>AINT</code>, since it
+does not fool with order of evaluation; all it needs is access to the
+“machine register” <code>**ENV**</code>.</p>
+<pre><code>(DEFUN ASET (VAR VALU)
+       (SETQ **TEM** (ASSQ VAR **ENV**))
+       (COND (**TEM** (RPLACA (CDR **TEM**) VALU))
+             (T (SET VAR VALU)))
+       VALU)</code></pre>
+<p><code>CATCH</code> binds the tag variable to a <code>DELTA</code>
+expression which contains the current <code>CLINK</code>. When
+<code>AEVAL</code> applies such an expression as a function (of one
+argument), it makes the <code>**CLINK**</code> in the <code>DELTA</code>
+expression be the <code>**CLINK**</code>, places the value of the
+argument in <code>**VAL**</code>, and does a <code>RESTORE</code>. The
+effect is to return from the <code>CATCH</code> expression with the
+argument to the <code>DELTA</code> expression as its value (can you see
+why?).</p>
+<pre><code>(DEFPROP CATCH ACATCH AINT)
+
+(DEFUN ACATCH ()
+       (SETQ **ENV** (CONS (LIST (CADR **EXP**) (LIST &#39;DELTA **CLINK**))
+                           **ENV**)
+             **EXP** (CADDR **EXP**)
+             **PC** &#39;AEVAL))</code></pre>
+<p><code>PAIRLIS</code> is as in the <span class="sc">LISP</span> 1.5
+Programmer’s Manual [<a href="#mccarthy-1-2" id="xmccarthy2" title="[2] McCarthy et al 1965, LISP 1.5 Programmer&#39;s Manual">McCarthy</a>].
+<sup>{{<a href="#republication" id="xnote10" title="Actually, this is false. We used LIST to make the pairs, where the original PAIRLIS used CONS; and, of course, the original PAIRLIS was not written using the MacLISP new-style DO loop! https://doi.org/10.1023/A:1010035624696">1998
+note 10</a>}}</sup></p>
+<pre><code>(DEFUN PAIRLIS (X Y Z)
+       (DO ((I X (CDR I))
+            (J Y (CDR J))
+            (L Z (CONS (LIST (CAR I) (CAR J)) L)))
+           ((AND (NULL I) (NULL J)) L)
+          (AND (OR (NULL I) (NULL J))
+               (ERROR &#39;|WRONG NUMBER OF ARGUMENTS - PAIRLIS|
+                      **EXP**
+                      &#39;WRNG-NO-ARGS))))</code></pre>
+<p><code>AMACRO</code>s are fairly complicated beasties, and have very
+little to do with the basic issues of the implementation of <span class="sc">SCHEME</span> per se, so the code for them will not be given
+here. <code>AMACRO</code>s behave almost exactly like <span class="sc">MacLISP</span> macros [<a href="#moon-1-2-3-4-5" id="xmoon5" title="[5] Moon 1974, MACLISP Reference Manual, Revision 0">Moon</a>].</p>
+<p>This is the end of the <span class="sc">SCHEME</span>
+interpreter!</p>
+<p><hr></p>
+</section>
+<section id="acknowledgements" class="level2">
+<h2><a href="#contents" title="Go to Contents">Acknowledgements</a></h2>
+<p>This paper would not have happened if Sussman had not been forced to
+think about lambda calculus by having to teach 6.031, nor would it have
+happened had not Steele been forced to understand <span class="sc">PLASMA</span> by morbid curiosity.</p>
+<p>This work developed out of an initial attempt to understand the
+actorness of actors. Steele thought he understood it, but couldn’t
+explain it; Sussman suggested the experimental approach of actually
+building an “<span class="sc">ACTORS</span> interpreter”. This
+interpreter attempted to intermix the use of actors and <span class="sc">LISP</span> lambda expressions in a clean manner. When it was
+completed, we discovered that the “actors” and the lambda expressions
+were identical in implementation. Once we had discovered this, all the
+rest fell into place, and it was only natural to begin thinking about
+actors in terms of lambda calculus. The original interpreter was
+call-by-name for various reasons having to do with 6.031; we
+subsequently experimentally discovered how call-by-name screws
+iteration, and rewrote it to use call-by-value. Note well that we did
+<em>not</em> bring forth a clean implementation in one brilliant flash
+of understanding; we used an experimental and highly empirical approach
+to bootstrap our knowledge.</p>
+<p>We wish to thank the staff of 6.031, Mike Dertouzos, and Steve Ward,
+for precipitating this intellectual adventure. Carl Hewitt spent many
+hours explaining the innards and outards of <span class="sc">PLASMA</span> to Steele over the course of several months;
+Marilyn McClennan was also helpful in this respect. Brian Smith and
+Richard Zippel helped a lot. We wish to thank Seymour Papert, Ben
+Kuipers, Marvin Minsky, and Vaughn Pratt for their excellent
+suggestions.</p>
+<p><hr></p>
+</section>
+<section id="bibliography" class="level2">
+<h2><a href="#contents" title="Go to Contents">Bibliography</a></h2>
+<section id="section" class="level3">
+<h3></h3>
+<section id="bobrow-and-wegbreit" class="level4">
+<h4>[Bobrow and Wegbreit] <span class="fr"><a href="#xbobrow-and-wegbreit">^</a></span><br />
+</h4>
+<p>Bobrow, Daniel G. and Wegbreit, Ben. <a href="https://dl.acm.org/doi/10.1145/362375.362379" title="dl.acm.org/doi/10.1145/362375.362379"><em>A Model and Stack
+Implementation of Multiple Environments</em></a>. CACM 16, 10 (October
+1973) pp. 591-603.</p>
+</section>
+<section id="church-1-2" class="level4">
+<h4>[Church] <span class="fr"><a href="#xchurch1">1</a>, <a href="#xchurch2">2</a></span><br />
+</h4>
+<p>Church, Alonzo. <a href="https://archive.org/details/AnnalsOfMathematicalStudies6ChurchAlonzoTheCalculiOfLambdaConversionPrincetonUniversityPress1941" title="archive.org/details/AnnalsOfMathematicalStudies6ChurchAlonzoTheCalculiOfLambdaConversionPrincetonUniversityPress1941"><em>The
+Calculi of Lambda Conversion</em></a>. Annals of Mathematics Studies
+Number 6. Princeton University Press (Princeton, 1941). Reprinted by
+Klaus Reprint Corp. (New York, 1965).</p>
+</section>
+<section id="dijkstra" class="level4">
+<h4>[Dijkstra] <span class="fr"><a href="#xdijkstra">^</a></span><br />
+</h4>
+<p>Dijkstra, Edsger W. <a href="https://dl.acm.org/doi/10.1145/365559.365617" title="dl.acm.org/doi/10.1145/365559.365617"><em>Solution of a Problem
+in Concurrent Programming Control</em></a>. CACM 8,9 (September 1965)
+p. 569.</p>
+</section>
+<section id="fischer-1-2" class="level4">
+<h4>[Fischer] <span class="fr"><a href="#xfischer1">1</a>, <a href="#xfischer2">2</a></span><br />
+</h4>
+<p>Fischer, Michael J. <a href="https://dl.acm.org/doi/10.1145/942578.807077" title="dl.acm.org/doi/10.1145/942578.807077"><em>Lambda Calculus
+Schemata</em></a>. Proceedings of ACM Conference on Proving Assertions
+about Programs. SIGPLAN Notices (January 1972).</p>
+</section>
+<section id="galley-and-pfister" class="level4">
+<h4>[Galley and Pfister] <span class="fr"><a href="#xgalley-and-pfister">^</a></span><br />
+</h4>
+<p>Galley, S.W. and Pfister, Greg. <a href="https://apps.dtic.mil/sti/pdfs/ADA070930.pdf" title="apps.dtic.mil/sti/pdfs/ADA070930.pdf"><em>The MDL
+Language</em></a>. Programming Technology Division Document SYS.11.01.
+Project MAC, MIT (Cambridge, November 1975).<br />
+{{See also <a href="https://mdl-language.readthedocs.io/en/latest" title="mdl-language.readthedocs.io/en/latest"><em>The MDL Programming
+Language</em></a> (transcription at ReadtheDocs.io) }}</p>
+</section>
+<section id="greif" class="level4">
+<h4>[Greif] <span class="fr"><a href="#xgreif">^</a></span><br />
+</h4>
+<p>Greif, Irene. <a href="https://dspace.mit.edu/handle/1721.1/57710" title="dspace.mit.edu/handle/1721.1/57710"><em>Semantics of
+Communicating Parallel Processes</em></a>. Ph.D. thesis. MAC-TR-154,
+Project MAC, MIT (Cambridge, September 1975).</p>
+</section>
+<section id="greif-and-hewitt-1-2" class="level4">
+<h4>[Greif and Hewitt] <span class="fr"><a href="#xgreif-and-hewitt1">1</a>, <a href="#xgreif-and-hewitt2">2</a></span><br />
+</h4>
+<p>Greif, Irene and Hewitt, Carl. <a href="https://dl.acm.org/doi/abs/10.1145/512976.512984" title="dl.acm.org/doi/abs/10.1145/512976.512984"><em>Actor Semantics of
+Planner-73</em></a>. Working Paper 81, MIT Al. Lab (Cambridge,
+1975).</p>
+</section>
+<section id="ingerman" class="level4">
+<h4>[Ingerman] <span class="fr"><a href="#xingerman">^</a></span><br />
+</h4>
+<p>Ingerman, P. Z. <a href="https://dl.acm.org/doi/pdf/10.1145/366062.366084" title="dl.acm.org/doi/pdf/10.1145/366062.366084"><em>Thunks – A Way of
+Compiling Procedure Statements with some Comments on Procedure
+Declarations</em></a>. CACM 4,1 (January 1961) pp. 55-58.</p>
+</section>
+<section id="knuth" class="level4">
+<h4>[Knuth] <span class="fr"><a href="#xknuth">^</a></span><br />
+</h4>
+<p>Knuth, Donald E. <a href="https://dl.acm.org/doi/pdf/10.1145/355592.365595" title="dl.acm.org/doi/pdf/10.1145/355592.365595"><em>Additional Comments
+on a Problem in Concurrent Programning Control</em></a>. CACM 9,5 (May
+1966) pp. 321-322.</p>
+</section>
+<section id="lamport" class="level4">
+<h4>[Lamport] <span class="fr"><a href="#xlamport">^</a></span><br />
+</h4>
+<p>Lamport, Leslie. <a href="https://dl.acm.org/doi/pdf/10.1145/361082.361093" title="dl.acm.org/doi/pdf/10.1145/361082.361093"><em>A New Solution of
+Dijkstra’s Concurrent Programming Problem</em></a>. CACM 17,8 (August
+1974) pp. 453-455.</p>
+</section>
+<section id="mac" class="level4">
+<h4>[MAC] <span class="fr"><a href="#xmac">^</a></span><br />
+</h4>
+<p><a href="https://apps.dtic.mil/sti/pdfs/ADA004966.pdf" title="apps.dtic.mil/sti/pdfs/ADA004966.pdf"><em>Project MAC Progress
+Report XI (July 1973 - July 1974)</em></a>. Project MAC, MIT (Cambridge,
+1974)</p>
+</section>
+<section id="mccarthy-1-2" class="level4">
+<h4>[McCarthy] <span class="fr"><a href="#xmccarthy1">1</a>, <a href="#xmccarthy2">2</a></span><br />
+</h4>
+<p>McCarthy, John, et al. <a href="https://www.softwarepreservation.org/projects/LISP/book/LISP%201.5%20Programmers%20Manual.pdf" title="www.softwarepreservation.org/projects/LISP/book/LISP%201.5%20Programmers%20Manual.pdf"><em>LISP
+1.5 Programmer’s Manual</em></a>. The MIT Press (Cambridge, 1965).</p>
+</section>
+<section id="mcdermott-and-sussman" class="level4 npb">
+<h4>[McDermott and Sussman] <span class="fr"><a href="#xmcdermott-and-sussman">^</a></span><br />
+</h4>
+<p>McDermott, Drew V. and Sussman, Gerald Jay. <a href="https://dspace.mit.edu/handle/1721.1/6204" title="dspace.mit.edu/handle/1721.1/6204"><em>The CONNIVER Reference
+Manual</em></a>. AI Memo <del>295a</del> {{259a}}. MIT AI Lab
+(Cambridge, January 1974).</p>
+</section>
+<section id="moon-1-2-3-4-5" class="level4">
+<h4>[Moon] <span class="fr"><a href="#xmoon1">1</a>, <a href="#xmoon2">2</a>, <a href="#xmoon3">3</a>, <a href="#xmoon4">4</a>,
+<a href="#xmoon5">5</a></span><br />
+</h4>
+<p>Moon, David A. <a href="https://www.softwarepreservation.org/projects/LISP/MIT/Moon-MACLISP_Reference_Manual-Apr_08_1974.pdf" title="www.softwarepreservation.org/projects/LISP/MIT/Moon-MACLISP_Reference_Manual-Apr_08_1974.pdf"><em>MACLISP
+Reference Manual, Revision 0</em></a>. Project MAC, MIT (Cambridge,
+April 1974).</p>
+</section>
+<section id="moses-1-2" class="level4">
+<h4>[Moses] <span class="fr"><a href="#xmoses1">1</a>, <a href="#xmoses2">2</a></span><br />
+</h4>
+<p>Moses, Joel. <a href="https://dspace.mit.edu/handle/1721.1/5854" title="dspace.mit.edu/handle/1721.1/5854"><em>The Function of FUNCTION
+in LISP</em></a>. AI Memo 199, MIT AI Lab (Cambridge, June 1970).</p>
+</section>
+<section id="reynolds-1-2" class="level4">
+<h4>[Reynolds] <span class="fr"><a href="#xreynolds1">1</a>, <a href="#xreynolds2">2</a></span><br />
+</h4>
+<p>Reynolds, John C. <a href="https://dl.acm.org/doi/10.1145/800194.805852" title="dl.acm.org/doi/10.1145/800194.805852"><em>Definitional
+Interpreters for Higher Order Programming Languages</em></a>. ACM
+Conference Proceedings 1972.</p>
+</section>
+<section id="smith-and-hewitt-1-2-3-4-5-6" class="level4">
+<h4>[Smith and Hewitt] <span class="fr"><a href="#xsmith1">1</a>, <a href="#xsmith2">2</a>, <a href="#xsmith3">3</a>, <a href="#xsmith4">4</a>, <a href="#xsmith5">5</a>, <a href="#xsmith6">6</a></span><br />
+</h4>
+<p>Smith, Brian C. and Hewitt, Carl. <a href="https://www.scribd.com/document/185900689/A-Plasma-Primer" title="www.scribd.com/document/185900689/A-Plasma-Primer"><em>A PLASMA
+Primer (draft)</em></a>. MIT AI Lab (Cambridge, October 1975).</p>
+</section>
+<section id="sussman" class="level4">
+<h4>[Sussman] <span class="fr"><a href="#xsussman">^</a></span><br />
+</h4>
+<p>Sussman, Gerald Jay, Winograd, Terry, and Charniak, Eugene. <a href="https://dspace.mit.edu/handle/1721.1/6184" title="dspace.mit.edu/handle/1721.1/6184"><em>Micro-PLANNER Reference
+Manual</em></a>. AI Memo 203A. MIT AI Lab (Cambridge, December
+1971).</p>
+<p><br />
+</p>
+</section>
+<section id="republication" class="level4">
+<h4>{{1998 republication: <span class="fr"><a href="#licence" title="back">^</a></span></h4>
+<div class="in">
+<p>For full text of “1998 notes” superscript links, see [<a href="#sussman-and-steele-1-2-3-4-5-6-7-8-9-10" title="Scheme: A Interpreter for Extended Lambda Calculus">Sussman and
+Steele</a>] pp. 438-439 (“These notes were not part of the original
+paper. We have added them to illuminate certain points that would
+otherwise not be clear to readers in 1998.”)</p>
+</div>
+</section>
+<section id="sussman-and-steele-1-2-3-4-5-6-7-8-9-10" class="level4 in">
+<h4>[Sussman and Steele] <span class="fr"><a href="#xnote1">1</a>, <a href="#xnote2">2</a>, <a href="#xnote3">3</a>, <a href="#xnote4">4</a>,
+<a href="#xnote5">5</a>, <a href="#xnote6">6</a>, <a href="#xnote7">7</a>, <a href="#xnote8">8</a>, <a href="#xnote9">9</a>,
+<a href="#xnote10">10</a></span><br />
+</h4>
+<p>Sussman, G.J., Steele, G.L. <a href="https://www.researchgate.net/publication/227098423_Scheme_A_Interpreter_for_Extended_Lambda_Calculus" title="www.researchgate.net/publication/227098423_Scheme_A_Interpreter_for_Extended_Lambda_Calculus"><em>Scheme:
+A Interpreter for Extended Lambda Calculus</em></a>. Higher-Order and
+Symbolic Computation 11, 405–439 (1998).
+https://doi.org/10.1023/A:1010035624696<br />
+See also: Sussman, G.J., Steele, G.L. <a href="https://doi.org/10.1023/A:1010079421970" title="doi.org/10.1023/A:1010079421970"><em>The First Report on Scheme
+Revisited</em></a>. Higher-Order and Symbolic Computation 11, 399–404
+(1998). https://doi.org/10.1023/A:1010079421970 }}</p>
+</section>
+</section>
+</section>
+</body>
+</html>

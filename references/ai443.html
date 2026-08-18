@@ -1,0 +1,1933 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta http-equiv="content-security-policy" content="img-src &#39;self&#39; data:" />
+  <meta name="author" content="Guy Lewis Steele Jr ©1977 (text and code)" />
+  <meta name="author" content="Roger Turner ©2025 (markup and transcriber notes)" />
+  <meta name="keywords" content="LISP, SCHEME, procedure
+calls, subroutine calls, structured programming, programming
+style, compilers, optimization" />
+  <title>LAMBDA: The Ultimate GOTO (The Lambda Papers)</title>
+  <style>
+html {
+font-size: 12pt;
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: blue;
+}
+a:visited {
+color: blue;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+background-color: #1a1a1a;
+border: none;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+</style>
+  <style>
+:root { 
+background-color: color-mix(in oklab, Canvas 85%, #808080 15%);
+color: color-mix(in oklab, CanvasText 85%, #808080 15%);
+color-scheme: light dark; }
+@media print {
+hr, .pb {
+break-before: always;
+page-break-before: always }
+div.box, div.npb, section.npb, pre, img {
+break-inside: avoid-page;
+page-break-inside: avoid }
+img {
+object-fit: scale-down }
+body {
+padding-top: 25px;
+padding-bottom: 25px }
+}
+code {
+font-family: Greybeard, Menlo, Monaco, Consolas, "Lucida Console", monospace }
+body {
+font-family: Bodoni, serif;
+text-wrap: pretty;
+max-width: 40em;
+padding-right: 30px;
+overflow-wrap: normal;
+line-height: 1.2;
+hyphens: none }
+header {
+margin-bottom: 1.0em }
+h1 {
+font-size: 1.2em;
+margin-top: 0;
+margin-bottom: 0.5em }
+h2 {
+font-size: 1.2em;
+margin-top: 1.0em }
+h4 { margin-top: 0.85em;
+margin-bottom: 0;
+padding-bottom: 0 }
+h4 + p {
+margin-top: 0;
+margin-bottom: 0.85em }
+#notes p, #references p, #bibliography p {
+margin-top: 0 }
+hr {
+margin-top: 3em }
+dd {
+margin-bottom: 0.85em }
+pre code { 
+text-wrap: nowrap;
+overflow-x: scroll;
+font-size: 75% }
+p code, .line-block code, figcaption code, h3 code, dt code { 
+font-size: 85% }
+code em {
+font-style: italic } 
+.large {
+font-size: 150% }
+.small {
+font-size: 80% }
+.sc { 
+font-size: 92% }
+.in {
+margin-left: 1em }
+.in5 {
+margin-left: 5em }
+.ti {
+text-indent: -1em;
+padding-left: 1em;
+margin-top: -0.85em }
+.ti5 {
+text-indent: -5em;
+padding-left: 5em;
+margin-top: -0.85em }
+div.ti2 p {
+text-indent: -2em;
+padding-left: 2em;
+margin-top: -0.85em }
+.fr {
+float: right }
+.fl {
+float: left }
+.fwn {
+font-weight: normal }
+li::marker {
+content: '(' counters(list-item) ') '; }
+div.box {
+padding: 0 0 0.5em 1em;
+border: 1px solid }
+figure {
+margin: 1em 0;
+width: 100% }
+figcaption {
+padding-top: 1em;
+text-align: center }
+a:hover {
+text-decoration: underline }
+a:any-link {
+color: AccentColor }
+</style>
+</head>
+<body>
+<p><div style="text-align: center"> MASSACHUSETTS INSTITUTE OF
+TECHNOLOGY<br />
+ARTIFICIAL INTELLIGENCE LABORATORY </div> AI Memo 443 <span class="fr">October 1977</span></p>
+<p><br />
+</p>
+<div style="text-align: center">
+<h1>
+<p>DEBUNKING THE “EXPENSIVE PROCEDURE CALL” MYTH</p>
+<p>or,   PROCEDURE CALL IMPLEMENTATIONS CONSIDERED HARMFUL</p>
+or,   LAMBDA: THE ULTIMATE GOTO
+</h1>
+<p>by</p>
+<p>Guy Lewis Steele Jr. * </div></p>
+<p><br />
+</p>
+<section id="abstract" class="level2">
+<h2>Abstract:</h2>
+<p>Folklore states that <code>GOTO</code> statements are “cheap”, while
+procedure calls are “expensive”. This myth is largely a result of poorly
+designed language implementations. The historical growth of this myth is
+considered. Both theoretical ideas and an existing implementation are
+discussed which debunk this myth. It is shown that the unrestricted use
+of procedure calls permits great stylistic freedom. In particular, any
+flowchart can be written as a “structured” program without introducing
+extra variables. The difficulty with the <code>GOTO</code> statement and
+the procedure call is characterized as a conflict between abstract
+programming concepts and concrete language constructs.</p>
+<p>This is an annotated version of a paper to be presented at the ACM
+National Conference (ACM ’77), Seattle, Washington, October 1977.</p>
+<p><strong>Keywords:</strong> procedure calls, subroutine calls,
+structured programming, programming style, compilers, optimization</p>
+<p>This report describes research done at the Artificial Intelligence
+Laboratory of the Massachusetts Institute of Technology. Support for the
+laboratory’s artificial intelligence research is provided in part by the
+Advanced Research Projects Agency of the Department of Defense under
+Office of Naval Research contract N00014-75-C-0643.</p>
+<p>* NSF Fellow</p>
+<p><br />
+</p>
+<div id="licence" class="ti small">
+<p>{{<a href="https://dspace.mit.edu/bitstream/handle/1721.1/5753/AIM-443.pdf" title="Original pdf at MIT: dspace.mit.edu/bitstream/handle/1721.1/5753/AIM-443.pdf">DEBUNKING
+THE “EXPENSIVE PROCEDURE CALL” MYTH or, PROCEDURE CALL IMPLEMENTATIONS
+CONSIDERED HARMFUL or, LAMBDA: THE ULTIMATE GOTO</a> © 1977 by Guy Lewis
+Steele Jr, and this transcription, licensed
+<a href="https://creativecommons.org/licenses/by-nc/4.0/" title="Creative Commons license deed: creativecommons.org/licenses/by-nc/4.0/">CC
+BY-NC 4.0</a>
+<svg id="Layer_1" role="img" aria-label alt style="max-width: 1em;max-height:1em;margin-left: .2em;" x="0px" y="0px" width="64px" height="64px" viewBox="5.5 -3.5 64 64" enable-background="new 5.5 -3.5 64 64" xml:space="preserve">
+<g>
+	<circle fill="#FFFFFF" cx="37.785" cy="28.501" r="28.836"></circle>
+	<path d="M37.441-3.5c8.951,0,16.572,3.125,22.857,9.372c3.008,3.009,5.295,6.448,6.857,10.314
+		c1.561,3.867,2.344,7.971,2.344,12.314c0,4.381-0.773,8.486-2.314,12.313c-1.543,3.828-3.82,7.21-6.828,10.143
+		c-3.123,3.085-6.666,5.448-10.629,7.086c-3.961,1.638-8.057,2.457-12.285,2.457s-8.276-0.808-12.143-2.429
+		c-3.866-1.618-7.333-3.961-10.4-7.027c-3.067-3.066-5.4-6.524-7-10.372S5.5,32.767,5.5,28.5c0-4.229,0.809-8.295,2.428-12.2
+		c1.619-3.905,3.972-7.4,7.057-10.486C21.08-0.394,28.565-3.5,37.441-3.5z M37.557,2.272c-7.314,0-13.467,2.553-18.458,7.657
+		c-2.515,2.553-4.448,5.419-5.8,8.6c-1.354,3.181-2.029,6.505-2.029,9.972c0,3.429,0.675,6.734,2.029,9.913
+		c1.353,3.183,3.285,6.021,5.8,8.516c2.514,2.496,5.351,4.399,8.515,5.715c3.161,1.314,6.476,1.971,9.943,1.971
+		c3.428,0,6.75-0.665,9.973-1.999c3.219-1.335,6.121-3.257,8.713-5.771c4.99-4.876,7.484-10.99,7.484-18.344
+		c0-3.543-0.648-6.895-1.943-10.057c-1.293-3.162-3.18-5.98-5.654-8.458C50.984,4.844,44.795,2.272,37.557,2.272z M37.156,23.187
+		l-4.287,2.229c-0.458-0.951-1.019-1.619-1.685-2c-0.667-0.38-1.286-0.571-1.858-0.571c-2.856,0-4.286,1.885-4.286,5.657
+		c0,1.714,0.362,3.084,1.085,4.113c0.724,1.029,1.791,1.544,3.201,1.544c1.867,0,3.181-0.915,3.944-2.743l3.942,2
+		c-0.838,1.563-2,2.791-3.486,3.686c-1.484,0.896-3.123,1.343-4.914,1.343c-2.857,0-5.163-0.875-6.915-2.629
+		c-1.752-1.752-2.628-4.19-2.628-7.313c0-3.048,0.886-5.466,2.657-7.257c1.771-1.79,4.009-2.686,6.715-2.686
+		C32.604,18.558,35.441,20.101,37.156,23.187z M55.613,23.187l-4.229,2.229c-0.457-0.951-1.02-1.619-1.686-2
+		c-0.668-0.38-1.307-0.571-1.914-0.571c-2.857,0-4.287,1.885-4.287,5.657c0,1.714,0.363,3.084,1.086,4.113
+		c0.723,1.029,1.789,1.544,3.201,1.544c1.865,0,3.18-0.915,3.941-2.743l4,2c-0.875,1.563-2.057,2.791-3.541,3.686
+		c-1.486,0.896-3.105,1.343-4.857,1.343c-2.896,0-5.209-0.875-6.941-2.629c-1.736-1.752-2.602-4.19-2.602-7.313
+		c0-3.048,0.885-5.466,2.658-7.257c1.77-1.79,4.008-2.686,6.713-2.686C51.117,18.558,53.938,20.101,55.613,23.187z" />
+</g>
+</svg>
+<svg id="Layer_1" role="img" aria-label alt style="max-width: 1em;max-height:1em;margin-left: .2em;" x="0px" y="0px" width="64px" height="64px" viewBox="5.5 -3.5 64 64" enable-background="new 5.5 -3.5 64 64" xml:space="preserve">
+<g>
+	<circle fill="#FFFFFF" cx="37.637" cy="28.806" r="28.276"></circle>
+	<g>
+		<path d="M37.443-3.5c8.988,0,16.57,3.085,22.742,9.257C66.393,11.967,69.5,19.548,69.5,28.5c0,8.991-3.049,16.476-9.145,22.456
+			C53.879,57.319,46.242,60.5,37.443,60.5c-8.649,0-16.153-3.144-22.514-9.43C8.644,44.784,5.5,37.262,5.5,28.5
+			c0-8.761,3.144-16.342,9.429-22.742C21.101-0.415,28.604-3.5,37.443-3.5z M37.557,2.272c-7.276,0-13.428,2.553-18.457,7.657
+			c-5.22,5.334-7.829,11.525-7.829,18.572c0,7.086,2.59,13.22,7.77,18.398c5.181,5.182,11.352,7.771,18.514,7.771
+			c7.123,0,13.334-2.607,18.629-7.828c5.029-4.838,7.543-10.952,7.543-18.343c0-7.276-2.553-13.465-7.656-18.571
+			C50.967,4.824,44.795,2.272,37.557,2.272z M46.129,20.557v13.085h-3.656v15.542h-9.944V33.643h-3.656V20.557
+			c0-0.572,0.2-1.057,0.599-1.457c0.401-0.399,0.887-0.6,1.457-0.6h13.144c0.533,0,1.01,0.2,1.428,0.6
+			C45.918,19.5,46.129,19.986,46.129,20.557z M33.042,12.329c0-3.008,1.485-4.514,4.458-4.514s4.457,1.504,4.457,4.514
+			c0,2.971-1.486,4.457-4.457,4.457S33.042,15.3,33.042,12.329z" />
+	</g>
+</g>
+</svg>
+<svg id="Layer_1" role="img" aria-label alt style="max-width: 1em;max-height:1em;margin-left: .2em;" x="0px" y="0px" width="64px" height="64px" viewBox="5.5 -3.5 64 64" enable-background="new 5.5 -3.5 64 64" xml:space="preserve">
+<g>
+	<circle fill="#FFFFFF" cx="37.47" cy="28.736" r="29.471"></circle>
+	<g>
+		<path d="M37.442-3.5c8.99,0,16.571,3.085,22.743,9.256C66.393,11.928,69.5,19.509,69.5,28.5c0,8.992-3.048,16.476-9.145,22.458
+			C53.88,57.32,46.241,60.5,37.442,60.5c-8.686,0-16.19-3.162-22.513-9.485C8.644,44.728,5.5,37.225,5.5,28.5
+			c0-8.762,3.144-16.343,9.429-22.743C21.1-0.414,28.604-3.5,37.442-3.5z M12.7,19.872c-0.952,2.628-1.429,5.505-1.429,8.629
+			c0,7.086,2.59,13.22,7.77,18.4c5.219,5.144,11.391,7.715,18.514,7.715c7.201,0,13.409-2.608,18.63-7.829
+			c1.867-1.79,3.332-3.657,4.398-5.602l-12.056-5.371c-0.421,2.02-1.439,3.667-3.057,4.942c-1.622,1.276-3.535,2.011-5.744,2.2
+			v4.915h-3.714v-4.915c-3.543-0.036-6.782-1.312-9.714-3.827l4.4-4.457c2.094,1.942,4.476,2.913,7.143,2.913
+			c1.104,0,2.048-0.246,2.83-0.743c0.78-0.494,1.172-1.312,1.172-2.457c0-0.801-0.287-1.448-0.858-1.943l-3.085-1.315l-3.771-1.715
+			l-5.086-2.229L12.7,19.872z M37.557,2.214c-7.276,0-13.428,2.571-18.457,7.714c-1.258,1.258-2.439,2.686-3.543,4.287L27.786,19.7
+			c0.533-1.676,1.542-3.019,3.029-4.028c1.484-1.009,3.218-1.571,5.2-1.686V9.071h3.715v4.915c2.934,0.153,5.6,1.143,8,2.971
+			l-4.172,4.286c-1.793-1.257-3.619-1.885-5.486-1.885c-0.991,0-1.876,0.191-2.656,0.571c-0.781,0.381-1.172,1.029-1.172,1.943
+			c0,0.267,0.095,0.533,0.285,0.8l4.057,1.83l2.8,1.257l5.144,2.285l16.397,7.314c0.535-2.248,0.801-4.533,0.801-6.857
+			c0-7.353-2.552-13.543-7.656-18.573C51.005,4.785,44.831,2.214,37.557,2.214z" />
+	</g>
+</g>
+</svg>
+(Attribution-NonCommercial 4.0 International).<br /> Transcription by
+Roger Turner: links, Contents page, and {{transcriber notes}} added.
+}}</p>
+</div>
+<hr>
+<header>
+<div class="small">
+<p><span class="fl">Guy L. Steele Jr.</span>
+<span style="text-align: center">  </span><span class="fr">Debunking the
+“Expensive …” Myth</span></p>
+</div>
+</header>
+</section>
+<section id="contents" class="level2">
+<h2>Contents</h2>
+<div class="line-block"><a href="#introduction">Introduction</a><br />
+<br />
+<a href="#a.-procedure-calls-as-goto-statements">A.   Procedure Calls as
+GOTO Statements</a><br />
+<br />
+<a href="#b.-procedure-calls-can-be-fast">B.   Procedure Calls Can be
+Fast</a><br />
+<br />
+<a href="#c.-why-procedure-calls-have-a-bad-reputation">C.   Why
+Procedure Calls Have a Bad Reputation</a><br />
+<br />
+<a href="#d.-what-are-we-doing-about-it">D.   What Are we Doing About
+It?</a><br />
+<br />
+<a href="#e.-the-expressive-power-of-procedure-calls">E.   The
+Expressive Power of Procedure Calls</a><br />
+<br />
+<a href="#f.-procedure-calls-and-modularity">F.   Procedure Calls and
+Modularity</a><br />
+<br />
+<a href="#conclusions">Conclusions</a><br />
+<br />
+<a href="#acknowledgements">Acknowledgements</a><br />
+<br />
+<a href="#notes">Notes</a><br />
+<br />
+  {<a href="#note-omniscient-implementors">Omniscient
+Implementors</a>}<br />
+  {<a href="#note-shuffle-arguments">Shuffle Arguments</a>}<br />
+  {<a href="#note-step-variables">Step Variables</a>}<br />
+  {<a href="#note-various-optimizations">Various
+Optimizations</a>}<br />
+<br />
+<a href="#references">References</a></div>
+<p><hr></p>
+</section>
+<section id="introduction" class="level2">
+<h2><a href="#contents" title="Go to Contents">Introduction</a></h2>
+<p>For the past five to ten years (depending on how you count) the
+computing community has been embroiled in debate over “structured
+programming” and, as a special case, the <code>GOTO</code> statement. On
+the one hand, many authors have observed that programs written without
+<code>GOTO</code>s are often more perspicuous than programs written with
+<code>GOTO</code>s by the same programmer. That is, the avoidance of
+<code>GOTO</code>s is a discipline which has been observed to produce
+programs which are easier to understand and maintain.</p>
+<p>On the other hand, a certain portion of the computing community has
+rebelled at this discipline. There are several reasons for this
+rebellion. Among these are:</p>
+<ol type="1">
+<li><p>Some programmers fear that their expressive power or style will
+be cramped if <code>GOTO</code> is taken away from them. This is true in
+such contemporary languages as <span class="sc">FORTRAN</span>, but in
+more powerful languages such as <span class="sc">ALGOL</span>, <span class="sc">PL/I</span>, <span class="sc">COBOL</span>, and <span class="sc">PASCAL</span> the point is somewhat more debatable. Yourdon
+comments:</p>
+<blockquote>
+<p>“Many programmers feel that programming without the
+<code>GO-TO</code> statement would be awkward, tedious and cumbersome.
+For the most part, this complaint is due to force of habit.” [<a href="#yourdon-75-1-2-3-4-5" id="xy1" title="Techniques of Program Structure and Design">Yourdon
+75</a>,178]</p>
+</blockquote>
+<p>In all fairness, it should be pointed out that <code>GOTO</code> is a
+basic, universal primitive with which (in conjunction with a
+conditional) almost any other control construct can be synthesized if
+the language designer neglected to include it. {Note <a href="#note-omniscient-implementors" id="xomniscient-implementors" title="One can argue quite strongly that there are so large a number (possibly infinite) of distinct useful control constructs that no one language could embody them all, and that therefore no language designer should be so conceited as to think he has encompassed all desirable constructions in a given language ...">Omniscient
+Implementors</a>} A good example of this is the <code>CASE</code>
+statement.</p></li>
+<li><p>Some programmers feel that the imposed discipline doesn’t make
+any difference, because one can write incomprehensible programs without
+<code>GOTO</code>. This piece of logic is slightly false, for while
+avoiding <code>GOTO</code> does not guarantee comprehensibility, it
+often does increase the probability of producing comprehensible code,
+given our current cultural biases in programming style.</p></li>
+<li><p>There is some feeling that <code>GOTO</code> is a “cheap”
+statement, while other constructs (<code>DO</code>, <code>CASE</code>,
+etc.) are more “expensive”. Everyone knows that a <code>GOTO</code> gets
+compiled into one machine instruction (some kind of branch), while
+<code>DO</code> produces many instructions. The difficulty here is a
+misplaced sense of what is “efficient”; and despite the fact that
+current practitioners of programming discipline tell us not to worry
+about efficiency, we nevertheless do, at some low unconscious level,
+whenever we write code. Yourdon tells of the plight of programmers
+“whose managers have specifically forbidden them to use such statements
+because of the overhead involved in subroutine-calling statements.” [<a href="#yourdon-75-1-2-3-4-5" id="xy2" title="Techniques of Program Structure and Design">Yourdon
+75</a>,177]</p></li>
+</ol>
+<p>These misplaced feelings of efficiency are felt for other programming
+language constructs as well. and subtly influence our programming style.
+The example I wish to consider here is the procedure call. Everyone
+knows that, unlike <code>GOTO</code> statements, procedure calls are
+“expensive”. Indeed, these feelings are not unjustified, given past and
+current programming language implementations.</p>
+<p>Because procedure calls are “expensive”, we tend to avoid using them
+in our code. Unfortunately, this produces a detrimental effect on our
+programming style, for what Dijkstra said of <span class="sc">PL/I</span> holds true of almost any language: the procedure
+is one of [the] main vehicles for expressing structure”. [<a href="#dijkstra-76-1-2" id="xdijkstra-761" title="A Discipline of Programming">Dijkstra 76</a>,8] Recently
+practitioners of programming discipline have advised us not to be afraid
+to use procedure calls, as the readability they afford is worth the
+inefficiency. This is like saying that cars with square wheels are all
+right because transportation is worth a bumpy ride: we really ought
+instead to concentrate on improving our wheels.</p>
+<p>I would like to suggest here that procedure calls have been given a
+“bad press” for a number of reasons. There is no reason that procedure
+calls must be expensive. I intend to demonstrate here the following
+points:</p>
+<ol type="A">
+<li>Procedure calls are, from a theoretical point of view, glorified
+<code>GOTO</code> statements; this view leads to interesting compilation
+techniques which can save space and time.</li>
+<li>Procedure calls are in fact quite fast when implemented
+properly.</li>
+<li>Procedure calls have received a bad reputation for a variety of
+historical reasons.</li>
+<li>As a result, we have been advising programmers to adjust their
+programming style to compensate for poor implementations (or,
+alternatively, not to adjust but to ignore the poorness of the
+implementation), while giving little thought to improving these
+implementations.</li>
+<li>Procedure calls, implemented properly and used freely, allow a
+stylistic freedom far greater than (and largely inclusive of) that
+afforded by <code>GOTO</code>. Any flowchart can be implemented as a
+“structured” program without introducing any extra variables.</li>
+<li>Much of our difficulty with procedure calls and with
+<code>GOTO</code> statements is that we have a restricted view of the
+relationship between programming concepts and language constructs.</li>
+</ol>
+</section>
+<section id="a.-procedure-calls-as-goto-statements" class="level2">
+<h2><a href="#contents" title="Go to Contents">A.   Procedure Calls as
+<code>GOTO</code> Statements</a></h2>
+<p>In studying the nature of procedure calls, it is appropriate to study
+the <span class="sc">LISP</span> language. <span class="sc">LISP</span>,
+more than any other language, uses procedure calls as the primary means
+of expression; in particular, the arbitrary distinction between built-in
+operators (like multiplication) and user functions is almost completely
+nonexistent. What would appear in <span class="sc">FORTRAN</span> as</p>
+<pre><code>  FUNCTION QUAD(A,B,C)
+  QUAD = (-B + SQRT(B**2 - 4*A*C)) / (2*A)
+  RETURN
+  END</code></pre>
+<p>is in (one dialect of) <span class="sc">LISP</span>:</p>
+<pre><code>  (DEFINE (QUAD A B C)
+          (/ (+ (- B)
+                (SQRT (- (** B 2) (* 4 A C))))
+            (* 2 A)))</code></pre>
+<p>In this way most computations (other than conditionals) can easily be
+expressed in terms of function calls of the form</p>
+<pre><code>  (F X1 X2 ... Xn)</code></pre>
+<p><span class="sc">LISP</span> is an expression language, in that every
+program is a function which returns a value (but this value may be
+ignored - many programs produce interesting side effects and then return
+<code>NIL</code>). It differs from other expression languages such as
+<span class="sc">BLISS</span> [<a href="#wulf-71" id="xwulf-71" title="BLISS: A Language for Systems Programing">Wulf 71</a>] [<a href="#wulf-75" id="xwulf-75" title="The design of an Optimizing Compiler">Wulf 75</a>], however, in
+its uniformity of notation.</p>
+<p>The usual way to implement function calls in <span class="sc">LISP</span> is by using a stack. When a function is called, a
+return address is pushed onto the stack; when a function is done, it
+pops a return address and goes there (after stashing the value to be
+returned in a register). This is in fact how procedure calls are
+implemented in many languages.</p>
+<p>Let us consider the execution of a call on the <span class="sc">LISP</span> function <code>BAR</code>:</p>
+<pre><code>  (DEFINE (BAR X Y)
+          (F (G X) (H Y)))</code></pre>
+<p><code>BAR</code> calls <code>G</code> on <code>X</code>,
+<code>H</code> on <code>Y</code>, and then <code>F</code> on the two
+results, returning the result of calling <code>F</code>.</p>
+<p>For concreteness, we will express the compiled code in a modified
+form of <span class="sc">PDP-10</span> machine language, using these
+instructions:</p>
+<pre><code>  JUMP x      Branch to (i.e. GOTO) location x.
+  PUSHJ x     Push the location of the PUSHJ, plus 1, on the stack,
+              then branch to location x.
+  POPJ        Pop an address from the stack and branch there.</code></pre>
+<p>The code for <code>BAR</code> might look something like this:</p>
+<pre><code>  BAR:    &lt;set up arguments for G&gt;
+          PUSHJ G
+  BAR1:   &lt;save result from G&gt;
+          &lt;set up arguments for H&gt;
+          PUSHJ H
+  BAR2:   &lt;use results from G and H for F&gt;
+          PUSHJ F
+  BAR3:   POPJ</code></pre>
+<p>We have introduced the labels <code>BAR1</code>, <code>BAR2</code>,
+<code>BAR3</code> to aid the exposition. Note that there are no
+instructions between the <code>PUSHJ F</code> and the <code>POPJ</code>;
+we shall justify this below.</p>
+<p>On arrival at <code>BAR</code>, the arguments <code>X</code> and
+<code>Y</code> are presumably in registers or some other appropriate
+place, and a return address (say <code>FOO5</code>) is on the stack.
+After we execute the <code>PUSHJ G</code>, the stack will look like
+this:</p>
+<pre><code>        BAR1
+        FOO5
+        ...</code></pre>
+<p><code>G</code> may call other functions, and the stack will go up and
+down, but eventually it will put a value in the result register and do a
+<code>POPJ</code>, returning to <code>BAR1</code>. This leaves the stack
+like this:</p>
+<pre><code>        FOO5
+        ...</code></pre>
+<p>In a similar manner, the <code>PUSHJ H</code> will push
+<code>BAR2</code> on the stack, and <code>H</code> will eventually pop
+it when it exits. The same is true of the <code>PUSHJ F</code> and
+<code>BAR3</code>. When <code>F</code> returns to <code>BAR3</code> with
+a value in the result register, the <code>POPJ</code> at
+<code>BAR3</code> is performed, returning to <code>FOO5</code>. Since
+<code>BAR</code> was to return the result of calling <code>F</code>, the
+correct value is in the result register for <code>FOO5</code>.</p>
+<p>Notice that during the execution of <code>F</code> the stack looked
+like this:</p>
+<pre><code>        BAR3
+        FOO5
+        ...</code></pre>
+<p>Suppose that at the end of <code>BAR</code> we changed the
+sequence</p>
+<pre><code>        PUSHJ F       to    JUMP F
+  BAR3: POPJ</code></pre>
+<p>Then on arrival at the <code>JUMP</code> the stack would look like
+this:</p>
+<pre><code>        FOO5
+        ...</code></pre>
+<p>Instead of a <code>PUSHJ</code> to push <code>BAR3</code>, we have a
+<code>JUMP</code> to <code>F</code>. Thus on arrival at <code>F</code>,
+the stack has only <code>FOO5</code> on top. When <code>F</code> is
+done, it will return to <code>FOO5</code> instead of <code>BAR3</code>.
+But this is all right! <code>F</code> has put the correct value in the
+result register, and this value will be transmitted to
+<code>FOO5</code>, with the stack properly adjusted. All that has
+changed is the useless pushing of <code>BAR3</code>, and the encoding of
+a procedure call as a <code>JUMP</code> (that is, a
+<code>GOTO</code>!).</p>
+<p>This approach is quite general. The idea is obscured by algebraic
+syntax, but if we rewrite a program in <span class="sc">LISP</span>
+notation, it is clear that the last thing that program does is a
+procedure call of some kind. To prove this, we note that the outermost
+construct in the program body must fall into one of a limited number of
+cases:</p>
+<ul>
+<li>A call to an “intrinsic” function which is compiled open. In this
+case that function is simply compiled open. That function may compile
+open as one or more arithmetic instructions followed by a
+<code>POPJ</code>, or else it must recursively fall into some other
+case.</li>
+<li>A call to an external function. In this case, as argued above, we
+can simply <code>JUMP</code> to the new function, as there is no need to
+return to the caller.</li>
+<li>A conditional. The argument applies recursively to the branches of
+the conditional.</li>
+<li>A sequential block. The argument applies recursively to the last
+component of the block.</li>
+<li>A looping construct. The argument applies recursively to the
+expression which gives the value of the loop (which may be assumed to
+fall into the first case if the value is to be ignored).</li>
+</ul>
+<p>Other constructs are handled similarly. In this way, if the last
+thing a procedure does is call another (external) procedure, that call
+can be compiled as a <code>GOTO</code>. Such a call is called
+<em>tail-recursive</em>, because the call appears to be recursive, but
+is not, since it appears at the tail end of the caller.</p>
+<p>This approach can be made even more uniform by compiling every
+procedure call as a <code>GOTO</code>. The idea is that a return address
+is pushed on commencement of the evaluation of an argument, rather than
+application of a function. This provides a uniform compilation
+discipline. For example, consider the <code>BAR</code> function used
+above:</p>
+<pre><code>  (DEFINE (BAR X Y)
+          (F (G X) (H Y)))</code></pre>
+<p>In order to compile the body, we must first compile the argument
+forms <code>(G X)</code> and <code>(H Y)</code>. Since
+<code>(G X)</code> is an argument form, we push a return address, then
+set up the arguments for <code>G</code>, then call <code>G</code>.
+<code>(H Y)</code> is treated similarly. Now that the arguments for
+<code>F</code> are available, we set them up and call
+<code>F</code>:</p>
+<pre><code>  BAR:    PUSH [BAR1]
+          &lt;set up arguments for G&gt;
+          JUMP G
+  BAR1:   &lt;save result from G&gt;
+          PUSH [BAR2]
+          &lt;set up arguments for H&gt;
+          JUMP H
+  BAR2:   &lt;use results from G and H for F&gt;
+          JUMP F</code></pre>
+<p>We did not push a return address for <code>F</code> since the call to
+<code>F</code> is not an argument form. Notice that this uniform
+discipline lends itself to passing arguments on the stack, above the
+return address. The called procedure is then responsible for popping the
+arguments. On the other hand, if argument passing does not use the
+stack, we can permute the <code>PUSH</code> of the return address with
+the argument set-up code:</p>
+<pre><code>  BAR:    &lt;set up arguments for G&gt;
+          PUSH [BAR1]
+          JUMP G
+  BAR1:   &lt;save result from G&gt;
+          &lt;set up arguments for H&gt;
+          PUSH [BAR2]
+          JUMP H
+  BAR2:   &lt;use results from G and H for F&gt;
+          JUMP F</code></pre>
+<p>If our machine has a <code>PUSHJ</code> instruction, then a peephole
+optimization [<a href="#mckeeman-65" id="xmckeeman-65" title="Peephole optimization">McKeeman 65</a>] can now transform the
+<code>PUSH</code>/<code>JUMP</code> sequence into a single
+<code>PUSHJ</code> instruction. Thus we see that a procedure call can be
+uniformly treated as a <code>GOTO</code>, with the <code>PUSHJ</code>
+instruction considered an optimization (rather than vice versa!).</p>
+<p>There are a couple of difficulties with this idea. One is that the
+stack is often used to hold information other than return addresses,
+such as stack-allocated data structures and intermediate results. This
+is no problem, as it turns out; it is merely necessary to clean up the
+stack just before calling <code>F</code>, rather than just after calling
+<code>F</code>; then the original <code>PUSHJ F</code> and the
+<code>POPJ</code> will be consecutive, and so can be expressed as a
+<code>JUMP F</code>. {Note <a href="#note-shuffle-arguments" id="xshuffle-arguments" title="To elucidate this point further, suppose that function arguments are passed on the stack (above the return address). Then, using a true stack discipline plus tail-recursion, if there are intermediate results or other data above that return address, the arguments to be passed must be moved down over this other data so that they will be in the correct position ...">Shuffle
+Arguments</a>}</p>
+<p>This leads to a second difficulty, which is that some languages would
+allow <code>F</code> to refer globally to stack-allocated structures
+within <code>BAR</code>, such as the dynamic values of <code>X</code>
+and <code>Y</code>. In this case we cannot clean up the stack until
+after calling <code>F</code>. There is, however, some evidence [<a href="#wulf-73" id="xwulf-73" title="Global Variable Considered Harmful">Wulf 73</a>] that such global
+variables are as “harmful” as <code>GOTO</code> statements; in any case
+it is a good idea to minimize their use, and to define variables to be
+lexical in scope by default. It turns out that in most programming
+languages (<span class="sc">COBOL</span>, <span class="sc">PL/I</span>,
+<span class="sc">FORTRAN</span>. and <span class="sc">LISP</span> in
+particular) the distinction between lexical and dynamic scoping doesn’t
+matter most of the time anyway. We should leave the compiler free to
+produce the best possible code; only in cases where structures are
+explicitly declared to be dynamically referenced should the compiler be
+forced to leave them on the stack in an otherwise tail-recursive
+situation.</p>
+<p>In general, procedure calls may be usefully thought of as
+<code>GOTO</code> statements which also pass parameters, and can be
+uniformly encoded as <code>JUMP</code> instructions. This is a simple,
+universal technique, to be contrasted with the more powerful
+recursion-removal techniques such as those in [<a href="#darlington-76-1-2-3" id="xdarlington-761" title="A System which Automatically Improves Programs">Darlington
+76</a>]. Our approach results in all tail-recursive procedure calls
+being compiled as iterative code, almost without even trying, for it is
+more a matter of the code generation strategy than of a specific attempt
+to remove recursions. (For more discussion of this, see [<a href="#steele-76b-1-2-3" id="xsteele-76b1" title="LAMBDA: The Ultimate Declarative">Steele 76b</a>]. For an
+interesting comparison between <code>GOTO</code> and the <span class="sc">APL</span> execute operator, see [<a href="#sykes-77" id="xsykes-77" title="Whizbang of the Month: Branching and Iteration">Sykes
+77</a>].)</p>
+</section>
+<section id="b.-procedure-calls-can-be-fast" class="level2">
+<h2><a href="#contents" title="Go to Contents">B.   Procedure Calls Can
+be Fast</a></h2>
+<p>The above examples have shown procedure calls encoded as a simple
+<code>JUMP</code>, or at worst as a <code>PUSHJ</code>. These simple
+instructions are not time-consuming, even on computers which must
+simulate <code>PUSHJ</code> because it is not a primitive instruction.
+What then makes procedure calls so expensive?</p>
+<p>The answer seems to be that most implementations are rather
+thoughtless or careless in this regard. It is usual for a compiler to
+slap standard “prologue” and “epilogue” code around every procedure;
+this code typically sets up complex procedure frame structures,
+allocates all declared variables, and sometimes even saves and restores
+all registers. Auslander and Strong [<a href="#auslander-76-1-2-3" id="xauslander-761" title="Systematic Recursion Removal">Auslander
+76</a>] report that one simple procedure call, compiled by the <span class="sc">OS/360</span> <span class="sc">PL/I</span> optimizing
+compiler, pushes 336 bytes onto the stack! Yourdon [<a href="#yourdon-75-1-2-3-4-5" id="xy3" title="Techniques of Program Structure and Design">Yourdon 75</a>,98]
+reports that on a 360/50 a <span class="sc">PL/I</span> procedure call
+costs 198 microseconds. It is no wonder that programmers feel that
+procedure calls are slow - they are!</p>
+<p>That is, they are slow <em>as currently implemented</em>.
+Unfortunately, our thinking has generally been colored to the point
+where we simply assume that all procedure calls are inherently slow.
+Even <span class="sc">SIGSAM</span> Bulletin, a journal contributed to
+in large part by <span class="sc">LISP</span> programmers, said in an
+editorial [<a href="#jenks-72" id="xjenks-72" title="Editor&#39;s Comment, SIGSAM Bulletin No. 24">Jenks 72</a>]:</p>
+<blockquote>
+<p>“… one might expect <span class="sc">CANAL</span>, <span class="sc">SAC-1</span>, <span class="sc">ALTRAN</span>, and <span class="sc">TRIGNAN</span> to run the fastest, because they make
+efficient use of special-purpose data structures and because they are
+written either in <span class="sc">FORTRAN</span> or machine language;
+and present versions of <span class="sc">MACSYMA</span>, <span class="sc">REDUCE</span>, and <span class="sc">SCRATCHPAD</span> to run
+slower – because of their more general expression handling ability and
+because of the frequency and generality of function calling in <span class="sc">LISP</span>.”</p>
+</blockquote>
+<p>In that same editorial comparative running times were given for the
+systems, and indeed the <span class="sc">LISP</span>-based systems were
+five to ten times slower than the others – except <span class="sc">MACSYMA</span>, which was comparable to the <span class="sc">FORTRAN</span> and machine-language systems! Clearly this
+contradicts the cited intuitive belief about procedure calls.</p>
+<p>A reply by Fateman [<a href="#fateman-73" id="xfateman-73" title="Reply to an Editorial, SIGSAM Bulletin 25">Fateman 73</a>]
+further emphasized this point. In actual timing tests conducted on
+numerical code using the <span class="sc">MacLISP</span> compiler and
+the then current <span class="sc">DEC</span> <span class="sc">FORTRAN</span> compiler, the <span class="sc">MacLISP</span>
+code was faster! Fateman comments:</p>
+<blockquote>
+<p>“… ‘the frequency and generality of function calling in <span class="sc">LISP</span>’ is a high cost only in inappropriately designed
+computers (or poorly designed <span class="sc">LISP</span> systems). …
+The point we wish to make is that compiled properly, <span class="sc">LISP</span> may be as efficient a vehicle for conveying
+algorithms, even numerical ones, as any other higher-level language,
+e.g. <span class="sc">FORTRAN</span>. An examination of the machine code
+produced by the two compilations shows that the inner-loop arithmetic
+compilations are virtually identical, but that <span class="sc">LISP</span> subroutine calls are less expensive.”</p>
+</blockquote>
+<p>(For a discussion of the techniques used to achieve <span class="sc">FORTRAN</span>-like arithmetic ability in <span class="sc">LISP</span>, see [<a href="#steele-77b" id="xsteele-77b" title="Fast Arithmetic in MacLISP">Steele 77b</a>].)</p>
+</section>
+<section id="c.-why-procedure-calls-have-a-bad-reputation" class="level2">
+<h2><a href="#contents" title="Go to Contents">C.   Why Procedure Calls
+Have a Bad Reputation</a></h2>
+<p>The very notion of “procedure call” in a programming context was only
+worked out painfully after computers had already existed for some time.
+Indeed, the idea of automatically linked library procedures met with
+considerable opposition when first proposed. [<a href="#hopper-73" id="xhopper-73" title="An Interview with Captain Grace Murray Hopper, USNR">Hopper
+73</a>] Since procedure calling instructions were not planned ahead of
+time in the way that arithmetic, conditional, and branch operations
+were, one would assume they were implemented on early computers in a
+rather clumsy fashion. While the basic arithmetic and conditional jump
+instructions have changed little in nature over the years, one can trace
+an evolution of special instructions used for procedure calls. Machines
+before 1960 (for example the <span class="sc">IBM</span> 1620 and 704)
+typically had only one instruction (if any) for subroutine calling,
+which saved the instruction counter in a register or in the first memory
+location of the called subroutine. The <span class="sc">PDP-1</span> had
+three instructions which were all variants on this theme. The <span class="sc">IBM</span> 360 had only one such instruction (with two
+addressing modes), but the programmer had the additional choice of which
+register to store the program counter into. As far as I know offhand,
+stack instructions did not generally appear in non-stack-oriented
+machines until the mid-1960’s, in such machines as the PDP-6, which in
+addition to <code>PUSHJ</code> offered three other subroutine-calling
+instructions; in retrospect, this seems to have been more out of
+uncertainty as to which would be used than out of necessity for a
+variety of instructions, for only two of the four are used at all
+extensively now on the PDP-10 (I am ignoring the “UUO” mechanism as not
+being a <em>general</em> subroutine-calling device). The <span class="sc">PDP-11</span> (1970 or so) is the earliest machine I know of
+which was not essentially stack oriented (as some early Burroughs
+machines were) but which provided only a stack-pushing subroutine call
+instruction.</p>
+<p>The interesting thing is that all of these examples have attempted to
+compress the procedure call operation into a single instruction. As may
+be inferred from the discussion above and in [<a href="#steele-76b-1-2-3" id="xsteele-76b2" title="LAMBDA: The Ultimate Declarative">Steele 76b</a>], this isn’t
+necessarily the right way to do it. The procedure call may conceptually
+be divided into three phases: push a return address <em>if
+necessary</em>, set up arguments, go to called procedure. (Those
+familiar with spaghetti stacks [<a href="#bobrow-73-1-2" id="xbobrow-731" title="A Model and Stack Implementation of Multiple Environments">Bobrow
+73</a>] will recognize this sequence as “create a frame, set up the
+arguments in the frame, go to called procedure”.) It is important to
+note that the first step <em>naturally</em> comes first, and that it is
+<em>conditional</em> (but for lexically scoped programs this condition
+can be determined at compile time for any given procedure call as
+described above). The mistake that we make is to attempt to combine the
+first and third steps unconditionally into a single, universal
+instruction. The result is that the return address is always pushed
+whether it is necessary or not.</p>
+<p>(It is appropriate to note here that the procedure call instruction
+might not itself push the return address onto the stack. It might put it
+into a register, in which case that register’s previous contents must
+first be pushed, in general, as there are only a finite number of
+registers. Another case, often used in <span class="sc">FORTRAN</span>
+implementations, is that every procedure has a location reserved in
+memory for holding the return address for that procedure. This does not
+permit recursion, and wastes memory space compared to the use of a
+stack, because if recursion is not permitted the total stack space could
+not exceed the number of distinct procedures anyway.)</p>
+<p>Compiler writers have often simplified their job at the expense of
+the procedure call by adopting certain standard protocols. One of these
+is that the called procedure should save all registers that it uses.
+This is in turn often simplified to “save all registers”. It is seldom
+the case that all of these registers actually need to be saved; indeed,
+in statement-oriented languages such as <span class="sc">FORTRAN</span>
+with little global optimization by the compiler, often no registers need
+be saved across a procedure call! Thus this convention can only lead to
+unnecessary extra running time, which gets charged to the poor procedure
+call. (This convention does have the virtue of helping to isolate the
+effects of buggy compiler output; but this feature is not without
+cost.)</p>
+<p>The great speed of compiled <span class="sc">MacLISP</span> procedure
+calls is primarily due to its taking the inverse approach: the
+<em>caller</em> is responsible for saving any registers that it will
+need after calling another procedure. It might be thought that this
+would lead to a much greater code size than the other convention, but
+this is offset by three effects. One is that, as noted above, few
+registers actually need to be saved in practice. Another is that the
+compiler can know which registers are not destroyed by built-in
+functions and avoid saving such registers unnecessarily. (This can be
+compared with knowing which registers are used by the out-of-line
+“intrinsic” functions in a FORTRAN implementation; or, for that matter,
+knowing that certain instructions clobber certain registers, such as
+<code>DIVIDE</code> producing both a quotient and a remainder.) The
+third is that the architecture of the PDP-10, while not essentially
+stack-oriented, does not make references to stack values unduly
+difficult; thus it is often just as easy to keep a variable on the stack
+rather than in a register in the first place.</p>
+<p>At the source-language level, there are other factors which
+contribute to the procedure call’s poor reputation. Nearly all algebraic
+computer languages draw a syntactic distinction between operators and
+user functions, if not also a semantic distinction. Often built-in
+functions are also distinguished in some silly way from user functions,
+even though they are used in syntactically similar ways. As an example,
+you cannot pass “<code>+</code>” as an external function argument in
+<span class="sc">FORTRAN</span>, even though it is mathematically a
+perfectly good function of two arguments; similarly you cannot pass a
+statement function, even though there is no syntactic difficulty as
+there is for “<code>+</code>”. [<a href="#ans-76-1-2" id="xans-761" title="Draft proposed ANS FORTRAN (BSR X3.9)">ANS 76</a>,8.7/15.4.3] You
+can pass an intrinsic function as an argument, <em>unless</em> it is one
+of the <code>MIN</code>/<code>MAX</code> series. [<a href="#ans-76-1-2" id="xans-762" title="Draft proposed ANS FORTRAN (BSR X3.9)">ANS
+76</a>,8.8/15.3.2] <span class="sc">PL/I</span> built-in functions can
+return array or structure values, but not user-defined functions. [<a href="#ibm-70b" id="xibm-70b" title="IBM System/360 Operating System PL/I (F) Language Reference Manual">IBM
+70b</a>,162] Even as enlightened a language as <span class="sc">APL</span> does not permit, in current implementations, a
+user function to be used within the reduction or inner/outer product
+constructions. Such decisions are occasionally questioned, but most
+people accept them on the grounds of “efficiency”. This is absurd. There
+is no reason one cannot accept the general case, and handle important
+special cases specially. For example, if a user should try to pass a
+statement function or intrinsic function as an argument in <span class="sc">FORTRAN</span>, the compiler could jolly well provide a
+reference to an <span class="sc">EXTERNAL</span> version of that
+routine, while continuing to use the internal version (if it is in fact
+compiled as a distinct version) where applicable.</p>
+<p>Even if we accept such arbitrary semantic distinctions in our
+languages, there remain the syntactic differences. Most languages
+require user functions to be referenced in a rather awkward manner, and
+subroutines (value-less procedures) in even more awkward ways. <span class="sc">FORTRAN</span> requires subroutines to be invoked using the
+keyword “<code>CALL</code>”. <span class="sc">COBOL</span> is even
+worse: it uses the longer keyword “<code>PERFORM</code>” for internal
+subroutines, and two keywords “<code>CALL ... USING</code>” for external
+subroutines. [<a href="#ibm-70a" id="xibm-70a" title="IBM System/360 Operating System American National Standard COBOL">IBM
+70a</a>] Moreover, for many years it took <em>three</em> statements to
+call an external procedure:</p>
+<pre><code>  ENTER LINKAGE.
+  CALL FOO USING ARG1 ARG2 ARG3.
+  ENTER COBOL.</code></pre>
+<p>[<a href="#ibm-68" id="xibm-68" title="IBM System/360 Operating System COBOL Language">IBM 68</a>] [<a href="#dec-69" id="xdec-69" title="PDP-10 COBOL Language Programmer&#39;s Reference Manual">DEC
+69</a>] (One notable exception to this mess is <span class="sc">LISP</span>. There are also some extensible algebraic
+languages available, such as <span class="sc">EL/1</span> [<a href="#wegbreit-71" id="xwegbreit-71" title="The ECL Programming System">Wegbreit 71</a>] [<a href="#wegbreit-74" id="xwegbreit-74" title="ECL Programmer&#39;s Manual">Wegbreit 74</a>]; many of these are
+in fact implemented in a <span class="sc">LISP</span>-like manner
+beneath a veneer of <span class="sc">ALGOL</span>-like syntax.) It is
+generally true that we tend to believe that the expense of a programming
+construct is proportional to the amount of writer’s cramp it causes us
+(by a “belief” I mean here an unconscious tendency rather than a fervent
+conviction). Indeed, this is not a bad psychological principle for
+language designers to keep in mind. We think of addition as cheap partly
+because we can notate it with a single character: “<code>+</code>”. Even
+if we believe that a construct is expensive, we will often prefer it to
+a cheaper one if it will cut our writing effort in half. This is a
+lesson that practitioners of programming discipline have been trying to
+sell us, but it is a good one only if our programming languages are
+designed to cooperate with our natural tendency toward brevity.</p>
+<p>In [<a href="#dijkstra-76-1-2" id="xdijkstra-762" title="A Discipline of Programming">Dijkstra 76</a>,xvii] Dijkstra
+comments:</p>
+<blockquote>
+<p>“… it therefore hurts me to see the semantics of the repetitive
+construct</p>
+<div class="line-block">    ‘<strong>while</strong> B
+<strong>do</strong> S’</div>
+<p><em>defined</em> as that of the call</p>
+<div class="line-block">    ‘whiledo(B,S)’</div>
+<p>of the recursive procedure (described in ALGOL 60 syntax):</p>
+<div class="line-block">    <strong>procedure</strong>
+whiledo(condition,statement);<br />
+    <strong>begin</strong> <strong>if</strong> condition
+<strong>then</strong> <strong>begin</strong> statement;<br />
+                                          whiledo(condition,statement)
+<strong>end</strong><br />
+    <strong>end</strong> ”</div>
+</blockquote>
+<p>It hurts me too, partly because Dijkstra here uses call-by-name to an
+indefinite number of levels, but even more because the syntax of <span class="sc">ALGOL</span> 60 makes the example twice as frightening as it
+really is. The <span class="sc">LISP</span> version</p>
+<pre><code>  ((LABEL LOOP
+          (LAMBDA () (IF (NOT B)
+                         (PROGN S (LOOP))))))</code></pre>
+<p>is at least slightly less awesome to me (though of course it is still
+more awesome than simply “<strong>while</strong> B <strong>do</strong>
+S”). {Note <a href="#note-step-variables" id="xstep-variables" title="A far more important point not mentioned in the main text is that procedures not only can easily express the control structure of various kinds of loops, but also provide a natural way to express the stepping of the variables ...">Step
+Variables</a>}</p>
+<p>As an additional defense of the procedure call, it should be pointed
+out that it constitutes a universal construct when properly implemented.
+The practitioners of programming discipline point with pride to such
+theorems as that of Boehm and Jacopini [<a href="#boehm-66" id="xboehm-66" title="Flow Diagrams, Turing Machines and Languages with Only Two Formation Rules">Boehm
+66</a>], showing that any program can be written using their favored
+constructs. Such theorems have recently been ballyhooed about to the
+point of absurdity:</p>
+<blockquote>
+<p>“Structured programming is based on the mathematically proven
+Structure Theorem.” [<a href="#neighbors-76" id="xneighbors-76" title="Assuring Software Reliability">Neighbors 76</a>]</p>
+</blockquote>
+<p>It has even been demonstrated, as a mathematical curiosity, that
+<code>IF-THEN-ELSE</code> can be dispensed with. [<a href="#presser-75" id="xpresser-75" title="Structured Languages">Presser 75</a>] It ought
+not be forgotten, however, that procedure calls can easily simulate
+sequencing, conditionals, and repetition, while the converse is
+decidedly not true. Even without completely solving the so-called FUNARG
+problem [<a href="#moses-70" id="xmoses-70" title="The Function of FUNCTION in LISP">Moses 70</a>], a surprising
+variety of tricks can be played with procedure calls, including dynamic
+binding and iteration. If the <code>FUNARG</code> problem is solved,
+additional tricks are easily played, such as escape expressions,
+call-by-name, procedural data types, etc. The interested reader is
+referred to [<a href="#steele-76a" id="xsteele-76a" title="LAMBDA: The Ultimate Imperative">Steele 76a</a>] and [<a href="#steele-76b-1-2-3" id="xsteele-76b3" title="LAMBDA: The Ultimate Declarative">Steele 76b</a>] for some
+examples of how this is done.</p>
+</section>
+<section id="d.-what-are-we-doing-about-it" class="level2">
+<h2><a href="#contents" title="Go to Contents">D.   What Are we Doing
+About It?</a></h2>
+<p>Up to now, we have spent more time ignoring or circumventing the
+problem than solving it. Yourdon says “In most cases, a modular approach
+should not require more than 5-10% extra <span class="sc">CPU</span>
+time; this seems to be a reasonable price to pay…” [<a href="#yourdon-75-1-2-3-4-5" id="xy4" title="Techniques of Program Structure and Design">Yourdon 75</a>,99] I
+would suggest that this price is totally <em>unreasonable</em> when the
+technology (or, more accurately, the design philosophy) exists to reduce
+it!</p>
+<p>There has been some mathematical work done on recursion removal [<a href="#strong-71-1-2" id="xstrong-711" title="Translating Recursion Equations into Flow Charts">Strong 71</a>]
+[<a href="#darlington-76-1-2-3" id="xdarlington-762" title="A System which Automatically Improves Programs">Darlington
+76</a>] which is aimed both at converting procedure calls to
+<code>GOTO</code> statements and at transforming programs into other
+forms requiring less recursion. Some of this work is both mathematically
+interesting and practically applicable. Sometimes, however, it has gone
+up a garden path under the influence of the “expensive procedure call”
+myth. One example is a paper by Auslander and Strong [<a href="#auslander-76-1-2-3" id="xauslander-762" title="Systematic Recursion Removal">Auslander 76</a>] which describes a
+technique for removing recursions from <span class="sc">PL/I</span>
+programs. This involves a set of source-to-source transformations which
+convert <span class="sc">PL/I</span> function calls into
+<code>GOTO</code> statements. Extra stacks are introduced in the form of
+arrays (though in their example they use an already existing array by
+means of an extremely clever trick) which are used to contain saved
+values of variables and return addresses. To put it quite simply (though
+they do not), they compile the <span class="sc">PL/I</span> program into
+another <span class="sc">PL/I</span> program which is more like machine
+language, and which the real <span class="sc">PL/I</span> compiler can
+therefore process more easily. They report that this technique improves
+run time by 40%, and space used per level of recursion from 336 bytes to
+9, a 97% saving!</p>
+<p>This seems impressive until we realize that their transformations are
+almost entirely straightforward and mechanical and could easily be made
+a part of the <span class="sc">PL/I</span> compiler, and furthermore
+that they are essentially techniques which have been used by the <span class="sc">MacLISP</span> compiler and others for almost a decade:
+turning procedure calls into <code>GOTO</code> when possible, and
+avoiding pushing variable values unless necessary! Then we are impressed
+only by the inefficiency of this so-called “optimizing” <span class="sc">PL/I</span> compiler!</p>
+<p>What is more, Auslander and Strong conclude:</p>
+<blockquote>
+<p>“These techniques can be applied to a program without an
+understanding of its purpose. However, they are complex enough so that
+we are inclined to teach them as tools for programmers rather than try
+to mechanize them as an option in an optimizing compiler.”</p>
+</blockquote>
+<p>In other words, we are now so afraid of procedure calls that, rather
+than fix our compilers, we wish to teach programmers complex techniques
+for using <code>GOTO</code> to circumvent the shortcomings of our
+compilers! Such a desire is completely outrageous. Not only does it
+violate the philosophical principles of clarity in language design and
+programming style we have slowly been forced to accept, but it is
+demonstrably ridiculous, because while the complete generality of these
+techniques has perhaps not been implemented in a compiler, a good part
+of it has, and has worked for eight to ten years at least. Such is the
+ludicrous position we have come to.</p>
+</section>
+<section id="e.-the-expressive-power-of-procedure-calls" class="level2">
+<h2><a href="#contents" title="Go to Contents">E.   The Expressive Power
+of Procedure Calls</a></h2>
+<p>Here we shall consider an example of how expressive procedure calls
+can be when used freely. The example is taken from Yourdon [<a href="#yourdon-75-1-2-3-4-5" id="xy5" title="Techniques of Program Structure and Design">Yourdon 75</a>,233];
+he implies that the program was an actual one in use. He suggests that,
+rather than using many flag variables to indicate various conditions
+within a program, one should use a single variable which encodes the
+state of the program. The motivation behind this is that one should also
+draw a state diagram showing the valid transitions between states; the
+programmer is encouraged to think of his program as a finite-state
+automaton. In this way one can avoid the common error of producing an
+invalid combination of flag values. The state diagram for Yourdon’s
+example is reproduced here.</p>
+<p><img role="img" src="data:image/png;base64,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" style="width:75.0%" /></p>
+<p>The 128 possible combinations of seven independent flags have been
+reduced to 23 permissible states and the legal transitions among
+them.</p>
+<p>The program itself is to be implemented using two variables
+<code>OLD-STATE</code> and <code>NEW-STATE</code> and a
+<code>computed-GOTO</code> or <code>CASE</code> statement. The main
+program dispatches to the module designated by <code>NEW-STATE</code>.
+The module can then check <code>OLD-STATE</code> to be sure the
+transition was valid. For example, module 14 would ensure that
+<code>OLD-STATE</code> held 11 or 16. When module 14 is done, it must
+store 14 into <code>OLD-STATE</code> and set <code>NEW-STATE</code> to
+the next state, and then branch back to the computed <code>GOTO</code>
+or <code>CASE</code>. It is assumed, though not stated, that all
+variables common to several modules are declared in an outer environment
+accessible to the modules.</p>
+<p>We shall modify this set-up slightly to make it more foolproof. The
+first problem is that every module must contain code to manipulate
+<code>OLD-STATE</code> and <code>NEW-STATE</code>, and it is easy to
+forget to include this code. We shall perform this work within the
+<code>CASE</code> statement itself; this collects the transition
+information into one place. In order to avoid branching to the
+<code>CASE</code> statement, we shall embed the <code>CASE</code>
+statement in a loop. To terminate the loop, we will allow state 0 to
+represent the exit state. Finally, we shall rename the variables
+<code>NEW-STATE</code> and <code>OLD-STATE</code> to
+<code>PROGRAM-COUNTER</code> and <code>OLD-PC</code>. The resulting code
+looks like this:</p>
+<pre><code>UNTIL PROGRAM-COUNTER = 0 DO
+    CASE PROGRAM-COUNTER OF
+        1: BEGIN
+              IF NOT (OLD-PC = 3
+                      OR OLD-PC = 7
+                      OR OLD-PC = 8)
+                 THEN ERROR;
+              OLD-PC := PROGRAM-COUNTER;
+              PERFORM MODULE1;
+           END;
+        2: ...
+        ...
+        23: BEGIN
+               IF NOT (OLD-PC = 20
+                       OR OLD-PC = 21)
+                  THEN ERROR;
+               OLD-PC := PROGRAM-COUNTER;
+               PERFORM MODULE23;
+            END;
+    ENDCASE;</code></pre>
+<p>The code for each module must end with a statement that assigns a new
+value to <code>PROGRAM-COUNTER</code>. The use of a number to identify
+the next module to execute obscures the code, so let us assume that we
+can use symbolic names (defined by a <code>PARAMETER</code> statement,
+for example). Let us also assume the trivial syntactic sugar:</p>
+<pre><code>  JUMP x means PROGRAM-COUNTER := X</code></pre>
+<p>Then at the end of each module we can write a <code>JUMP</code>
+statement to the next module. For example:</p>
+<pre><code>  PROCEDURE MODULE23;
+      BEGIN
+          &lt;do processing&gt;;
+          IF &lt;testl&gt; THEN JUMP MODULE10
+              ELSE IF &lt;test2&gt; THEN JUMP MODULE15
+              ELSE JUMP MODULE20;
+      END;</code></pre>
+<p>Let us pause for a few observations. First, the outer loop of our
+program may be compared to a hardware <span class="sc">CPU</span>, and
+the modules to the instructions of that <span class="sc">CPU</span>. It
+has a program counter which takes us from instruction to instruction.
+(For an example of this style of programming in LISP, see [<a href="#sussman-75" id="xsussman-75" title="SCHEME: An Interpreter for Extended Lambda Calculus">Sussman
+75</a>].) Second, our nice program has become a rat’s nest of
+<code>JUMP</code> statements (which might look more familiar had we used
+the keyword <code>GOTO</code> instead of <code>JUMP</code>). This is not
+at all surprising, since the structure of our program merely reflects
+the structure of our problem as exhibited in the state-transition
+diagram, and that too is a rat’s nest. Third, our attempt to improve the
+program by using a nice, structured approach has resulted in the
+effective use of <code>GOTO</code> all over the place!</p>
+<p>We note that the use of symbolic names in <code>JUMP</code>
+statements reduces the probability of errors in describing state
+transitions, and so we may feel confident in removing the error-checking
+code from the main loop. (Moreover, a cross-indexing program can find
+all the references to each module for us, which could not easily be done
+when numbers were used.) We furthermore can eliminate the outer loop and
+<code>CASE</code> statement entirely; all that would be needed is
+<code>GOTO</code> statements at the end of each module, linking them
+together. This will speed up the program by eliminating the
+<code>PROGRAM-COUNTER</code> variable, without appreciably altering the
+structure of the program. Unfortunately, this produces a rat’s nest of
+true <code>GOTO</code> statements, which is not structured.</p>
+<p>This points up to some extent the ultimate futility of the
+Boehm-Jacopini theorem. We can certainly express all programs in a
+structured form by introducing flag variables, but the preceding series
+of reasonable transformations merely renders it unstructured again,
+demonstrating that we had not really made the program structured in
+nature, but only in form.</p>
+<p>There is another way out. Let us not use <code>GOTO</code> statements
+to jump between modules, and let us not use flag variables to signal
+what are effectively <code>GOTO</code> statements to an outer control
+loop. Instead, let us consider what a single module does: it performs
+its bit of processing, and then invokes or otherwise designates another
+module to complete processing. Suppose therefore that at the end of
+every module we had a procedure call to the next module:</p>
+<pre><code>  PROCEDURE MODULE23;
+      BEGIN
+          &lt;do processing&gt;;
+          IF &lt;testl&gt; THEN PERFORM MODULE10
+              ELSE IF &lt;test2&gt; THEN PERFORM MODULEl5
+              ELSE PERFORM MODULE2O;
+      END;</code></pre>
+<p>where we might as well have written “CALL” for “PERFORM”.</p>
+<p>This will certainly do what we want; if <code>MODULE23</code> calls
+<code>MODULE10</code>, then <code>MODULE10</code> will carry on, calling
+other modules in the process, and eventually the program will complete.
+It is also “structured”; the only constructs used are sequencing,
+possibly conditionals, and procedure calls. It uses no <code>GOTO</code>
+statements. There is also an additional bonus: if <code>MODULE23</code>
+wants to pass some information to <code>MODULE10</code>, it can pass
+them as parameters rather than having to use global variables. This can
+help prevent conflicting usages of global variables among disjoint
+module sets.</p>
+<p>From this example we can induce the following theorem:</p>
+<blockquote>
+<p>Any flowchart can be written as a program which uses only sequencing,
+conditionals, and procedure calls.</p>
+</blockquote>
+<p>This theorem is not new; it appears in McCarthy’s 1960 paper. [<a href="#mccarthy-60" id="xmccarthy-60" title="Recursive functions of symbolic expressions and their computation by machine - I">McCarthy
+60</a>] It is quite easy to prove. We assume without loss of generality
+that the boxes of the flowchart are of two sorts: process boxes with one
+exit, and conditional boxes with two. A process box may contain any
+single-exit computation whatsoever (which may be built up from
+sequencing, conditional, and while-do loops, for example). A conditional
+may contain a predicate which decides which of two exits to take.</p>
+<p>For each box in the flowchart we construct a procedure. If a box
+<code>A</code> is a process box whose exit branch leads to box
+<code>B</code>, then the procedure for <code>A</code> is:</p>
+<pre><code>  PROCEDURE A; BEGIN &lt;processing&gt;; CALL B END;</code></pre>
+<p>If a box <code>C</code> is a conditional box whose exit branches lead
+to boxes <code>D</code> and <code>E</code>, then the procedure for
+<code>C</code> is:</p>
+<pre><code>  PROCEDURE C; IF &lt;predicate&gt; THEN CALL D ELSE CALL E;</code></pre>
+<p>Every module is “structured” in form; moreover, the modules are not
+necessarily as tiny in size as the examples indicate, since a process
+box may contain an arbitrarily large one-in/one-out program.</p>
+<p>There are several possible objections to such a style of
+programming:</p>
+<ol type="1">
+<li>It requires recursion to implement loops in the flowchart.</li>
+</ol>
+<ul>
+<li>That’s right. If your programming language won’t support recursion
+(e.g. most <span class="sc">FORTRAN</span> implementations), you can’t
+use this particular “structured, modular approach”.</li>
+</ul>
+<ol start="2" type="1">
+<li>Procedure calls are expensive.</li>
+</ol>
+<ul>
+<li>They shouldn’t be!</li>
+</ul>
+<ol start="3" type="1">
+<li>The chain of procedure calls will keep pushing stack, and the stack
+will overflow.</li>
+</ol>
+<ul>
+<li>This is true of current programming language implementations, but it
+has been shown above that such implementations use far more stack than
+necessary. If tail-recursive procedure calls are compiled as
+<code>JUMP</code> instructions, then this problem does not arise.</li>
+</ul>
+<ol start="4" type="1">
+<li>This style of programming is unnatural: “That’s not what procedures
+are for!”</li>
+</ol>
+<ul>
+<li>This is largely a matter of taste. I have written a number of
+medium-sized programs in this style (using a dialect of <span class="sc">LISP</span>) and find it quite natural for certain purposes.
+It accommodates itself well to “state-transition” kinds of programs. It
+also permits one to create non-standard looping constructs which are
+one-in/one-out, but which have complex relationships among the variables
+being stepped.</li>
+</ul>
+<p>An additional observation should be made, of course: in the example
+above, the use of procedure calls hasn’t endowed the program with any
+more structure than the use of flag variables or
+<code>PROGRAM-COUNTER</code> did, compared with the <code>GOTO</code>
+version. All it has done is possibly make the code more palatable. This
+may be a useful psychological illusion, but it is as much a myth as the
+belief that procedure calls are inherently expensive.</p>
+</section>
+<section id="f.-procedure-calls-and-modularity" class="level2">
+<h2><a href="#contents" title="Go to Contents">F.   Procedure Calls and
+Modularity</a></h2>
+<p>The primary role which the procedure call plays in the current
+philosophy of programming discipline is as the agent of modularity.
+Similarly, the primary role played by <code>GOTO</code> is as the agent
+of tangled flowgraphs.</p>
+<p>I would like to suggest that our difficulties in dealing with
+programming and programming languages stem in part from a confusion
+between the abstract notions of program organization and the concrete
+embodiment of these notions as programming language constructs. In order
+to simplify our thinking we have attempted to enforce a one-to-one
+mapping between these two sets, and it doesn’t work very well. For
+example, we decree that procedures are <em>the</em> method of producing
+modularity; that <code>WHILE-DO</code> loops are <em>the</em> way to
+iterate; that <code>IF-THEN-ELSE</code> is <em>the</em> way to produce
+conditionals; that <code>GOTO</code> is <em>the</em> way to produce
+peculiar program structures.</p>
+<p>The fact is that this just isn’t so. Consider the notion of
+modularity, which is indeed a useful concept for organizing programs.
+While procedure calls are indeed a method of modularizing programs,
+there are other methods. The <span class="sc">PL/I</span>
+<code>%INCLUDE</code> construct or the <span class="sc">COBOL</span>
+<code>COPY</code> construct are one alternative. Another is the
+“<code>PRINLEVEL</code>” feature in some <span class="sc">LISP</span>
+systems, which allows you to print the overall structure of a program
+while suppressing the detail of computations below a certain level of
+nesting. A third example (due to R. Zippel) is the common <span class="sc">FORTRAN</span> trick of breaking up a single complex
+assignment statement into several smaller ones:</p>
+<pre><code>      FOO = F(G(A,B,C,D) + H(A,B,C), G(C,D,A,B)
+     1         - H(C,D,A), G(D,C,B,A) * H(D,C,B))</code></pre>
+<p>becomes</p>
+<pre><code>      FOO1 = G(A,B,C,D) + H(A,B,C)
+      FOO2 = G(C,D,A,B) - H(C,D,A)
+      FOO3 = G(D,C,B,A) * H(D,C,B)
+      FOO = F(FOO1, FOO2, FOO3)</code></pre>
+<p>If someone had asked me whether assignment statements were an agent
+of modularity in programming languages, I should certainly have replied
+in the negative before seeing this example.</p>
+<p>Similarly, consider the notion of iteration, another useful concept
+in organizing programs. We are all familiar with the use of
+<code>WHILE-DO</code> and its variants, and also with the use of
+<code>IF-THEN-ELSE</code> and <code>GOTO</code> to achieve the same
+purpose. But, as shown earlier, procedure calls can be an agent of
+iteration. While I would hesitate to write</p>
+<div class="line-block">    <strong>procedure</strong>
+whiledo(condition,statement);<br />
+        <strong>begin</strong> <strong>if</strong> condition
+<strong>then</strong><br />
+            <strong>begin</strong> statement;<br />
+                      whiledo(condition,statement)<br />
+            <strong>end</strong><br />
+        <strong>end</strong><br />
+    whiledo(B,S);</div>
+<p>for “<code>WHILE B DO S</code>”, I would <em>not</em> hesitate to
+write</p>
+<div class="line-block">    <strong>real</strong>
+<strong>procedure</strong> sqrt(arg);<br />
+        <strong>value</strong> arg; <strong>real</strong> arg;<br />
+        <strong>begin</strong><br />
+            <strong>real</strong> <strong>procedure</strong>
+sqrt1(approx);<br />
+                <strong>value</strong> approx; <strong>real</strong>
+approx;<br />
+                <strong>if</strong> abs(arg - approx*approx) &lt;
+epsilon<br />
+                    <strong>then</strong> approx<br />
+                    <strong>else</strong> sqrt1((approx +
+arg/approx)/2);<br />
+            sqrt1(arg/2);<br />
+        <strong>end</strong>;</div>
+<p>knowing, if necessary, that it could be compiled as an iteration
+rather than as a stack-pushing recursion. Of course, I would prefer not
+to have to write the “value” declarations, and might prefer some other
+notation, such as <span class="sc">LISP</span> notation, but the
+essential idea is the same.</p>
+<p>It is even possible to use procedure calls to implement conditional
+expressions, though this has heretofore been largely a curiosity for
+students of lambda calculus. [<a href="#church-41" id="xchurch-41" title="The Calculi of Lambda Conversion">Church 41</a>] Similarly, many
+assignment statements can be modelled and even implemented through the
+use of procedure calls. I have written two <span class="sc">LISP</span>
+compilers which use procedure calls to implement all assignments and
+iterations within the compiler. [<a href="#steele-77a" id="xsteele-77a" title="Compiler Optimization Based on Viewing LAMBDA as RENAME plus GOTO">Steele
+77a</a>] I have used these compilers to compile themselves, and there
+seems to have been no demonstrable sacrifice of speed due to the use of
+procedure calls. Moreover, the code, totalling some seventy pages of
+source text, has been extremely easy to modify and maintain.</p>
+<p>The important point is that for each important programming concept
+which we have found useful – modularity, iteration, assignment,
+conditionals – there may exist more than one programming language
+construct which can embody that concept in a reasonably natural manner.
+Furthermore, it sometimes requires more than one construct to properly
+embody a given concept. For example, <code>WHILE-DO</code> would be
+utterly useless in expressing iteration if some form of assignment
+statement (or other side effect) were not also used!</p>
+<p>In understanding (a piece of) a program it is necessary to determine
+not only what construct is being used, but the concept it is intended to
+express. While we may prefer to think of a procedure call as meaning “go
+do this other module and then come back”, this is only one possible
+interpretation. We must realize that there are situations where coming
+back doesn’t matter (i.e. the tail-recursive cases), and these
+situations may be exploited. Just as a concept such as modularity may be
+expressed by diverse constructs, so may a language construct be
+interpreted in various ways, some of which may lead to superior
+compilation techniques. {Note <a href="#note-various-optimizations" id="xvarious-optimizations" title="Other research has attacked the &#39;expense&#39; of procedure calls from other directions; notable successes have been achieved with the techniques of procedure integration ...">Various
+Optimizations</a>} One example of this is the tail-recursive procedure
+call; another is the logical expression occurring in the predicate of a
+conditional, which does not actually have to produce a Boolean value
+when compiled (this is called “anchor pointing” in [<a href="#allen-72-1-2" id="xallen-721" title="A Catalogue of Optimizing Transformation">Allen 72</a>]).</p>
+<p>It is not unreasonable to want to be able to infer the intent of a
+piece of code from the particular construct used to express it. If only
+<code>GOTO</code> is used to express all control structure, it is hard
+to identify the conceptually important notions of conditional,
+iteration, and escape occurring in the program. It is important that
+alternative modes of expression exist; but the mere banishing of one
+abused alternative is unlikely of itself to cause correct usage of the
+others. Instead, a language should be so designed that one is encouraged
+to use a construct if, and only if, it is appropriate; it most also
+provide enough constructs to cover all reasonable programming concepts.
+Otherwise, programmers will merely misuse the constructs they are given
+(and most programmers are very good at this!). The structure of a
+program is dictated largely by the structure of the problem. If the
+problem solution is best expressed as a finite-state automaton, for
+example, then no amount of structured camouflage will help that
+fact.</p>
+<p>This is the essential frustration we have experienced with
+<code>GOTO</code>. We discovered that <code>GOTO</code> was often being
+used even in situations where more appropriate and expressive constructs
+were available, and that it was being used for all sorts of purposes we
+hadn’t anticipated, and so we sought to eliminate unwanted
+<em>concepts</em> and <em>programming styles</em> by banning a
+<em>construct</em>. This is as fruitless as eliminating iteration by
+banning <code>DO</code>-loops would be (people would just use
+<code>GOTO</code> or procedure calls), or eliminating recursion by
+banning procedure calls (people would, and do, simulate it by using an
+array as a stack). We need to get a better grasp on organizational
+concepts and their relationship to the individual constructs which make
+up our languages.</p>
+</section>
+<section id="conclusions" class="level2">
+<h2><a href="#contents" title="Go to Contents">Conclusions</a></h2>
+<p>Procedure calls are demonstrably not inherently as inefficient as
+computing folklore would lead us to believe. There are implementations
+of higher-level programming languages in which procedure calls are
+almost as cheap as <code>GOTO</code> statements.</p>
+<p>Not all procedure calls need push a return address. “Tail-recursive”
+procedure calls (those occurring at the end of a procedure) can be
+compiled almost as if they were simple <code>GOTO</code> statements. In
+fact, procedure calls can uniformly be treated as <code>GOTO</code>
+statements which pass parameters, with return addresses being pushed at
+a conceptually different point (the commencement of argument
+evaluation). Such a technique reduces the amount of stack space needed,
+provided lexical scoping is used (as in <span class="sc">ALGOL</span>)
+or a subset of lexical scoping (as is largely true of <span class="sc">FORTRAN</span> and <span class="sc">COBOL</span>). Even
+languages with dynamic scoping rules, such as <span class="sc">APL</span> and some <span class="sc">LISP</span> dialects,
+can use this technique in situations where dynamic references are not
+involved.</p>
+<p>Procedure calls permit an extraordinarily powerful style of
+programming which, even though it is completely “structured”, includes
+most rat’s nests of <code>GOTO</code> statements as a subset. This style
+merely involves writing a procedure call where one would ordinarily
+write a <code>GOTO</code> at the end of a procedure. (The technique will
+not reproduce the “escape expression” effect of writing a
+<code>GOTO</code> from inside a loop to outside the loop, however.) This
+style is sufficiently powerful to represent any flowchart without
+introducing flag variables or <code>GOTO</code> statements. Furthermore,
+this style of programming is a natural way to write certain kinds of
+commonly occurring programs. The use of this style does not depend on
+procedure calls being cheap or being compiled as tail-recursive
+branches, though if they are so compiled running time is reduced and
+less stack is consumed, which are desirable characteristics apart from
+the issue of style.</p>
+<p>We might wonder why such rat’s nests are not written using procedure
+calls in practice, when they are certainly possible and violate no rules
+of “structured” programming. The answer is probably that
+<code>GOTO</code> statements, being “cheap”, are used freely enough to
+produce rat’s nests, while procedure calls, being “expensive”, are used
+sparingly. We therefore come to the paradoxical conclusion that
+improving the implementation of procedure calls is a mixed blessing; we
+can improve our programs both in time and space, but we may bring on the
+same problems we had with <code>GOTO</code> by encouraging the use of
+procedure calls in stylistically diverse ways. We could simply ignore
+the whole thing, and go on letting procedure calls be expensive, in
+order to discourage their use; but this would not be intellectually
+honest. It is appropriate that we should have a healthy respect for
+procedure calls, and use them sparingly; but we should respect them
+because they are powerful, and not because they are “expensive”.</p>
+</section>
+<section id="acknowledgements" class="level2">
+<h2><a href="#contents" title="Go to Contents">Acknowledgements</a></h2>
+<p>Discussions with Mike Genesereth, Richard Stallman, and Richard
+Zippel illuminated many key points. Johan DeKleer, Jon Doyle, Tom
+Knight, and Richard Greenblatt also provided useful comments. Gerry
+Sussman was, as always, a great source of enlightenment.</p>
+<p>Carl Hewitt and Richard Stallman provided additional useful comments
+which led to the notes, which were added after final submission of the
+paper to <span class="sc">ACM</span> ’77.</p>
+<p><hr></p>
+</section>
+<section id="notes" class="level2">
+<h2><a href="#contents" title="Go to Contents">Notes</a></h2>
+<section id="section" class="level3">
+<h3></h3>
+<section id="note-omniscient-implementors" class="level4">
+<h4>{Note Omniscient Implementors} <a href="#xomniscient-implementors" class="fr">^</a><br />
+</h4>
+<p>One can argue quite strongly that there are so large a number
+(possibly infinite) of distinct useful control constructs that no one
+language could embody them all, and that therefore no language designer
+should be so conceited as to think he has encompassed all desirable
+constructions in a given language. By this reasoning, the omission of
+<code>CASE</code>, or Dahl loops, or event constructions, or whatever
+else is not a matter of neglect, but of necessity: you just can’t
+foresee them all.</p>
+<p>(This brings out a serious flaw in the present theory of structured
+programming; by assuming that all programs can conveniently be written
+using only certain structures, it implicitly assumes that the problems
+to be solved by these programs have solutions which can be decomposed
+using these structures. We have never seen any justification advanced
+for this latter assumption; and indeed, there are many counterexamples,
+such as Yourdon’s “finite-state machine” program mentioned in the
+text.)</p>
+<p>Until a much more advanced theory of programming is devised,
+designers of practical languages are well advised to leave in “ugly
+hooks” like <code>GOTO</code>, even if also discouraging their use
+except in emergencies. After all, using <code>GOTO</code> to simulate a
+peculiar control construct is probably preferable to a convoluted
+perversion of a more specialized construct.</p>
+</section>
+<section id="note-shuffle-arguments" class="level4">
+<h4>{Note Shuffle Arguments} <a href="#xshuffle-arguments" class="fr">^</a><br />
+</h4>
+<p>To elucidate this point further, suppose that function arguments are
+passed on the stack (above the return address). Then, using a true stack
+discipline plus tail-recursion, if there are intermediate results or
+other data above that return address, the arguments to be passed must be
+moved down over this other data so that they will be in the correct
+position. This is particularly tricky because these positions are
+probably also where the arguments passed to you were stored. For
+example, suppose <code>A</code> calls <code>B</code>, and <code>B</code>
+calls <code>C</code> tail-recursively. Then <code>A</code> passes a
+return address <code>R</code> and arguments to <code>B</code>, and
+<code>B</code> wishes to pass <code>R</code> and different arguments to
+<code>C</code>. <code>B</code> must replace its arguments from
+<code>A</code> with the new ones for <code>C</code>. This entails some
+shuffling of the stack positions.</p>
+<p>The need to shuffle stack positions can be alleviated by passing
+arguments through registers, but this in turn usually requires shuffling
+of registers. Another way out is to use a more general form of stack,
+such as the so-called “spaghetti” [<a href="#bobrow-73-1-2" id="xbobrow-732" title="A Model and Stack Implementation of Multiple Environments">Bobrow
+73</a>] or “macaroni” [<a href="#steele-77c" id="xsteele-77c" title="Macaroni is Better than Spaghetti">Steele 77c</a>] stacks. Under
+such a scheme there is no need to shuffle old arguments away so that new
+arguments to be passed may occupy their positions; instead, each stack
+frame has a pointer to the next one, and two stack frames may both point
+to a third. Thus <code>B</code> would build a new stack frame
+<code>F&#39;</code> pointing to the one <code>G</code> containing
+<code>R</code>; <code>B</code>’s arguments remain in frame
+<code>F</code>, which also points to <code>G</code>. On calling
+<code>C</code>, <code>F&#39;</code> is passed to <code>C</code> and
+<code>F</code> is discarded.</p>
+</section>
+<section id="note-step-variables" class="level4">
+<h4>{Note Step Variables} <a href="#xstep-variables" class="fr">^</a><br />
+</h4>
+<p>A far more important point not mentioned in the main text is that
+procedures not only can easily express the control structure of various
+kinds of loops, but also provide a natural way to express the stepping
+of the variables. Consider the loop for “iterative factorial” written in
+terms of a <span class="sc">LISP</span> <code>LABEL</code>
+construct:</p>
+<pre><code>  ((LABEL LOOP
+          (LAMBDA (M A)
+                  (IF (= M 0)
+                      A
+                      (LOOP (- M 1) (* M A)))))
+   N 1)</code></pre>
+<p>Compare this with the Algol version:</p>
+<div class="line-block">    <strong>begin</strong><br />
+        A := 1;<br />
+        <strong>for</strong> M := N <strong>step</strong> -1
+<strong>until</strong> 0 <strong>do</strong><br />
+            A := A * M;<br />
+    <strong>end</strong></div>
+<p><br />
+As it happens, in the Algol version we could absorb the stepping of one
+of the variables into a <strong>for</strong> construction. However, the
+nature of the loop is that two variables are stepped, and the Algol
+version makes one of them very hard to see! The stepping must be
+expressed through a side-effect (assignment) to a variable global to the
+loop. The <span class="sc">LISP</span> version has identical semantics
+but proceeds without explicit side-effect, and expresses the stepping of
+the two variables in the same manner. (Cf. the <span class="sc">PLASMA</span> version given in [<a href="#hewitt-77" id="xhewitt-77" title="Viewing Control Structures as Patterns of Passing Messages">Hewitt
+77</a>].)</p>
+<p>Procedure calls also allow one to express escapes and non-standard
+loops. Consider the table-search example from [<a href="#knuth-74" id="xknuth-74" title="Structured Programming with go to Statements">Knuth 74</a>],
+expressed here in terms of procedure calls:</p>
+<div class="line-block">    <strong>procedure</strong>
+search(a,b,n,key);<br />
+        <strong>begin</strong><br />
+            <strong>procedure</strong> search loop(i);<br />
+                <strong>if</strong> i&gt;n <strong>then</strong><br />
+                    <strong>begin</strong><br />
+                        n:=n+1;<br />
+                        a[n]:=key;<br />
+                        b[n]:=1<br />
+                    <strong>end</strong><br />
+                <strong>else</strong> if a[i]=key
+<strong>then</strong><br />
+                    b[i]:=b[i]+1<br />
+                <strong>else</strong> search loop(i+1);<br />
+            search loop(1)<br />
+        <strong>end</strong></div>
+<p><br />
+The structure of the algorithm to be performed is a loop with two
+possible exit points. This is easily expressed by procedure calls,
+because we can specify for each branch of the
+<strong>if-then-else</strong> whether or not to take another cycle of
+the loop. (In fact, we can argue for this style on the basis of an
+important primitive principle: any notation should accentuate the
+unusual and make unobtrusive the usual. Now for a loop there are two
+cases when the body is done: take another cycle, or exit the loop. Now
+exiting the loop is the unusual case <em>at run time</em>, because we
+expect to iterate many times for each time a loop is exited; this leads
+us to design loop syntaxes which accentuate exit conditions. We may
+ponder, however, the fact that <em>textually</em> there will be one or
+more iteration points and one or more exit points. In the case of
+<strong>while-do</strong>, there is one of each. If we want to have
+<strong>while-do</strong> with multiple exits, then we should accentuate
+the looping action, and de-emphasize the exiting action. This occurs in
+the version of “search loop” given above.)</p>
+<p>An additional advantage of the procedural mode of expression is that
+procedure entry points are ideal places to make assertions about the
+state of the process. The procedure header lists the variable quantities
+of interest; in the case of a loop expressed in terms of procedure calls
+(as above), the procedure header mentions explicitly all the variables
+to be stepped by each cycle of the loop.</p>
+</section>
+<section id="note-various-optimizations" class="level4">
+<h4>{Note Various Optimizations} <a href="#xvarious-optimizations" class="fr">^</a><br />
+</h4>
+<p>Other research has attacked the “expense” of procedure calls from
+other directions; notable successes have been achieved with the
+techniques of procedure integration ( [<a href="#allen-72-1-2" id="xallen-722" title="A Catalogue of Optimizing Transformation">Allen
+72</a>] [<a href="#atkinson-76" id="xatkinson-76" title="Optimization Techniques for a Structured Programming Language">Atkinson
+76</a>] [<a href="#scheifler-77" id="xscheifler-77" title="An Analysis of Inline Substitution for a Structured Programming Language">Scheifler
+77</a>] and many others) and recursion removal ( [<a href="#strong-71-1-2" id="xstrong-712" title="Translating Recursion Equations into Flow Charts">Strong 71</a>]
+[<a href="#auslander-76-1-2-3" id="xauslander-763" title="Systematic Recursion Removal">Auslander 76</a>] [<a href="#darlington-76-1-2-3" id="xdarlington-763" title="A System which Automatically Improves Programs">Darlington
+76</a>]). Much of this effort has been apparently motivated by the
+notion that procedure calls are expensive and should be done away with
+in some way. Complementing this is the idea that procedure calls are
+indeed valuable for their expressive power, and they should be retained
+and compensated for rather than banned entirely.</p>
+<p>We take the slightly different point of view that procedure calls are
+valuable, but that they do not map one-to-one to the various low-level
+primitives made available on existing hardware. A given procedure call
+may, depending on context, be mapped to any one of a number of low-level
+implementations, some of which are markedly more efficient than others.
+Up to now, most “optimizing” compilers have had knowledge about the many
+equivalent ways of compiling arithmetic or array-indexing expressions
+and how to choose the most efficient, but have had only a single, most
+general method of compiling procedure calls per se.</p>
+<p>What we have tried to stress in the first half of this paper is that
+this most general method is often much more general than necessary, even
+for a universal method. We have described another method which is also
+semantically universal, but which is more efficient and just as easy for
+a compiler to deal with. We believe that the psychological effect of
+this new method will be the most important, for it does away with the
+automatic reflexive thought that “procedure calls always return”.
+(Imagine, for example, that we had always thought of <code>GOTO</code>
+as branching forward and never backward, under the influence of old
+paper-tape machines. Until we had dispelled this notion, could we ever
+have seen the abstract pattern of <strong>while-do</strong>?) Once we
+realize that procedure calls are semantically a superset of
+<code>GOTO</code>, we are freed to exploit a far more expressive style.
+It then becomes our task to analyze this style, and to isolate from it
+important special cases, just as from the maze of <code>GOTO</code>
+patterns we have isolated such important structures as
+<strong>while-do</strong>.</p>
+<p>Special techniques for compiling these special cases are not mere
+tricks; they reflect the possibility that the programmer had just such a
+special case in mind when he wrote the code, but was forced (by the
+“graininess” of the language) to use a more general piece of syntax to
+express it than he might have liked. While the program as a whole will
+reflect the originally intended concept, it is unlikely that the
+syntactic decomposition of the program will correspond in any precise
+way to the semantic decomposition of the concept. The compiler writer
+must realize that what the programmer writes is not always precisely
+what he wants, but only the closest expression thereof permitted by the
+language. (“I know you believe you understand what you think I said. But
+I am not sure you realize that what you heard is not what I meant.” –
+Anon.) The compiler writer must therefore avoid a monistic
+interpretation of the language definition, and try to determine from a
+given program the best of all possible intentions and produce code
+accordingly.</p>
+<p><hr></p>
+</section>
+</section>
+</section>
+<section id="references" class="level1">
+<h1><a href="#contents" title="Go to Contents">References</a></h1>
+<section id="allen-72-1-2" class="level4">
+<h4>[Allen 72] <span class="fr"><a href="#xallen-721">1</a>, <a href="#xallen-722">2</a></span><br />
+</h4>
+<p>Allen, Frances E., and Cocke, John. <a href="https://www.clear.rice.edu/comp512/Lectures/Papers/1971-allen-catalog.pdf" title="www.clear.rice.edu/comp512/Lectures/Papers/1971-allen-catalog.pdf"><em>A
+Catalogue of Optimizing Transformations</em></a>. In Rustin, Randall
+(ed.), Design and Optimization of Compilers. Proc. Courant Comp. Sci.
+Symp. 5. Prentice-Hall (Englewood Cliffs, N.J., 1972).</p>
+</section>
+<section id="ans-76-1-2" class="level4">
+<h4>[ANS 76] <span class="fr"><a href="#xans-761">1</a>, <a href="#xans-762">2</a></span><br />
+</h4>
+<p>American National Standards Institute. <a href="https://doi.org/10.1145/956013.1070892" title="doi.org/10.1145/956013.1070892"><em>Draft proposed ANS FORTRAN
+(BSR X3.9)</em></a>. Reprinted as SIGPLAN Notices 11, 3 (March
+1976).</p>
+</section>
+<section id="atkinson-76" class="level4">
+<h4>[Atkinson 76] <a href="#xatkinson-76" class="fr">^</a><br />
+</h4>
+<p>Atkinson, Russell R. <a href="https://.invalid/_no_online_copy_found_/" title="No online copy found"><em>Optimization Techniques for a
+Structured Programming Language</em></a>. S.M. Thesis. MIT (Cambridge,
+1976).</p>
+</section>
+<section id="auslander-76-1-2-3" class="level4">
+<h4>[Auslander 76] <span class="fr"><a href="#xauslander-761">1</a>, <a href="#xauslander-762">2</a>, <a href="#xauslander-763">3</a></span><br />
+</h4>
+<p>Auslander, M.A., and Strong, H.R. <a href="https://dl.acm.org/doi/10.1145/359340.359344" title="dl.acm.org/doi/10.1145/359340.359344"><em>Systematic Recursion
+Removal</em></a>. Report RC 5841 (#25283) IBM T.J. Watson Research
+Center (Yorktown Heights, New York, February 1976).</p>
+</section>
+<section id="bobrow-73-1-2" class="level4">
+<h4>[Bobrow 73] <span class="fr"><a href="#xbobrow-731">1</a>, <a href="#xbobrow-732">2</a></span><br />
+</h4>
+<p>Bobrow, Daniel G. and Wegbreit, Ben. <a href="https://dl.acm.org/doi/10.1145/362375.362379" title="dl.acm.org/doi/10.1145/362375.362379"><em>A Model and Stack
+Implementation of Multiple Environments</em></a>. CACM 16, 10 (October
+1973) pp. 591-603.</p>
+</section>
+<section id="boehm-66" class="level4">
+<h4>[Boehm 66] <a href="#xboehm-66" class="fr">^</a><br />
+</h4>
+<p>Boehm, Corrado, and Jacopini, Guiseppe. <a href="https://dl.acm.org/doi/10.1145/355592.365646" title="dl.acm.org/doi/10.1145/355592.365646"><em>Flow Diagrams, Turing
+Machines and Languages with Only Two Formation Rules</em></a>. Comm. ACM
+9, 5 (May 1966), 366-371.</p>
+</section>
+<section id="church-41" class="level4">
+<h4>[Church 41] <a href="#xchurch-41" class="fr">^</a><br />
+</h4>
+<p>Church, Alonzo. <a href="https://archive.org/details/AnnalsOfMathematicalStudies6ChurchAlonzoTheCalculiOfLambdaConversionPrincetonUniversityPress1941" title="archive.org/details/AnnalsOfMathematicalStudies6ChurchAlonzoTheCalculiOfLambdaConversionPrincetonUniversityPress1941"><em>The
+Calculi of Lambda Conversion</em></a>. Annals of Mathematics Studies
+Number 6. Princeton University Press (Princeton, 1941). Reprinted by
+Klaus Reprint Corp. (New York, 1965).</p>
+</section>
+<section id="darlington-76-1-2-3" class="level4">
+<h4>[Darlington 76] <span class="fr"><a href="#xdarlington-761">1</a>,
+<a href="#xdarlington-762">2</a>, <a href="#xdarlington-763">3</a></span><br />
+</h4>
+<p>Darlington, J., and Burstall, R.M. <a href="https://www.researchgate.net/publication/226895071_A_System_which_Automatically_Improves_Programs" title="www.researchgate.net/publication/226895071_A_System_which_Automatically_Improves_Programs"><em>A
+System which Automatically Improves Programs</em></a>. Acta Informatica
+6 (1976), 41-60.</p>
+</section>
+<section id="dec-69" class="level4">
+<h4>[DEC 69] <a href="#xdec-69" class="fr">^</a><br />
+</h4>
+<p>Digital Equipment Corporation. <a href="https://bitsavers.org/pdf/dec/pdp10/TOPS10/DEC-10-KC1B-D_COBOL_Programmers_Manual_Jul70.pdf" title="bitsavers.org/pdf/dec/pdp10/TOPS10/DEC-10-KC1B-D_COBOL_Programmers_Manual_Jul70.pdf"><em>PDP-10
+COBOL Language Programmer’s Reference Manual</em></a>. DEC-10-KC1A-D
+(Maynard, Mass., 1969).</p>
+</section>
+<section id="dijkstra-76-1-2" class="level4">
+<h4>[Dijkstra 76] <span class="fr"><a href="#xdijkstra-761">1</a>, <a href="#xdijkstra-762">2</a></span><br />
+</h4>
+<p>Dijkstra, Edsger W. <a href="https://archive.org/details/disciplineofprog0000dijk" title="archive.org/details/disciplineofprog0000dijk"><em>A Discipline of
+Programming</em></a>. Prentice-Hall (Englewood Cliffs, N.J., 1976)</p>
+</section>
+<section id="fateman-73" class="level4">
+<h4>[Fateman 73] <a href="#xfateman-73" class="fr">^</a><br />
+</h4>
+<p>Fateman, Richard J. <a href="https://dl.acm.org/doi/abs/10.1145/1086803.1086804" title="dl.acm.org/doi/abs/10.1145/1086803.1086804"><em>Reply to an
+Editorial</em></a>. SIGSAM Bulletin 25 (March 1973), 9-11.</p>
+</section>
+<section id="hewitt-77" class="level4">
+<h4>[Hewitt 77] <a href="#xhewitt-77" class="fr">^</a><br />
+</h4>
+<p>Hewitt, Carl. <a href="https://doi.org/10.1016/0004-3702(77)90033-9" title="doi.org/10.1016/0004-3702(77)90033-9"><em>Viewing Control
+Structures as Patterns of Passing Messages</em></a> AI Journal 8, 3
+(June 1977), 323-364.</p>
+</section>
+<section id="hopper-73" class="level4 npb">
+<h4>[Hopper 73] <a href="#xhopper-73" class="fr">^</a><br />
+</h4>
+<p>Hopper, Captain Grace Murray. In <a href="https://dl.acm.org/action/showFmPdf?doi=10.1145%2F953220" title="dl.acm.org/action/showFmPdf?doi=10.1145%2F953220"><em>An
+Interview with Captain Grace Murray Hopper, USNR</em></a>. Computing
+(October 10, 1973). Reprinted in SIGPLAN Notices 9, 1 (January 1974),
+3-6.</p>
+</section>
+<section id="ibm-68" class="level4">
+<h4>[IBM 68] <a href="#xibm-68" class="fr">^</a><br />
+</h4>
+<p>International Business Machines. <a href="http://bitsavers.informatik.uni-stuttgart.de/pdf/ibm/360/os/cobol/C28-6516-8_OS_COBOL_Language_196811.pdf" title="bitsavers.informatik.uni-stuttgart.de/pdf/ibm/360/os/cobol/C28-6516-8_OS_COBOL_Language_196811.pdf"><em>IBM
+System/360 Operating System COBOL Language</em></a>. Form C28-6516-8.
+Ninth Edition (November 1968).</p>
+</section>
+<section id="ibm-70a" class="level4">
+<h4>[IBM 70a] <a href="#xibm-70a" class="fr">^</a><br />
+</h4>
+<p>International Business Machines. <a href="http://bitsavers.trailing-edge.com/pdf/ibm/360/os/cobol/GC28-6396-6_IBM_OS_Full_American_National_Standard_COBOL_Apr76.pdf" title="bitsavers.trailing-edge.com/pdf/ibm/360/os/cobol/GC28-6396-6_IBM_OS_Full_American_National_Standard_COBOL_Apr76.pdf"><em>IBM
+System/360 Operating System American National Standard COBOL</em></a>.
+Form GC28-6396-2. Third edition (June 1970).</p>
+</section>
+<section id="ibm-70b" class="level4">
+<h4>[IBM 70b] <a href="#xibm-70b" class="fr">^</a><br />
+</h4>
+<p>International Business Machines. <a href="http://bitsavers.trailing-edge.com/pdf/ibm/360/pli/GC28-8201-4_PLI_F_Language_Reference_Dec72.pdf" title="bitsavers.trailing-edge.com/pdf/ibm/360/pli/GC28-8201-4_PLI_F_Language_Reference_Dec72.pdf"><em>IBM
+System/360 Operating System PL/I (F) Language Reference Manual</em></a>.
+Form GC28-8201-3. Revised (November 1970).</p>
+</section>
+<section id="jenks-72" class="level4">
+<h4>[Jenks 72] <a href="#xjenks-72" class="fr">^</a><br />
+</h4>
+<p>Jenks, Richard D., and Griesmer, James H. <a href="https://dl.acm.org/action/showFmPdf?doi=10.1145%2F1086793" title="dl.acm.org/action/showFmPdf?doi=10.1145%2F1086793"><em>Editor’s
+Comment</em></a> SIGSAM Bulletin No. 24 (October 1972), 2-3.</p>
+</section>
+<section id="knuth-74" class="level4">
+<h4>[Knuth 74] <a href="#xknuth-74" class="fr">^</a><br />
+</h4>
+<p>Knuth, Donald E. <a href="https://dl.acm.org/doi/10.1145/356635.356640" title="dl.acm.org/doi/10.1145/356635.356640"><em>Structured Programming
+with go to Statements</em></a>. ACM Computing Surveys 6, 4 (December
+1974) pp. 261–301.</p>
+</section>
+<section id="mccarthy-60" class="level4">
+<h4>[McCarthy 60] <a href="#xmccarthy-60" class="fr">^</a><br />
+</h4>
+<p>McCarthy, John. <a href="https://dl.acm.org/doi/10.1145/367177.367199" title="dl.acm.org/doi/10.1145/367177.367199"><em>Recursive functions of
+symbolic expressions and their computation by machine - I</em></a>.
+Comm. ACM 3, 4 (April 1960), 184-195.</p>
+</section>
+<section id="mckeeman-65" class="level4">
+<h4>[McKeeman 65] <a href="#xmckeeman-65" class="fr">^</a><br />
+</h4>
+<p>McKeeman, W.M. <a href="https://dl.acm.org/doi/10.1145/364995.365000" title="dl.acm.org/doi/10.1145/364995.365000"><em>Peephole
+optimization</em></a>. Comm. ACM 8, 7 (July 1965), 443-444.</p>
+</section>
+<section id="moses-70" class="level4">
+<h4>[Moses 70] <a href="#xmoses-70" class="fr">^</a><br />
+</h4>
+<p>Moses, Joel. <a href="https://dspace.mit.edu/handle/1721.1/5854" title="dspace.mit.edu/handle/1721.1/5854"><em>The Function of FUNCTION
+in LISP</em></a>. AI Memo 199, MIT AI Lab (Cambridge, June 1970).</p>
+</section>
+<section id="neighbors-76" class="level4">
+<h4>[Neighbors 76] <a href="#xneighbors-76" class="fr">^</a><br />
+</h4>
+<p>Neighbors, Michael A. <a href="https://.invalid/_no_online_copy_found_" title="No online copy found"><em>Assuring Software Reliability</em></a>.
+Computer Decisions 8, 12 (December 1976), 44-46.</p>
+</section>
+<section id="presser-75" class="level4">
+<h4>[Presser 75] <a href="#xpresser-75" class="fr">^</a><br />
+</h4>
+<p>Presser, Leon. <a href="https://dl.acm.org/doi/10.1145/987305.987311" title="dl.acm.org/doi/10.1145/987305.987311"><em>Structured
+Languages</em></a>. Proc. National Computer Conference 1975. Reprinted
+in SIGPLAN Notices 10, 7 (July 1975), 22- 24.</p>
+</section>
+<section id="scheifler-77" class="level4">
+<h4>[Scheifler 77] <a href="#xscheifler-77" class="fr">^</a><br />
+</h4>
+<p>Scheifler, Robert W. <a href="https://dl.acm.org/doi/10.1145/359810.359830" title="dl.acm.org/doi/10.1145/359810.359830"><em>An Analysis of Inline
+Substitution for a Structured Programming Language</em></a> Comm. ACM
+20, 9 (September 1977), 647-654.</p>
+</section>
+<section id="steele-76a" class="level4">
+<h4>[Steele 76a] <a href="#xsteele-76a" class="fr">^</a><br />
+</h4>
+<p>Steele, Guy Lewis Jr., and Sussman, Gerald Jay. <a href="https://dspace.mit.edu/handle/1721.1/5790" title="dspace.mit.edu/handle/1721.1/5790"><em>LAMBDA: The Ultimate
+Imperative</em></a>. AI Lab Memo 353. MIT (Cambridge, March 1976).</p>
+<div class="ti">
+<p>{{HTML transcription: <a href="https://research.scheme.org/lambda-papers/" title="research.scheme.org/lambda-papers/">research.scheme.org/lambda-papers/</a>.
+}}</p>
+</div>
+</section>
+<section id="steele-76b-1-2-3" class="level4">
+<h4>[Steele 76b] <span class="fr"><a href="#xsteele-76b1">1</a>, <a href="#xsteele-76b2">2</a>, <a href="#xsteele-76b3">3</a></span><br />
+</h4>
+<p>Steele, Guy Lewis Jr. <a href="https://dspace.mit.edu/handle/1721.1/6091" title="dspace.mit.edu/handle/1721.1/6091"><em>LAMBDA: The Ultimate
+Declarative</em></a>. AI Memo 379. MIT AI Lab (Cambridge, November
+1976).</p>
+<div class="ti">
+<p>{{HTML transcription: <a href="https://research.scheme.org/lambda-papers/" title="research.scheme.org/lambda-papers/">research.scheme.org/lambda-papers/</a>.
+}}</p>
+</div>
+</section>
+<section id="steele-77a" class="level4">
+<h4>[Steele 77a] <a href="#xsteele-77a" class="fr">^</a><br />
+</h4>
+<p>Steele, Guy Lewis Jr. <a href="https://.invalid/_no_online_copy_found_" title="No online copy found"><em>Compiler Optimization Based on Viewing
+LAMBDA as RENAME plus GOTO</em></a>. S.M. Thesis. MIT AI Lab (Cambridge,
+May 1977).</p>
+<div class="ti">
+<p>{{See <a href="https://research.scheme.org/lambda-papers/" title="research.scheme.org/lambda-papers/">research.scheme.org/lambda-papers/</a>.<br />
+See also <em>Compiler Optimization Based on Viewing LAMBDA as RENAME
+plus GOTO</em> in <a href="https://archive.org/details/artificialintell0002unse" title="archive.org/details/artificialintell0002unse"><em>Artificial
+Intelligence, an MIT Perspective, Volume 2</em></a> (MIT Press 1979)
+pp401-431. }}</p>
+</div>
+</section>
+<section id="steele-77b" class="level4">
+<h4>[Steele 77b] <a href="#xsteele-77b" class="fr">^</a><br />
+</h4>
+<p>Steele, Guy Lewis Jr. <a href="https://ntrs.nasa.gov/citations/19770021827" title="ntrs.nasa.gov/citations/19770021827"><em>Fast Arithmetic in
+MacLISP</em></a> Proc. 1977 MACSYMA Users’ Conference. NASA Sci. and
+Tech. Info. Office (Washington, D.C., July 1977), 215-224.</p>
+</section>
+<section id="steele-77c" class="level4">
+<h4>[Steele 77c] <a href="#xsteele-77c" class="fr">^</a><br />
+</h4>
+<p>Steele, Guy Lewis Jr. <a href="https://dl.acm.org/doi/10.1145/872734.806933" title="dl.acm.org/doi/10.1145/872734.806933"><em>Macaroni is Better than
+Spaghetti</em></a>. Proc. AI and Programing Languages Conf. (Rochester,
+New York, August 1977). SIGPLAN Notices 12, 8, SIGART Newsletter 64
+(August 1977), 60-66.</p>
+</section>
+<section id="strong-71-1-2" class="level4">
+<h4>[Strong 71] <span class="fr"><a href="#xstrong-711">1</a>, <a href="#xstrong-712">2</a></span><br />
+</h4>
+<p>Strong, H.R., Jr. <a href="https://www.sciencedirect.com/science/article/pii/S0022000071800363" title="www.sciencedirect.com/science/article/pii/S0022000071800363"><em>Translating
+Recursion Equations into Flow Charts</em></a>. Journal of Computer and
+System Sciences 5, 3 (June 1971), 254-285.</p>
+</section>
+<section id="sussman-75" class="level4">
+<h4>[Sussman 75] <a href="#xsussman-75" class="fr">^</a><br />
+</h4>
+<p>Sussman, Gerald Jay, and Steele, Guy L. Jr. <a href="https://dspace.mit.edu/handle/1721.1/5794" title="dspace.mit.edu/handle/1721.1/5794"><em>SCHEME: An Interpreter for
+Extended Lambda Calculus</em></a>. AI Lab Memo 349. MIT (Cambridge,
+December 1975).</p>
+<div class="ti">
+<p>{{HTML transcription: <a href="https://research.scheme.org/lambda-papers/" title="research.scheme.org/lambda-papers/">research.scheme.org/lambda-papers/</a>.<br />
+Republished with notes as<br />
+Sussman, G.J., Steele, G.L. <a href="https://www.researchgate.net/publication/227098423_Scheme_A_Interpreter_for_Extended_Lambda_Calculus" title="www.researchgate.net/publication/227098423_Scheme_A_Interpreter_for_Extended_Lambda_Calculus"><em>Scheme:
+A Interpreter for Extended Lambda Calculus</em></a>. Higher-Order and
+Symbolic Computation 11, 405–439 (1998).
+https://doi.org/10.1023/A:1010035624696<br />
+See also: Sussman, G.J., Steele, G.L. <a href="https://doi.org/10.1023/A:1010079421970" title="doi.org/10.1023/A:1010079421970"><em>The First Report on Scheme
+Revisited</em></a>. Higher-Order and Symbolic Computation 11, 399–404
+(1998). https://doi.org/10.1023/A:1010079421970 }}</p>
+</div>
+</section>
+<section id="sykes-77" class="level4">
+<h4>[Sykes 77] <a href="#xsykes-77" class="fr">^</a><br />
+</h4>
+<p>Sykes, Roy A., Jr. <a href="https://.invalid/_no_online_copy_found_" title="No online copy found"><em>Whizbang of the Month: Branching and
+Iteration</em></a>. Scientific Time Sharing Corporation News 2, 10
+(Bethesda, Maryland, January-February 1977), 5-6.</p>
+</section>
+<section id="wegbreit-71" class="level4">
+<h4>[Wegbreit 71] <a href="#xwegbreit-71" class="fr">^</a><br />
+</h4>
+<p>Wegbreit, Ben. <a href="https://dl.acm.org/doi/10.1145/1479064.1479113" title="dl.acm.org/doi/10.1145/1479064.1479113"><em>The ECL Programming
+System</em></a>. Proc. AFIPS 1971 FJCC, Vol. 39. AFIPS Press, Montvale,
+N.J. pp. 253-262.</p>
+</section>
+<section id="wegbreit-74" class="level4">
+<h4>[Wegbreit 74] <a href="#xwegbreit-74" class="fr">^</a><br />
+</h4>
+<p>Wegbreit, Ben, et al. <a href="https://github.com/PDP-10/harvard-ecl/blob/master/Holloway_et_al-ECL_Programmers_Manual-Dec_1974.pdf" title="github.com/PDP-10/harvard-ecl/blob/master/Holloway_et_al-ECL_Programmers_Manual-Dec_1974.pdf"><em>ECL
+Programmer’s Manual</em></a>. Technical Report 23-74. Center for
+Research in Computing Technology, Harvard U. (Cambridge, December
+1974).</p>
+</section>
+<section id="wulf-71" class="level4">
+<h4>[Wulf 71] <a href="#xwulf-73" class="fr">^</a><br />
+</h4>
+<p>Wulf, W.A., Russell, D.B., and Habermann, A.N. <a href="https://dl.acm.org/doi/10.1145/362919.362936" title="dl.acm.org/doi/10.1145/362919.362936"><em>BLISS: A Language for
+Systems Programing</em></a>. Comm. ACM 14, 12 (December 1971),
+780-790.</p>
+</section>
+<section id="wulf-73" class="level4">
+<h4>[Wulf 73] <a href="#xwulf-73" class="fr">^</a><br />
+</h4>
+<p>Wulf, William A., and Shaw, Mary. <a href="https://dl.acm.org/doi/10.1145/953353.953355" title="dl.acm.org/doi/10.1145/953353.953355"><em>Global Variable
+Considered Harmful</em></a> SIGPLAN Notices 8, 2 (February 1973),
+28-34.</p>
+</section>
+<section id="wulf-75" class="level4">
+<h4>[Wulf 75] <a href="#xwulf-75" class="fr">^</a><br />
+</h4>
+<p>Wulf, William A., et al. <a href="https://apps.dtic.mil/sti/citations/AD0773838" title="apps.dtic.mil/sti/citations/AD0773838"><em>The design of an
+Optimizing Compiler</em></a>. American Elsevier (New York, 1975).</p>
+</section>
+<section id="yourdon-75-1-2-3-4-5" class="level4">
+<h4>[Yourdon 75] <span class="fr"><a href="#xy1">1</a>, <a href="#xy2">2</a>, <a href="#xy3">3</a>, <a href="#xy4">4</a>, <a href="#xy5">5</a></span><br />
+</h4>
+<p>Yourdon, Edward. <a href="https://archive.org/details/techniquesofprog00your" title="archive.org/details/techniquesofprog00your"><em>Techniques of
+Program Structure and Design</em></a> Prentice-Hall (Englewood Cliffs,
+N.J., 1975).</p>
+</section>
+</section>
+</body>
+</html>

@@ -1,0 +1,2120 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Gerald Jay Sussman (text and code)" />
+  <meta name="author" content="Guy Lewis Steele Jr (text and code)" />
+  <meta name="author" content="Roger Turner ©2025 (markup and transcriber notes)" />
+  <meta name="keywords" content="LISP, SCHEME, LISP-like
+languages, lambda calculus, environments, lexical scoping, dynamic
+scoping, fluid variables, control structures, macros, extensible
+syntax, extensible languages" />
+  <title>The Revised Report on SCHEME (The Lambda Papers)</title>
+  <style>
+html {
+font-size: 12pt;
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: blue;
+}
+a:visited {
+color: blue;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+background-color: #1a1a1a;
+border: none;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+</style>
+  <style>
+:root { 
+background-color: color-mix(in oklab, Canvas 85%, #808080 15%);
+color: color-mix(in oklab, CanvasText 85%, #808080 15%);
+color-scheme: light dark; }
+@media print {
+hr, .pb {
+break-before: always;
+page-break-before: always }
+div.box, div.npb, section.npb, pre, img {
+break-inside: avoid-page;
+page-break-inside: avoid }
+img {
+object-fit: scale-down }
+body {
+padding-top: 25px;
+padding-bottom: 25px }
+}
+code {
+font-family: Greybeard, Menlo, Monaco, Consolas, "Lucida Console", monospace }
+body {
+font-family: Bodoni, serif;
+text-wrap: pretty;
+max-width: 40em;
+padding-right: 30px;
+overflow-wrap: normal;
+line-height: 1.2;
+hyphens: none }
+header {
+margin-bottom: 1.0em }
+h1 {
+font-size: 1.2em;
+margin-top: 0;
+margin-bottom: 0.5em }
+h2 {
+font-size: 1.2em;
+margin-top: 1.0em }
+h4 { margin-top: 0.85em;
+margin-bottom: 0;
+padding-bottom: 0 }
+h4 + p {
+margin-top: 0;
+margin-bottom: 0.85em }
+#notes p, #references p, #bibliography p {
+margin-top: 0 }
+hr {
+margin-top: 3em }
+dd {
+margin-bottom: 0.85em }
+pre code { 
+text-wrap: nowrap;
+overflow-x: scroll;
+font-size: 75% }
+p code, .line-block code, figcaption code, h3 code, dt code { 
+font-size: 85% }
+code em {
+font-style: italic } 
+.large {
+font-size: 150% }
+.small {
+font-size: 80% }
+.sc { 
+font-size: 92% }
+.in {
+margin-left: 1em }
+.in5 {
+margin-left: 5em }
+.ti {
+text-indent: -1em;
+padding-left: 1em;
+margin-top: -0.85em }
+.ti5 {
+text-indent: -5em;
+padding-left: 5em;
+margin-top: -0.85em }
+div.ti2 p {
+text-indent: -2em;
+padding-left: 2em;
+margin-top: -0.85em }
+.fr {
+float: right }
+.fl {
+float: left }
+.fwn {
+font-weight: normal }
+li::marker {
+content: '(' counters(list-item) ') '; }
+div.box {
+padding: 0 0 0.5em 1em;
+border: 1px solid }
+figure {
+margin: 1em 0;
+width: 100% }
+figcaption {
+padding-top: 1em;
+text-align: center }
+a:hover {
+text-decoration: underline }
+a:any-link {
+color: AccentColor }
+</style>
+</head>
+<body>
+<p><div style="text-align: center"> MASSACHUSETTS INSTITUTE OF
+TECHNOLOGY<br />
+ARTIFICIAL INTELLIGENCE LABORATORY </div></p>
+<p>AI Memo No. 452 <span class="fr">January 1978</span></p>
+<div style="text-align: center">
+<h1>
+<p>THE REVISED REPORT ON</p>
+<p><span class="large">SCHEME</span></p>
+A DIALECT OF LISP
+</h1>
+<p>by</p>
+<p>Guy Lewis Steele Jr.* and Gerald Jay Sussman </div></p>
+<section id="abstract" class="level2">
+<h2>Abstract:</h2>
+<p><span class="sc">SCHEME</span> is a dialect of <span class="sc">LISP</span>. It is an expression-oriented, applicative order,
+interpreter-based language which allows one to manipulate programs as
+data. It differs from most current dialects of <span class="sc">LISP</span> in that it closes all lambda-expressions in the
+environment of their definition or declaration, rather than in the
+execution environment. This has the consequence that variables are
+normally lexically scoped, as in <span class="sc">ALGOL</span>. However,
+in contrast with <span class="sc">ALGOL</span>, <span class="sc">SCHEME</span> treats procedures as a first-class data type.
+They can be the values of variables, the returned values of procedures,
+and components of data structures. Another difference from <span class="sc">LISP</span> is that <span class="sc">SCHEME</span> is
+implemented in such a way that tail-recursions execute without net
+growth of the interpreter stack. The effect of this is that a procedure
+call behaves like a <code>GOTO</code>, and thus procedure calls can be
+used to implement iterations, as in <span class="sc">PLASMA</span>.</p>
+<p>Here we give a complete “user manual” for the <span class="sc">SCHEME</span> language. Some features described here were not
+documented in the original report on <span class="sc">SCHEME</span> (for
+instance particular macros). Other features have been added, changed, or
+deleted as our understanding of certain language issues evolved.
+Annotations to the manual describe the motivations for these
+changes.</p>
+<div class="line-block">Keywords: <span class="sc">LISP</span>, <span class="sc">SCHEME</span>, <span class="sc">LISP</span>-like languages,
+lambda-calculus, environments,<br />
+    lexical scoping, dynamic scoping, fluid variables, control
+structures,<br />
+    macros, extensible syntax, extensible languages</div>
+<p>This report describes research done at the Artificial Intelligence
+Laboratory of the Massachusetts Institute of Technology. Support for the
+laboratory’s artificial intelligence research is provided in part by the
+Advanced Research Projects Agency of the Department of Defense under
+Office of Naval Research contract N00014-75-C-0643.</p>
+<p>* NSF Fellow</p>
+<div class="ti small">
+<p>{{<a href="https://dspace.mit.edu/bitstream/handle/1721.1/6283/AIM-452.pdf" title="Original pdf at MIT: dspace.mit.edu/bitstream/handle/1721.1/6283/AIM-452.pdf">THE
+REVISED REPORT ON SCHEME A DIALECT OF LISP</a> © 1978 by Massachussetts
+Institute of Technology, and this transcription, licensed
+<a href="https://creativecommons.org/licenses/by-nc/4.0/" title="Creative Commons license deed: creativecommons.org/licenses/by-nc/4.0/">CC
+BY-NC 4.0</a>
+<svg id="Layer_1" role="img" aria-label alt style="max-width: 1em;max-height:1em;margin-left: .2em;" x="0px" y="0px" width="64px" height="64px" viewBox="5.5 -3.5 64 64" enable-background="new 5.5 -3.5 64 64" xml:space="preserve">
+<g>
+	<circle fill="#FFFFFF" cx="37.785" cy="28.501" r="28.836"></circle>
+	<path d="M37.441-3.5c8.951,0,16.572,3.125,22.857,9.372c3.008,3.009,5.295,6.448,6.857,10.314
+		c1.561,3.867,2.344,7.971,2.344,12.314c0,4.381-0.773,8.486-2.314,12.313c-1.543,3.828-3.82,7.21-6.828,10.143
+		c-3.123,3.085-6.666,5.448-10.629,7.086c-3.961,1.638-8.057,2.457-12.285,2.457s-8.276-0.808-12.143-2.429
+		c-3.866-1.618-7.333-3.961-10.4-7.027c-3.067-3.066-5.4-6.524-7-10.372S5.5,32.767,5.5,28.5c0-4.229,0.809-8.295,2.428-12.2
+		c1.619-3.905,3.972-7.4,7.057-10.486C21.08-0.394,28.565-3.5,37.441-3.5z M37.557,2.272c-7.314,0-13.467,2.553-18.458,7.657
+		c-2.515,2.553-4.448,5.419-5.8,8.6c-1.354,3.181-2.029,6.505-2.029,9.972c0,3.429,0.675,6.734,2.029,9.913
+		c1.353,3.183,3.285,6.021,5.8,8.516c2.514,2.496,5.351,4.399,8.515,5.715c3.161,1.314,6.476,1.971,9.943,1.971
+		c3.428,0,6.75-0.665,9.973-1.999c3.219-1.335,6.121-3.257,8.713-5.771c4.99-4.876,7.484-10.99,7.484-18.344
+		c0-3.543-0.648-6.895-1.943-10.057c-1.293-3.162-3.18-5.98-5.654-8.458C50.984,4.844,44.795,2.272,37.557,2.272z M37.156,23.187
+		l-4.287,2.229c-0.458-0.951-1.019-1.619-1.685-2c-0.667-0.38-1.286-0.571-1.858-0.571c-2.856,0-4.286,1.885-4.286,5.657
+		c0,1.714,0.362,3.084,1.085,4.113c0.724,1.029,1.791,1.544,3.201,1.544c1.867,0,3.181-0.915,3.944-2.743l3.942,2
+		c-0.838,1.563-2,2.791-3.486,3.686c-1.484,0.896-3.123,1.343-4.914,1.343c-2.857,0-5.163-0.875-6.915-2.629
+		c-1.752-1.752-2.628-4.19-2.628-7.313c0-3.048,0.886-5.466,2.657-7.257c1.771-1.79,4.009-2.686,6.715-2.686
+		C32.604,18.558,35.441,20.101,37.156,23.187z M55.613,23.187l-4.229,2.229c-0.457-0.951-1.02-1.619-1.686-2
+		c-0.668-0.38-1.307-0.571-1.914-0.571c-2.857,0-4.287,1.885-4.287,5.657c0,1.714,0.363,3.084,1.086,4.113
+		c0.723,1.029,1.789,1.544,3.201,1.544c1.865,0,3.18-0.915,3.941-2.743l4,2c-0.875,1.563-2.057,2.791-3.541,3.686
+		c-1.486,0.896-3.105,1.343-4.857,1.343c-2.896,0-5.209-0.875-6.941-2.629c-1.736-1.752-2.602-4.19-2.602-7.313
+		c0-3.048,0.885-5.466,2.658-7.257c1.77-1.79,4.008-2.686,6.713-2.686C51.117,18.558,53.938,20.101,55.613,23.187z" />
+</g>
+</svg>
+<svg id="Layer_1" role="img" aria-label alt style="max-width: 1em;max-height:1em;margin-left: .2em;" x="0px" y="0px" width="64px" height="64px" viewBox="5.5 -3.5 64 64" enable-background="new 5.5 -3.5 64 64" xml:space="preserve">
+<g>
+	<circle fill="#FFFFFF" cx="37.637" cy="28.806" r="28.276"></circle>
+	<g>
+		<path d="M37.443-3.5c8.988,0,16.57,3.085,22.742,9.257C66.393,11.967,69.5,19.548,69.5,28.5c0,8.991-3.049,16.476-9.145,22.456
+			C53.879,57.319,46.242,60.5,37.443,60.5c-8.649,0-16.153-3.144-22.514-9.43C8.644,44.784,5.5,37.262,5.5,28.5
+			c0-8.761,3.144-16.342,9.429-22.742C21.101-0.415,28.604-3.5,37.443-3.5z M37.557,2.272c-7.276,0-13.428,2.553-18.457,7.657
+			c-5.22,5.334-7.829,11.525-7.829,18.572c0,7.086,2.59,13.22,7.77,18.398c5.181,5.182,11.352,7.771,18.514,7.771
+			c7.123,0,13.334-2.607,18.629-7.828c5.029-4.838,7.543-10.952,7.543-18.343c0-7.276-2.553-13.465-7.656-18.571
+			C50.967,4.824,44.795,2.272,37.557,2.272z M46.129,20.557v13.085h-3.656v15.542h-9.944V33.643h-3.656V20.557
+			c0-0.572,0.2-1.057,0.599-1.457c0.401-0.399,0.887-0.6,1.457-0.6h13.144c0.533,0,1.01,0.2,1.428,0.6
+			C45.918,19.5,46.129,19.986,46.129,20.557z M33.042,12.329c0-3.008,1.485-4.514,4.458-4.514s4.457,1.504,4.457,4.514
+			c0,2.971-1.486,4.457-4.457,4.457S33.042,15.3,33.042,12.329z" />
+	</g>
+</g>
+</svg>
+<svg id="Layer_1" role="img" aria-label alt style="max-width: 1em;max-height:1em;margin-left: .2em;" x="0px" y="0px" width="64px" height="64px" viewBox="5.5 -3.5 64 64" enable-background="new 5.5 -3.5 64 64" xml:space="preserve">
+<g>
+	<circle fill="#FFFFFF" cx="37.47" cy="28.736" r="29.471"></circle>
+	<g>
+		<path d="M37.442-3.5c8.99,0,16.571,3.085,22.743,9.256C66.393,11.928,69.5,19.509,69.5,28.5c0,8.992-3.048,16.476-9.145,22.458
+			C53.88,57.32,46.241,60.5,37.442,60.5c-8.686,0-16.19-3.162-22.513-9.485C8.644,44.728,5.5,37.225,5.5,28.5
+			c0-8.762,3.144-16.343,9.429-22.743C21.1-0.414,28.604-3.5,37.442-3.5z M12.7,19.872c-0.952,2.628-1.429,5.505-1.429,8.629
+			c0,7.086,2.59,13.22,7.77,18.4c5.219,5.144,11.391,7.715,18.514,7.715c7.201,0,13.409-2.608,18.63-7.829
+			c1.867-1.79,3.332-3.657,4.398-5.602l-12.056-5.371c-0.421,2.02-1.439,3.667-3.057,4.942c-1.622,1.276-3.535,2.011-5.744,2.2
+			v4.915h-3.714v-4.915c-3.543-0.036-6.782-1.312-9.714-3.827l4.4-4.457c2.094,1.942,4.476,2.913,7.143,2.913
+			c1.104,0,2.048-0.246,2.83-0.743c0.78-0.494,1.172-1.312,1.172-2.457c0-0.801-0.287-1.448-0.858-1.943l-3.085-1.315l-3.771-1.715
+			l-5.086-2.229L12.7,19.872z M37.557,2.214c-7.276,0-13.428,2.571-18.457,7.714c-1.258,1.258-2.439,2.686-3.543,4.287L27.786,19.7
+			c0.533-1.676,1.542-3.019,3.029-4.028c1.484-1.009,3.218-1.571,5.2-1.686V9.071h3.715v4.915c2.934,0.153,5.6,1.143,8,2.971
+			l-4.172,4.286c-1.793-1.257-3.619-1.885-5.486-1.885c-0.991,0-1.876,0.191-2.656,0.571c-0.781,0.381-1.172,1.029-1.172,1.943
+			c0,0.267,0.095,0.533,0.285,0.8l4.057,1.83l2.8,1.257l5.144,2.285l16.397,7.314c0.535-2.248,0.801-4.533,0.801-6.857
+			c0-7.353-2.552-13.543-7.656-18.573C51.005,4.785,44.831,2.214,37.557,2.214z" />
+	</g>
+</g>
+</svg>
+(Attribution-NonCommercial 4.0 International).<br /> Transcription by
+Roger Turner: links, Contents page, and {{transcriber notes}}
+added.}}</p>
+</div>
+<hr>
+<header>
+<div class="small">
+<p><span class="fl">Steele and Sussman</span>
+<span style="text-align: center">  </span><span class="fr">The Revised
+Report on SCHEME</span></p>
+</div>
+</header>
+</section>
+<section id="contents" class="level2">
+<h2>Contents</h2>
+<div style="line-height: 1.3">
+<div class="line-block">A.   <a href="#a.-the-representation-of-scheme-procedures-as-s-expressions">The
+Representation of <span class="sc">SCHEME</span> Procedures as
+S-expressions</a><br />
+B.   <a href="#b.-catalogue-of-magic-forms">Catalogue of Magic
+Forms</a><br />
+B.1.   <a href="#b.1.-kernel-magic-forms">Kernel Magic Forms</a><br />
+B.2.   <a href="#b.2.-side-effects">Side Effects</a><br />
+B.3.   <a href="#b.3.-dynamic-magic">Dynamic Magic</a><br />
+C.   <a href="#c.-syntactic-extensions">Syntactic Extensions</a><br />
+C.1.   <a href="#c.1.-system-provided-extensions">System-Provided
+Extensions</a><br />
+C.2.   <a href="#c.2.-user-provided-extensions">User-Provided
+Extensions</a><br />
+D.   <a href="#d.-primitive-scheme-functions">Primitive <span class="sc">SCHEME</span> Functions</a><br />
+<br />
+<a href="#notes">Notes</a><br />
+  {<a href="#aset-has-disappeared"><code>ASET</code> Has
+Disappeared</a>}<br />
+  {<a href="#block-exploits-applicative-order"><code>BLOCK</code>
+Exploits Applicative Order</a>}<br />
+  {<a href="#environment-symmetry">Environment Symmetry</a>}<br />
+  {<a href="#evaluate-has-disappeared"><code>EVALUATE</code> Has
+Disappeared</a>}<br />
+  {<a href="#evaluateuninterruptibly-has-disappeared"><code>EVALUATE!UNINTERRUPTIBLY</code>
+Has Disappeared</a>}<br />
+  {<a href="#fexprs-are-okay-by-us"><code>FEXPR</code>s Are Okay by
+Us</a>}<br />
+  {<a href="#funcall-is-a-pain-1-2-3-4"><code>FUNCALL</code> is a
+Pain</a>}<br />
+  {<a href="#global-fluid-environment">Global Fluid
+Environment</a>}<br />
+  {<a href="#lisp-bnf"><span class="sc">LISP</span> BNF</a>}<br />
+  {<a href="#lisp-is-a-ball-of-mud"><span class="sc">LISP</span> Is a
+Ball of Mud</a>}<br />
+  {<a href="#normal-order-loses">Normal Order Loses</a>}<br />
+  {<a href="#notes-are-in-alphabetical-order">Notes Are in Alphabetical
+Order</a>}<br />
+  {<a href="#s-expressions-are-not-functions">S-expressions Are Not
+Functions</a>}<br />
+  {<a href="#tail-recursive-and">Tail-Recursive
+<code>AND</code></a>}<br />
+  {<a href="#tail-recursive-or">Tail-Recursive
+<code>OR</code></a>}<br />
+  {<a href="#what-use-is-it">What Use Is It?</a>}<br />
+<br />
+<a href="#acknowledgements">Acknowledgements</a><br />
+<br />
+<a href="#references">References</a></div>
+</div>
+<p><hr></p>
+</section>
+<section id="a.-the-representation-of-scheme-procedures-as-s-expressions" class="level2">
+<h2>A.  <a href="#contents">The Representation of <span class="sc">SCHEME</span> Procedures as S-expressions</a></h2>
+<p><span class="sc">SCHEME</span> programs are represented as <span class="sc">LISP</span> s-expressions. The evaluator interprets these
+s-expressions in a specified way. This specification constitutes the
+definition of the language.</p>
+<p>The definition of <span class="sc">SCHEME</span> is a little fuzzy
+around the edges. This is because of the inherent extensibility of <span class="sc">LISP</span>-like languages {Note <a href="#lisp-is-a-ball-of-mud" id="xlisp-is-a-ball-of-mud" title="[LISP]{.sc} is extensible in two ways. First, there is the simple ability to define new functions; these are used in a way that is both syntactically and semantically identical to built-in primitive functions like CAR. ... Second, there is a uniform macro facility for transforming one syntactic form into another ..."><span class="sc">LISP</span> Is a Ball of Mud</a>}. We can define a few
+essential features which constitute the “kernel” of the language, and
+also enumerate several syntactic and semantic extensions which are
+convenient and normally included in a given implementation. The
+existence of a mechanism for such extensions is a part of the kernel of
+<span class="sc">SCHEME</span>; however, any particular such extension
+is not necessarily part of the kernel.</p>
+<p>For those who like this sort of thing, here is the BNF for <span class="sc">SCHEME</span> programs. {Note <a href="#lisp-bnf" id="xlisp-bnf" title="These rules refer to the following rules for LISP s-expressions: ..."><span class="sc">LISP</span> BNF</a>}:</p>
+<pre><code>  &lt;form&gt; ::= &lt;non-symbol atom&gt; | &lt;identifier&gt; | &lt;magic&gt; | &lt;combination&gt;
+  &lt;identifier&gt; ::= &lt;atomic symbol&gt;
+  &lt;magic&gt; ::= &lt;lambda-expression&gt;
+            | (QUOTE &lt;s-expression&gt; )
+            | (IF &lt;form&gt; &lt;form&gt; &lt;form&gt; )
+            | (IF &lt;form&gt; &lt;form&gt; )
+            | (LABELS ( &lt;labels list&gt; ) &lt;body&gt; )
+            | (DEFINE &lt;identifier&gt; &lt;lambda-expression&gt; )
+            | (DEFINE &lt;identifier&gt; ( &lt;identifier list&gt; ) &lt;form&gt; )
+            | (DEFINE ( &lt;identifier&gt; &lt;identifier list&gt; ) &lt;form&gt; )
+            | (ASET&#39; &lt;identifier&gt; &lt;form&gt; )
+            | (FLUIDBIND ( &lt;fluidbind list&gt; ) &lt;form&gt; )
+            | (FLUID &lt;identifier&gt; )
+            | (FLUIDSET&#39; &lt;identifier &gt; &lt;form&gt; )
+            | (CATCH &lt;identifier&gt; &lt;form&gt; )
+            | &lt;syntactic extension&gt;
+  &lt;lambda-expression&gt; ::= (LAMBDA ( &lt;identifier list &gt; ) &lt;body&gt;)
+  &lt;identifier list&gt; ::= &lt;empty&gt; | &lt;identifier&gt; &lt;identifier list&gt;
+  &lt;body&gt; ::= &lt;form&gt;
+  &lt;labels list&gt; ::= &lt;empty&gt;
+            | ( &lt;identifier&gt; &lt;lambda-expression&gt; ) &lt;labels list&gt;
+  &lt;fluidbind list&gt; ::= &lt;empty&gt; | ( &lt;identifier &gt; &lt;form&gt; ) &lt;fluidbind list&gt;
+  &lt;combination&gt; ::= ( &lt;form list&gt; )
+  &lt;form list&gt; ::= &lt;form&gt; | &lt;form) &lt;form list&gt;
+  &lt;syntactic extension&gt; ::= ( &lt;magic word&gt; . &lt;s-expression&gt; )
+  (magic word&gt; ::= &lt;atomic symbol&gt;
+  &lt;non-symbol atom&gt; ::= &lt;number&gt; | &lt;array&gt; | &lt;string&gt; | ...</code></pre>
+<p>Atoms which are not atomic symbols (identifiers) evaluate to
+themselves. Typical examples of such atoms are numbers, arrays, and
+strings (character arrays). Symbols are treated as identifiers or
+variables. They may be lexically bound by lambda-expressions. There is a
+global environment containing values for (some) free variables. Many of
+the variables in this global environment initially have as their values
+primitive operations such as, for example, <code>CAR</code>,
+<code>CONS</code>, and <code>PLUS</code>. <span class="sc">SCHEME</span>
+differs from most <span class="sc">LISP</span> systems in that the atom
+car is not itself an operation (in the sense of being an invocable
+object, e.g. a valid first argument to <code>APPLY</code>), but only has
+one as a value when considered as an identifier.</p>
+<p>Non-atomic forms are divided by the evaluator into two classes:
+combinations and “magic (special) forms”. The BNF given above is
+ambiguous; any magic form can also be parsed as a combination. The
+evaluator always treats an ambiguous case as a magic form. Magic forms
+are recognized by the presence of a “magic (reserved) word” in the car
+position of the form. All non-atomic forms which are not magic forms are
+considered to be combinations. The system has a small initial set of
+magic words; there is also a mechanism for creating new ones {Note <a href="#funcall-is-a-pain-1-2-3-4" id="xfuncall1" title="The ambiguity between magic forms and combinations could be eliminated by reserving a special subclass of lists to represent combinations, and allowing all others to represent magic forms. For example, we might say that all lists beginning with the atom CALL are combinations ..."><code>FUNCALL</code>
+is a Pain</a>}.</p>
+<p>A combination is considered to be a list of subforms. These subforms
+are all evaluated. The first value must be a procedure; it is applied to
+the other values to get the value of the combination. There are four
+important points here:</p>
+<ol type="1">
+<li><p>The procedure position is always evaluated just like any other
+position. (This is why the primitive operators are the <em>values</em>
+of global identifiers.)</p></li>
+<li><p>The procedure is never “re-evaluated”; if the first subform fails
+to evaluate to an applicable procedure, it is an error. Thus, unlike
+most <span class="sc">LISP</span> systems, SCHEME]{.sc} always evaluates
+the first subform of a combination exactly once.</p></li>
+<li><p>The arguments are all completely evaluated before the procedure
+is applied; that is, <span class="sc">SCHEME</span>, like most <span class="sc">LISP</span> systems, is an applicative-order language. Many
+<span class="sc">SCHEME</span> programs exploit this fact.</p></li>
+<li><p>The argument forms (and procedure form) may in principle be
+evaluated in any order. This is unlike the usual <span class="sc">LISP</span> left-to-right order. (All <span class="sc">SCHEME</span> interpreters implemented so far have in fact
+performed left-to-right evaluation, but we do not wish programs to
+depend on this fact. Indeed, there are some reasons why a clever
+interpreter might want to evaluate them right-to-left, e.g. to get
+things on a stack in the correct order.)</p></li>
+</ol>
+<p><hr></p>
+</section>
+<section id="b.-catalogue-of-magic-forms" class="level2">
+<h2>B.  <a href="#contents">Catalogue of Magic Forms</a></h2>
+<section id="b.1.-kernel-magic-forms" class="level3">
+<h3>B.1.  <a href="#contents">Kernel Magic Forms</a></h3>
+<p>The magic forms in this section are all part of the kernel of <span class="sc">SCHEME</span> and so must exist in any <span class="sc">SCHEME</span> implementation.</p>
+<p><strong><code>(LAMBDA ( &lt;identifier list&gt; ) &lt;body&gt; )</code></strong></p>
+<div class="in">
+<p>Lambda-expressions evaluate to procedures. Unlike most <span class="sc">LISP</span> systems, <span class="sc">SCHEME</span> does not
+consider a lambda-expression (an s-expression whose car is the atom
+<code>LAMBDA</code>) to be a procedure. A lambda-expression only
+<em>evaluates</em> to a procedure. A lambda-expression should be thought
+of as a partial <strong>description</strong> of a procedure; a procedure
+and a description of it are conceptually distinct objects. A
+lambda-expression must be “closed” (associated with an environment) to
+produce a procedure object. Evaluation of a lambda-expression performs
+such a closure operation.</p>
+<p>The resulting procedure takes as many arguments as there are
+identifiers in the identifier list of the lambda-expression. When the
+procedure is eventually invoked, the intuitive effect is that the
+evaluation of the procedure call is equivalent to the evaluation of the
+<code>&lt;body&gt;</code> in an environment consisting of (a) the
+environment in which the lambda-expression had been evaluated to produce
+the procedure, plus (b) the pairing of the identifiers of the
+<code>&lt;identifier list&gt;</code> with the arguments supplied to the
+procedure. The pairings (b) take precedence over the environment (a),
+and to prevent confusion no identifier may appear twice in the
+<code>&lt;identifier list&gt;</code>. The net effect is to implement
+<span class="sc">ALGOL</span>-style lexical scoping [<a href="#naur" id="xnaur" title="Revised Report on the Algorithmic Language ALGOL 60">Naur</a>],
+and to “solve the funarg problem” [<a href="#moses" id="xmoses" title="The Function of FUNCTION in LISP">Moses</a>].</p>
+</div>
+<div class="npb">
+<p><strong><code>(IF &lt;predicate&gt; &lt;consequent&gt; &lt;alternative&gt;)</code></strong></p>
+<div class="in">
+<p>This is a primitive conditional operator. The predicate form is
+evaluated. If the result is non-<code>NIL</code> {Note <a href="#if-is-data-dependent" id="xif-is-data-dependent" title="We should note that the usefulness of the definition of IF explicitly depends on the particular kinds of data types and the particular primitive functions available; we expect to use IF with primitive predicates such as ATOM and EQ. This is in contrast to other kernel forms such as LAMBDA and LABELS expressions, whose semantics are independent of the data ..."><code>IF</code>
+Is Data-Dependent</a>}, then the consequent is evaluated, and otherwise
+the alternative is evaluated. The resulting value (if there is one) is
+the value of the <code>IF</code> form.</p>
+</div>
+</div>
+<div class="npb">
+<p><strong><code>(IF &lt;predicate&gt; &lt;consequent&gt;)</code></strong></p>
+<div class="in">
+<p>As above, but if the predicate evaluates to <code>NIL</code>, then
+<code>NIL</code> is the value of the <code>IF</code> form. (As a matter
+of style, this is usually used only when the value of the
+<code>IF</code> form doesn’t matter, for example, when the consequent is
+intended to cause a side effect.)</p>
+</div>
+</div>
+<div class="npb">
+<p><strong><code>(QUOTE &lt;s-expression&gt;)</code></strong></p>
+<div class="in">
+<p>As in <span class="sc">LISP</span>, this quotes the argument form so
+that it will be passed verbatim as data; the value of this form is
+<code>&lt;s-expression&gt;</code>. If a <span class="sc">SCHEME</span>
+implementation has the <span class="sc">MacLISP</span>
+read-macro-character feature, then the abbreviation <code>&#39;FOO</code>
+may be used instead of <code>(QUOTE FOO)</code>.</p>
+</div>
+</div>
+<div class="npb">
+<div class="line-block"><strong><code>(LABELS ( &lt;labels list&gt; ) &lt;body&gt; )</code></strong>
+where<br />
+    <strong><code>&lt;labels list&gt; ::= &lt;empty&gt; | (&lt;identifier&gt; &lt;lambda-expression&gt;) &lt;labels list&gt;</code></strong></div>
+<div class="in">
+<p>This has the effect of evaluating the <code>&lt;body&gt;</code> in an
+environment where all the identifiers (which, as for
+<code>LAMBDA</code>, must all be distinct) in the labels list evaluate
+to the values of the respective lambda-expressions. Furthermore, the
+procedures which are the values of the lambda-expressions are themselves
+closed in that environment, and not in the outer environment; this
+allows the procedures to call themselves <em>and each other</em>
+recursively. For example, consider a procedure which counts all the
+atoms in a list structure recursively to all levels, but which doesn’t
+count the <code>NIL</code>s which terminate lists (but <code>NIL</code>s
+in the car of a list count). In order to perform this we define two
+mutually recursive procedures, one to count the car and one to count the
+cdr, as follows:</p>
+<pre><code>    (DEFINE COUNT
+            (LAMBDA (L)
+                    (LABELS ((COUNTCAR
+                              (LAMBDA (L)
+                                      (IF (ATOM L) 1
+                                          (+ (COUNTCAR (CAR L))
+                                              (COUNTCDR (CDR L))))))
+                              (COUNTCDR
+                                (LAMBDA (L)
+                                        (IF (ATOM L)
+                                            (IF (NULL L) 0 1)
+                                            (+ (COUNTCAR (CAR L))
+                                              (COUNTCDR (CDR L))))))
+                              (COUNTCDR L))))</code></pre>
+<p>(We have decided not to use the traditional <span class="sc">LISP</span> <code>LABEL</code> primitive in <span class="sc">SCHEME</span> because it is difficult to define several
+mutually recursive procedures using only <code>LABEL</code>. Although
+<code>LABELS</code> is a little more complicated than
+<code>LABEL</code>, it is considerably more convenient. Contrast this
+design decision with the choice of <code>IF</code> over the more
+traditional <code>COND</code>, where the definitional simplicity of
+<code>IF</code> outweighed the somewhat greater convenience of
+<code>COND</code>.)</p>
+</div>
+</div>
+</section>
+<section id="b.2.-side-effects" class="level3 npb">
+<h3>B.2.  <a href="#contents">Side Effects</a></h3>
+<p>These magic forms produce side effects in the environment.</p>
+<p><strong><code>(DEFINE &lt;identifier&gt; &lt;lambda-expression&gt; )</code></strong></p>
+<div class="in">
+<p>This is used for defining a procedure in the “global environment”
+permanently, as opposed to <code>LABELS</code>, which is used for
+temporary procedure definitions in a local environment.
+<code>DEFINE</code> takes a name and a lambda-expression; it evaluates
+the lambda-expression in the <strong>global</strong> environment and
+causes the result to be the <strong>global</strong> value of the
+identifier. (<code>DEFINE</code> may perform other
+implementation-dependent operations as well, such as keeping track of
+defined procedures for an editor. For this reason it is the preferred
+way to define a globally available procedure.)</p>
+</div>
+</section>
+<div class="line-block"><strong><code>(DEFINE &lt;identifier&gt; ( &lt;identifier list&gt; ) &lt;form list&gt; )</code></strong><br />
+<strong><code>(DEFINE ( &lt;identifier&gt; &lt;identifier list&gt; ) &lt;form list&gt; )</code></strong></div>
+<div class="in">
+<p>These alternative syntaxes permitted by <code>DEFINE</code> are
+equivalent to:</p>
+<pre><code>  (DEFINE &lt;identifier&gt;
+          (LAMBDA ( &lt;identifier list&gt; )
+                  (BLOCK &lt;form list&gt; )))</code></pre>
+<p>where <code>BLOCK</code> is a syntactic extension defined below. For
+example, these three definitions are equivalent:</p>
+<pre><code>  (DEFINE CIRCULATE (LAMBDA (X) (RPLACD X X)))
+  (DEFINE CIRCULATE (X) (RPLACD X X))
+  (DEFINE (CIRCULATE X) (RPLACD X X))</code></pre>
+<p>These forms are provided to support stylistic diversity.</p>
+</div>
+<div class="npb">
+<p><strong><code>(ASET&#39; &lt;identifier&gt; &lt;form&gt;)</code></strong></p>
+<div class="[.in]">
+<p>This is analogous to the LISP primitive <code>SETQ</code>. For
+example, to define a <strong>cell</strong> [<a href="#smith-and-hewitt-1-2-3" id="xsmith1" title="A PLASMA Primer (draft)">Smith and Hewitt</a>], we may use
+<code>ASET&#39;</code> as follows:</p>
+<pre><code>  (DEFINE CONS-CELL
+      (LAMBDA (CONTENTS)
+          (LABELS ((THE-CELL
+                    (LAMBDA (MSG)
+                        (IF (EQ MSG &#39;CONTENTS?) CONTENTS
+                            (IF (EQ MSG &#39;CELL?) &#39;YES
+                                (IF (EQ (CAR MSG) &#39;&lt;-)
+                                    (BLOCK (ASET&#39; CONTENTS (CADR MSG))
+                                            THE-CELL)
+                                    (ERROR &#39;|UNRECOGNIZED MESSAGE - CELL|
+                                            MSG
+                                            &#39;WRNG-TYPE-ARG)))))))
+                    THE-CELL)))</code></pre>
+<p>Note that <code>ASET&#39;</code> may be used on global identifiers as
+well as locally bound identifiers {Note <a href="#aset-has-disappeared" id="xaset-has-disappeared" title="The more general primitive ASET described in [SCHEME] has been removed from the SCHEME language ..."><code>ASET</code>
+Has Disappeared</a>}.</p>
+</div>
+</div>
+<section id="b.3.-dynamic-magic" class="level3 npb">
+<h3>B.3.  <a href="#contents">Dynamic Magic</a></h3>
+<p>These magic forms implement escape objects and fluid (dynamic)
+variables. They are not a part of the essential kernel. For a further
+explication of their semantics in terms of kernel primitives, see [<a href="#imperative-1-2-3-4-5-6" id="ximp1" title="LAMBDA: The Ultimate Imperative">Imperative</a>].</p>
+</section>
+<div class="line-block"><strong><code>(FLUIDBIND ( &lt;fluidbind list&gt; ) &lt;form&gt; )</code></strong><br />
+    where
+<code>&lt;fluidbind list&gt; ::= &lt;empty&gt; | (&lt;identifier&gt; &lt;form&gt;) &lt;fluidbind list&gt;</code></div>
+<div class="in">
+<p>This evaluates the <code>&lt;form&gt;</code> in the environment of
+the <code>FLUIDBIND</code> form, with a <strong>dynamic</strong>
+environment to which dynamic bindings of the identifiers in the
+<code>&lt;fluidbind list&gt;</code> have been added. Any procedure
+dynamically called by the form, even if not lexically apparent to the
+<code>FLUIDBIND</code> form, will see this dynamic environment (unless
+modified by further <code>FLUIDBIND</code>s, of course). The dynamic
+environment is restored on return from the form.</p>
+<p>Most <span class="sc">LISP</span> systems use a dynamic environment
+for all variables. A <span class="sc">SCHEME</span> which implements
+<code>FLUIDBIND</code> provides two distinct environments. The fluid
+variable named <code>FOO</code> is completely unrelated to a normal
+lexical variable named <code>FOO</code> {Note <a href="#global-fluid-environment" id="xglobal-fluid-environment" title="There is a question as to the meaning of the global fluid environment. In the PDP-10 MacLISP implementation of SCHEME, the global lexical and fluid environments coincide, but this was an arbitrary choice of convenience influenced by the structure of MacLISP. We recommend that the two global environments be kept distinct.">Global
+Fluid Environment</a>}, and the access mechanisms for the two are
+distinct.</p>
+</div>
+<div class="npb">
+<p><strong><code>(FLUID &lt;identifier&gt;)</code></strong></p>
+<div class="in">
+<p>The value of this form is the value of the
+<code>&lt;identifier&gt;</code> in the current dynamic environment. In
+<span class="sc">SCHEME</span> implementations which have the <span class="sc">MacLISP</span> read-macro-character feature,
+<code>(FLUID FOO)</code> may be abbreviated to <code>•FOO</code>.</p>
+</div>
+</div>
+<div class="npb">
+<p><strong><code>(FLUIDSET&#39; &lt;identifier&gt; &lt;form&gt; )</code></strong></p>
+<div class="in">
+<p>The value of the <code>&lt;form&gt;</code> is assigned to the
+<code>&lt;identifier&gt;</code> in the current dynamic environment.</p>
+</div>
+</div>
+<div class="npb">
+<p><strong><code>(STATIC &lt;identifier&gt;)</code></strong></p>
+<div class="in">
+<p>The value of this is the value of the lexical identifier; writing
+this is the same as writing just <code>&lt;identifier&gt;</code> {Note
+<a href="#what-use-is-it" id="xwhat-use-is-it" title="We should perhaps say instead that &lt;identifier&gt; is treated the same as (STATIC &lt;identifier&gt;). The STATIC construction is included in SCHEME primarily for pedagogical purposes, to provide symmetry, to (FLUID &lt;identifier&gt;) ...">What
+Use Is It?</a>}.</p>
+</div>
+</div>
+<p><strong><code>(CATCH &lt;identifier&gt; &lt;form&gt; )</code></strong></p>
+<div class="in">
+<p>This evaluates the form in an environment where the identifier is
+bound to an “escape object” [<a href="#landin" id="xlandin" title="A Correspondence between ALGOL 60 and Church&#39;s Lambda-Notation">Landin</a>]
+[<a href="#reynolds" id="xreynolds" title="Definitional Interpreters for Higher Order Programming Languages">Reynolds</a>].
+This is a strange object which can be invoked as if it were a procedure
+of one argument. When the escape object is so invoked, then control
+proceeds as if the <code>CATCH</code> expression had returned with the
+supplied argument as its value {Note <a href="#multiple-throw" id="xmultiple-throw" title="A full implementation of SCHEME allows this to work even if the CATCH has already been &#39;returned from&#39;; that is, the escape object can be used to &#39;return from the catch&#39; several times.">Multiple
+Throw</a>}.</p>
+<p>If both <code>CATCH</code> and <code>FLUIDBIND</code> are
+implemented, then their semantics are intertwined. When the escape
+object is called, then the dynamic environment is restored to the one
+which was current at the time the <code>CATCH</code> form was evaluated
+{Note <a href="#environment-symmetry" id="xenvironment-symmetry" title="One may think of an escape object as being &#39;closed&#39; with respect to a dynamic environment (and here we mean not only fluid variables but the chain of pending procedure calls) in much the same way that an ordinary procedure is closed with respect to a lexical environment. Just as a procedure cannot execute properly except in conjunction with a static environment of the appropriate form, so an escape object cannot properly resume control except in a dynamic environment of the appropriate form.">Environment
+Symmetry</a>}.</p>
+<p>For a contorted example, consider the following obscure definition of
+<code>SQRT</code> (Sussman’s least favorite style/Steele’s favorite; but
+see [<a href="#scheme-1-2-3-4-5-6-7-8-9" id="xsch1" title="SCHEME: An Interpreter for Extended Lambda Calculus"><span class="sc">SCHEME</span></a>]):</p>
+<pre><code>  (DEFINE SQRT
+      (LAMBDA (X EPSILON)
+          ((LAMBDA (ANS TAG GO)
+                (CATCH RETURN
+                      (BLOCK
+                        (CATCH M (ASET&#39; TAG M))               ;CREATE PROG TAG
+                        (IF (&lt; (ABS (-$ (*$ ANS ANS) X)) EPSILON)  ;CAMGE
+                            (RETURN ANS))                          ;POPJ
+                        (ASET&#39; ANS (//$ (+$ (//$ X ANS) ANS) 2.0)) ;MOVEM
+                        (GO TAG))))                                ;JRST
+            1.0
+            NIL
+            (LAMBDA (F) (F NIL)))))</code></pre>
+<p>This example differs slightly from the version given in [<a href="#scheme-1-2-3-4-5-6-7-8-9" id="xsch2" title="SCHEME: An Interpreter for Extended Lambda Calculus"><span class="sc">SCHEME</span></a>]; notice the forms
+<code>(RETURN ANS)</code> and <code>(GO TAG)</code>.</p>
+<p>As another example, we can define a <code>THROW</code> function,
+which may then be used with <code>CATCH</code> much as it is in <span class="sc">MacLISP</span> [<a href="#moon-1-2-3-4" id="xmoon1" title="MACLISP Reference Manual, Revision 0">Moon</a>] (except that in
+<span class="sc">MacLISP</span> the tag is written after the body of the
+<code>CATCH</code>, not before):</p>
+<pre><code>  (DEFINE THROW (LAMBDA (TAG RESULT) (TAG RESULT)))</code></pre>
+<p>An example of its use:</p>
+<pre><code>  (CATCH LOSE
+          (MAPCAR (LAMBDA (X) (IF (MINUSP X) (THROW LOSE NIL) (SQRT X)))
+                  NUMLIST))</code></pre>
+<p>Indeed, note the similarity between <code>THROW</code> and the
+definition of <code>GO</code> in the first example.</p>
+</div>
+<p><hr></p>
+</section>
+<section id="c.-syntactic-extensions" class="level2">
+<h2>C.  <a href="#contents">Syntactic Extensions</a></h2>
+<p><span class="sc">SCHEME</span> has a syntactic extension mechanism
+which provides a way to define an identifier to be a magic word, and to
+associate a function with that word. The function accepts the magic form
+as an argument, and produces a new form; this new form is then evaluated
+in place of the original (magic) form. This is precisely the same as the
+<span class="sc">MacLISP</span> macro facility.</p>
+<section id="c.1.-system-provided-extensions" class="level3">
+<h3>C.1.  <a href="#contents">System-Provided Extensions</a></h3>
+<p>Some standard syntactic extensions are provided by the system for
+convenience in ordinary programming. They are distinguished from other
+magic words in that they are semantically defined in terms of others
+rather than being primitive {Note <a href="#fexprs-are-okay-by-us" id="xfexprs-are-okay-by-us" title="While the syntactic extensions are defined in terms of other constructs, they need not be implemented in terms of them. For example, in the current PDP-10 MacLISP implementation of SCHEME, BLOCK is actually implemented in the same way IF and QUOTE are, rather than as a macro in terms of LAMBDA ..."><code>FEXPR</code>s
+Are Okay by Us</a>}. For expository purposes they are described here in
+a pattern-matching/production-rule kind of language. The matching is on
+s-expression structure, not on character string syntax, and takes
+advantage of the definition of list notation:
+<code>(A B C) = (A . (B . (C . NIL)))</code>. Thus the pattern
+<code>(x . r)</code> matches <code>(A B C),</code> with
+<code>x = A</code> and <code>r = (B C)</code>. The ordering of the
+“productions” is significant; the first one which matches is to be
+used.</p>
+<p><strong><code>(BLOCK x</code><sub>1</sub> <code>x</code><sub>2</sub>
+<code>... x</code><sub>n</sub><code>)</code></strong></p>
+<div class="in">
+<pre><code>  (BLOCK x) -&gt; x
+  (BLOCK x . r) -&gt; ((LAMBDA (A B) (B)) x (LAMBDA () (BLOCK . r)))</code></pre>
+<p><code>BLOCK</code> sequentially evaluates the subforms
+<code>x</code><sub>i</sub>  <em>from left to right</em>. For
+example:</p>
+<pre><code>  (BLOCK (ASET&#39; X 43) (PRINT X) (+ X 1))</code></pre>
+<p>returns <code>44</code> after setting <code>X</code> to
+<code>43</code> and then printing it {Note <a href="#block-exploits-applicative-order" id="xblock-exploits-applicative-order" title="The definition shown for BLOCK exploits the applicative order of evaluation of SCHEME to perform this ... It does NOT depend on left-to-right evaluation of arguments to functions! ..."><code>BLOCK</code>
+Exploits Applicative Order</a>}.</p>
+</div>
+<p><strong><code>(LET ((v</code><sub>1</sub>
+<code>x</code><sub>1</sub><code>) (v</code><sub>2</sub>
+<code>x</code><sub>2</sub><code>) ... (v</code><sub>n</sub>
+<code>x</code><sub>n</sub><code>)) . body)</code></strong></p>
+<div class="in">
+<div class="line-block">            <code>-&gt; ((LAMBDA (v</code><sub>1</sub>
+<code>v</code><sub>2</sub>
+<code>... v</code><sub>n</sub><code>) (BLOCK . body)) x</code><sub>1</sub>
+<code>x</code><sub>2</sub>
+<code>... x</code><sub>n</sub><code>)</code></div>
+<p><code>LET</code> provides a convenient syntax for binding several
+variables to corresponding quantities. It allows the forms for the
+quantities to appear textually adjacent to their corresponding
+variables. Notice that the variables are all bound simultaneously, not
+sequentially, and that the initialization forms
+<code>x</code><sub>i</sub> may be evaluated in any order. For
+convenience, <code>LET</code> also supplies a <code>BLOCK</code> around
+the forms constituting its body.</p>
+</div>
+<p><strong><code>(DO ((v</code><sub>1</sub> <code>x</code><sub>1</sub>
+<code>s</code><sub>1</sub><code>) ... (v</code><sub>n</sub>
+<code>x</code><sub>n</sub>
+<code>s</code><sub>n</sub><code>)) (test . done) . body)</code></strong></p>
+<div class="line-block">    <code>         -&gt; (LET ((A1 (LAMBDA () x</code><sub>1</sub><code>))</code><br />
+    <code>                  (B1 (LAMBDA (v</code><sub>1</sub>
+<code>... v</code><sub>n</sub><code>) s</code><sub>1</sub><code>)</code><br />
+    <code>                  ...</code><br />
+    <code>                  (An (LAMBDA () x</code><sub>n</sub><code>))</code><br />
+    <code>                  (Bn (LAMBDA (v</code><sub>1</sub>
+<code>... v</code><sub>n</sub><code>) s</code><sub>n</sub><code>))</code><br />
+    <code>                  (TS (LAMBDA (v</code><sub>1</sub>
+<code>... v</code><sub>n</sub><code>)  test))</code><br />
+    <code>                  (DN (LAMBDA (v</code><sub>1</sub>
+<code>... v</code><sub>n</sub><code>)  (BLOCK . done)))</code><br />
+    <code>                  (BD (LAMBDA (v</code><sub>1</sub>
+<code>... v</code><sub>n</sub><code>)  (BLOCK . body))))</code><br />
+    <code>                 (LABELS ((LOOP</code><br />
+    <code>                           (LAMBDA (Z1 ... Zn)</code><br />
+    <code>                                   (IF (TS Z1 ... Zn)</code><br />
+    <code>                                       (DN Z1 ... Zn)</code><br />
+    <code>                                       (BLOCK (BD Z1 ... Zn)</code><br />
+    <code>                                              (LOOP (B1 Z1 ... Zn)</code><br />
+    <code>                                                    ...</code><br />
+    <code>                                                    (Bn Z1 ... Zn)))))))</code><br />
+    <code>                         (LOOP (A1) ... (An))))</code></div>
+<div class="in">
+<p>This is essentially the <span class="sc">MacLISP</span> “new-style”
+<code>DO</code> loop [<a href="#moon-1-2-3-4" id="xmoon2" title="MACLISP Reference Manual, Revision 0">Moon</a>]. The variables
+<code>v</code><sub>i</sub> are bound to the values of the corresponding
+<code>x</code><sub>i</sub>, and stepped in parallel after every
+execution of the body by the <code>s</code><sub>i</sub> (by “step” we
+mean “set to the value of”, not “increment by”). If an
+<code>s</code><sub>i</sub> is omitted, <code>v</code><sub>i</sub> is
+assumed; this results in the variable not being stepped. If in addition
+<code>x</code><sub>i</sub>, is omitted, <code>NIL</code> is assumed. The
+loop terminates when the test evaluates non-<code>NIL</code>; it is
+evaluated before each execution of the body. When this occurs, the
+<code>done</code> part is evaluated as a <code>BLOCK</code>.</p>
+<p>The complexity of the definition shown is due to an effort to avoid
+conflict of variable names, as for <code>BLOCK</code>. The auxiliary
+variables <code>Ai</code>, <code>Bi</code>, and <code>Zi</code> must be
+generated to produce as many as are needed, but they need not be chosen
+different from all variables appearing in <code>x</code><sub>i</sub>,
+<code>s</code><sub>i</sub>, <code>body</code>, etc.</p>
+<p>The iteration is effected entirely by procedure calls. In this manner
+the definition of <code>DO</code> exploits the tail-recursive properties
+of <span class="sc">SCHEME</span> [<a href="#scheme-1-2-3-4-5-6-7-8-9" id="xsch3" title="SCHEME: An Interpreter for Extended Lambda Calculus"><span class="sc">SCHEME</span></a>] [<a href="#imperative-1-2-3-4-5-6" id="ximp2" title="LAMBDA: The Ultimate Imperative">Imperative</a>].</p>
+<p>As an example, here is a definition of a function to find the length
+of a list:</p>
+<pre><code>    (DEFINE (LENGTH X)
+            (DO ((Z X (CDR Z))
+                 (N 0 (+ N 1)))
+                ((NULL Z) N)))</code></pre>
+<p>The initializations forms <code>x</code><sub>i</sub> may be evaluated
+in any order, and on each iteration the stepping form
+<code>s</code><sub>i</sub> may be evaluated in any order. This differs
+from the <span class="sc">MacLISP</span> definition of <code>DO</code>.
+For example, this definition of <code>NREVERSE</code> (destructively
+reverse a list) would work in <span class="sc">MacLISP</span> but not
+necessarily in <span class="sc">SCHEME</span>:</p>
+<pre><code>    (DEFINE NREVERSE (X)
+            (DO ((A X (CDR A))
+                 (B NIL (RPLACD A B)))
+                ((NULL A) B)))</code></pre>
+<p>This definition depends on the <code>CDR</code> occurring before the
+<code>RPLACD</code>. In <span class="sc">SCHEME</span> we must instead
+write:</p>
+<pre><code>    (DEFINE NREVERSE (X)
+            (DO ((A X (PROG1 (CDR A) (RPLACD A B)))
+                 (B NIL A))
+                ((NULL A) B)))</code></pre>
+<p>where by <code>(PROG1 x y)</code> We mean
+<code>((LAMBDA (P Q) (BLOCK (Q) P)) x (LAMBDA () y))</code> (but
+<code>PROG1</code> is not really a defined <span class="sc">SCHEME</span> primitive).</p>
+<p>Note also that the effect of an <code>ASET&#39;</code> on a
+<code>DO</code> variable does not survive to the next iteration; this
+differs from using <code>SETQ</code> on a <code>DO</code> variable in
+<span class="sc">MacLISP</span>.</p>
+</div>
+<p><strong><code>(ITERATE name ((v</code><sub>1</sub>
+<code>e</code><sub>1</sub><code>) ... (v</code><sub>n</sub>
+<code>e</code><sub>n</sub><code>)) . body)</code></strong></p>
+<div class="line-block">    <code>         -&gt; (LABELS ((name (LAMBDA (v</code><sub>1</sub>
+<code>... v</code><sub>n</sub><code>) (BLOCK . body))))</code><br />
+    <code>                    (name e</code><sub>1</sub>
+<code>... e</code><sub>n</sub><code>))</code></div>
+<div class="in">
+<p>This defines a looping construct more general than <code>DO</code>.
+For example, consider a function to sort out a list of s-expressions
+into atoms and lists:</p>
+<pre><code>  (DEFINE COLLATE
+          (LAMBDA (X)
+                  (ITERATE COL
+                           ((Z X) (ATOMS NIL) (LISTS NIL))
+                           (IF (NULL Z)
+                               (LIST ATOMS LISTS)
+                               (IF (ATOM (CAR Z) )
+                                   (COL (CDR Z) (CONS (CAR Z) ATOMS) LISTS)
+                                   (COL (CDR Z) ATOMS (CONS (CAR Z)
+                                                            LISTS)))))))</code></pre>
+<p>We have found many situations involving loops where there may be more
+than one condition on which to exit and/or more than one condition to
+iterate, where <code>DO</code> is too restrictive but
+<code>ITERATE</code> suffices. Notice that because each loop has a name,
+one can specify from an inner loop that the next iteration of any outer
+loop is to occur. Here is a function very similar to the one used in one
+<span class="sc">SCHEME</span> implementation for variable lookup: there
+are two lists of lists, one containing names and the other values.</p>
+<pre><code>  (DEFINE (LOOKUP NAME VARS VALUES)
+          (ITERATE MAJOR-LOOP
+                   ((VARS-BACKBONE VARS)
+                    (VALUES-BACKBONE VALUES))
+                   (IF (NULL VARS-BACKBONE)
+                       NIL
+                      (ITERATE MINOR-LOOP
+                               ((VARS-RIB (CAR VARS-BACKBONE))
+                                (VALUES-RIB (CAR VALUES-BACKBONE)))
+                               (IF (NULL VARS-RIB)
+                                   (MAJOR-LOOP (CDR VARS-BACKBONE)
+                                               (CDR VALUES-BACKBONE))
+                                   (IF (EQ (CAR VARS-RIB) NAME)
+                                       VALUES-RIB
+                                       (MINOR-LOOP (CDR VARS-RIB)
+                                                   (CDR VALUES-RIB)))))</code></pre>
+<p>(We had originally wanted to call this construct <code>LOOP</code>,
+but see {Note <a href="#funcall-is-a-pain-1-2-3-4" id="xfuncall2" title="The ambiguity between magic forms and combinations could be eliminated by reserving a special subclass of lists to represent combinations, and allowing all others to represent magic forms. For example, we might say that all lists beginning with the atom CALL are combinations ..."><code>FUNCALL</code>
+is a Pain</a>}. Compare this with looping constructs appearing in [<a href="#hewitt" id="xhewitt" title="Viewing Control Structures as Patterns of Passing Messages">Hewitt</a>].)</p>
+<p>It happens that <code>ITERATE</code> is a misleading name; the
+construct can actually be used for recursion (“true” recursion, as
+opposed to tail-recursion) as well. If the <code>name</code> is invoked
+from a non-tail-recursive invoked situation, the argument evaluation in
+which the call is embedded is not aborted. It just so happens that we
+have found <code>ITERATE</code> useful primarily to implement
+complicated iterations. One can draw the rough analogy
+<code>ITERATE : LABELS :: LET : LAMBDA</code>.</p>
+</div>
+<p><strong><code>(TEST pred in alt)</code></strong></p>
+<div class="in">
+<pre><code>    -&gt; ((LAMBDA (P F A) (IF P ((F) P) (A)))
+        pred
+        (LAMBDA () fn)
+        (LAMBDA () alt))</code></pre>
+<p>The predicate is evaluated; if its value is non-<code>NIL</code> then
+the form <code>fn</code> should evaluate to a procedure of one argument,
+which is then invoked on the value of the predicate. Otherwise the
+alternative <code>alt</code> is evaluated.</p>
+<p>This construct is of occasional use with <span class="sc">LISP</span>
+“predicates” which return a “useful” non-<code>NIL</code> value. For the
+consequent of an <code>IF</code> to get at the non-<code>NIL</code>
+value of the predicate, one might first bind a variable to the value of
+the predicate, and this variable would then be visible to the
+alternative as well. With <code>TEST</code>, the use of the variable is
+restricted to the consequent.</p>
+<p>An example:</p>
+<pre><code>    (TEST (ASSQ VARIABLE ENVIRONMENT)
+          CDR
+          (GLOBALVALUE VARIABLE))</code></pre>
+<p>Using an a-list to represent an environment, one wants to use the cdr
+of the result of <code>ASSQ</code> if it is non-<code>NIL</code>; but if
+it is <code>NIL</code>, then the variable was not in the environment,
+and one must look elsewhere.</p>
+</div>
+<p><strong><code>(COND (p</code><sub>1</sub>  .
+ <code>e</code><sub>1</sub><code>) ... (p</code><sub>n</sub>  .
+ <code>e</code><sub>n</sub><code>))</code></strong></p>
+<div class="in">
+<pre><code>    (COND) -&gt; &#39;NIL
+    (COND (p) . r) -&gt; ((LAMBDA (V R) (IF V V (R)))
+                       p
+                       (LAMBDA () (COND . r)))
+    (COND (p =&gt; f) . r) -&gt; (TEST p f (COND . r))
+    (COND (p . e) . r) -&gt; (IF p (BLOCK . e) (COND . r ))</code></pre>
+<p>This <code>COND</code> is a superset of the <span class="sc">MacLISP</span> <code>COND</code>. As in <span class="sc">MacLISP</span>, singleton clauses return the value of the
+predicate if it is non-<code>NIL</code>, and clauses with two or more
+forms treat the first as the predicate and the rest as constituents of a
+<code>BLOCK</code>, thus evaluating them in order.</p>
+<p>The extension to the <span class="sc">MacLISP</span>
+<code>COND</code> made in <span class="sc">SCHEME</span> is flagged by
+the atom <code>=&gt;</code>. (It cannot be confused with the more
+general case of two <code>BLOCK</code> constituents because having the
+atom <code>=&gt;</code> as the first element of a <code>BLOCK</code> is
+not useful.) In this situation the form <code>f</code> following the
+<code>=&gt;</code> should have as its value a function of one argument;
+if the predicate <code>p</code> is non-<code>NIL</code>, this function
+is determined and invoked on the value returned by the predicate. This
+is useful for the common situation encountered in <span class="sc">LISP</span>:</p>
+<pre><code>    (COND ((SETQ IT (GET X &#39;PROPERTY)) (HACK IT))
+          ...)</code></pre>
+<p>which in <span class="sc">SCHEME</span> can be rendered without using
+a variable global to the <code>COND</code>:</p>
+<pre><code>    (COND ((GET X &#39;PROPERTY)
+           =&gt; (LAMBDA (IT) (HACK IT)))
+           ...)</code></pre>
+<p>or, in this specific instance, simply as:</p>
+<pre><code>    (COND ((GET X &#39;PROPERTY) =&gt; HACK)
+          ...)</code></pre>
+</div>
+<p><strong><code>(OR x</code><sub>1</sub>  <code>x</code><sub>2</sub>
+ <code>... x</code><sub>n</sub><code>)</code></strong></p>
+<div class="in">
+<pre><code>    (OR) -&gt; &#39;NIL
+    (OR x) -&gt; x
+    (OR x . r) -&gt; (COND (x) (T (OR . r)))</code></pre>
+<p>This standard <span class="sc">LISP</span> primitive evaluates the
+forms <code>x</code><sub>i</sub> in order, returning the first
+non-<code>NIL</code> value (and ignoring all following forms). If all
+forms produce <code>NIL</code>, then <code>NIL</code> is returned {Note
+<a href="#tail-recursive-or" id="xtail-recursive-or" title="We might have defined OR with only two rules: ...">Tail-Recursive
+<code>OR</code></a>}.</p>
+</div>
+<p><strong><code>(AND x</code><sub>1</sub>  <code>x</code><sub>2</sub>
+ <code>... x</code><sub>n</sub><code>)</code></strong></p>
+<div class="in">
+<pre><code>    (AND) -&gt; &#39;T
+    (AND x) -&gt; x
+    (AND x . r) -&gt; (COND (x) (x (AND . r)))</code></pre>
+<p>This standard <span class="sc">LISP</span> primitive evaluates the
+forms <code>x</code><sub>i</sub> in order. If any form produces
+<code>NIL</code>, then <code>NIL</code> is returned, and succeeding
+forms <code>x</code><sub>i</sub> are ignored. If all forms produce
+non-<code>NIL</code> values, the value of the last is returned {Note <a href="#tail-recursive-and" id="xtail-recursive-and" title="The definition of AND has three rules, not only for the same reasons OR does, but because AND is not a precise dual to OR. OR, on failure, returns NIL, but AND does not just return nonNIL` on success. It must return the non-NIL thing returned by its last form.">Tail-Recursive
+<code>AND</code></a>}.</p>
+</div>
+<p><strong><code>(AMAPCAR f x</code><sub>1</sub>
+ <code>x</code><sub>2</sub>
+ <code>... x</code><sub>n</sub><code>))</code></strong></p>
+<div class="line-block">    <code>         -&gt; (DO ((FN f)</code><br />
+    <code>                  (V1 x</code><sub>1</sub>
+ <code>(CDR V1))</code><br />
+    <code>                  (V2 x</code><sub>2</sub>
+ <code>(CDR V2))</code><br />
+    <code>                  ...</code><br />
+    <code>                  (Vn x</code><sub>n</sub>
+ <code>(CDR Vn))</code><br />
+    <code>                  (Q &#39;NIL (CONS (FN (CAR V1) (CAR V2) ... (CAR Vn)) Q)))</code><br />
+    <code>                 ((OR (NULL V1) (NULL V2) ... (NULL Vn))</code><br />
+    <code>                  (NREVERSE Q)))</code></div>
+<div class="in">
+<p><code>AMAPCAR</code> is analogous to the <span class="sc">MacLISP</span> <code>MAPCAR</code> function. The function
+<code>f</code>, a function of <code>n</code> arguments, is mapped
+simultaneously down the lists <code>x</code><sub>1</sub>,
+<code>x</code><sub>2</sub>, <code>..., x</code><sub>n</sub>; that is,
+<code>f</code> is applied to tuples of successive elements of the lists.
+The values returned by <code>f</code> are collected and returned as a
+list. Note that <code>AMAPCAR</code> of a fixed number of arguments
+could easily be written as a function in <span class="sc">SCHEME</span>.
+It is a syntactic extension only so that it may accommodate any number
+of arguments, which saves the trouble of defining an entire set of
+primitive functions <code>AMAPCAR1</code>, <code>AMAPCAR2</code>, …
+where <code>AMAPCARn</code> takes <code>n+1</code> arguments.</p>
+</div>
+<p><strong><code>(AMAPLIST f x</code><sub>1</sub>
+ <code>x</code><sub>2</sub>
+ <code>... x</code><sub>n</sub><code>))</code></strong></p>
+<div class="line-block">    <code>         -&gt; (DO ((FN f)</code><br />
+    <code>                 (V1 x</code><sub>1</sub>
+ <code>(CDR V1))</code><br />
+    <code>                 (V2 x</code><sub>2</sub>
+ <code>(CDR V2))</code><br />
+    <code>                 ...</code><br />
+    <code>                 (Vn x</code><sub>n</sub>
+ <code>(CDR Vn))</code><br />
+    <code>                 (Q &#39;NIL (CONS (FN V1 V2 ... Vn) Q)))</code><br />
+    <code>                ((OR (NULL V1) (NULL V2) ... (NULL Vn))</code><br />
+    <code>                 (NREVERSE Q)))</code></div>
+<div class="in">
+<p><code>AMAPLIST</code> is analogous to the <span class="sc">MacLISP</span> <code>MAPLIST</code> function. The function
+<code>f</code>, a function of <code>n</code> arguments, iis applied to
+tuples of successive tails of the lists. The values returned by
+<code>f</code> are collected and returned as a list.</p>
+</div>
+<p><strong><code>(AMAPC f x</code><sub>1</sub>
+ <code>x</code><sub>2</sub>
+ <code>... x</code><sub>n</sub><code>))</code></strong></p>
+<div class="line-block">    <code>         -&gt; (DO ((FN f)</code><br />
+    <code>                 (X1 x</code><sub>1</sub>
+ <code>(CDR X1))</code><br />
+    <code>                 (X2 x</code><sub>2</sub>
+ <code>(CDR X2))</code><br />
+    <code>                 ...</code><br />
+    <code>                 (Xn x</code><sub>n</sub>
+ <code>(CDR Xn)))</code><br />
+    <code>                ((OR (NULL X1) (NULL X2) ... (NULL Xn))</code><br />
+    <code>                 &#39;NIL)</code><br />
+    <code>                (FN (CAR X1) (CAR X2) ... (CAR Xn)))</code></div>
+<div class="in">
+<p><code>AMAPC</code> is analogous to the <span class="sc">MacLISP</span> <code>MAPC</code> function. The function
+<code>f</code>, a function of <code>n</code> arguments, is mapped
+simultaneously down the lists <code>x</code><sub>1</sub>,
+<code>x</code><sub>2</sub>, <code>..., x</code><sub>n</sub>; that is,
+<code>f</code> is applied to tuples of successive elements of the lists.
+Thus <code>AMAPC</code> is similar to <code>AMAPCAR</code>, except that
+no values are expected from <code>f</code>; therefore <code>f</code>
+need not be a function, but may be any procedure.</p>
+</div>
+<p><strong><code>(PROG varlist s</code><sub>1</sub>
+ <code>s</code><sub>2</sub>
+ <code>... s</code><sub>n</sub><code>)</code></strong></p>
+<div class="in">
+<p>The <span class="sc">SCHEME</span> <code>PROG</code> is like the
+ordinary <span class="sc">LISP</span> <code>PROG</code>. There is no
+simple way to describe the transformation of <code>PROG</code> syntax
+into <span class="sc">SCHEME</span> primitives. The basic idea is that a
+large <code>LABELS</code> statement is created, with a labelled
+procedure (of zero arguments) for each <code>PROG</code> statement. Each
+statement is transformed in such a way that each one that “drops
+through” is made to call the labelled procedure for the succeeding
+statement; each appearance of <code>(GO tag)</code> is converted to a
+call on the labelled procedure for the statement following the tag; and
+each appearance of <code>(RETURN value)</code> is replaced by value.</p>
+<p>Practical experience with <span class="sc">SCHEME</span> has shown
+that <code>PROG</code> is almost never used. It is usually more
+convenient just to write the corresponding <code>LABELS</code> directly.
+This allows one to write <code>LABELS</code> procedures which take
+arguments, which tends to clarify the flow of data [<a href="#imperative-1-2-3-4-5-6" id="ximp3" title="LAMBDA: The Ultimate Imperative">Imperative</a>].</p>
+</div>
+<p><br />
+</p>
+<p>The rest of this section (FSUBRs) applies only to the <span class="sc">PDP-10</span> <span class="sc">MacLISP</span> implementation
+of <span class="sc">SCHEME</span> .</p>
+<p><strong><code>FSUBRs</code></strong></p>
+<div class="in">
+<p>As a user convenience, the <span class="sc">PDP-10</span> <span class="sc">MacLISP</span> implementation of <span class="sc">SCHEME</span> treats FSUBRs specially; any FSUBR provided by
+the <span class="sc">MacLISP</span> system is automatically a <span class="sc">SCHEME</span> primitive (but user FSUBRs are not). Of course,
+if the FSUBR tries to evaluate some form obtained from its argument, the
+variable references will not refer to <span class="sc">SCHEME</span>
+variables. As a special case, the <span class="sc">SCHEME</span>
+syntactic extension <code>AARRAYCALL</code> is provided to get the
+effect of the <span class="sc">MacLISP</span> FSUBR
+<code>ARRAYCALL</code>.</p>
+</div>
+</section>
+<section id="c.2.-user-provided-extensions" class="level3 npb">
+<h3>C.2.  <a href="#contents">User-Provided Extensions</a></h3>
+<p>A <span class="sc">SCHEME</span> implementation should have one or
+more ways for the user to extend the inventory of magic words. The
+methods provided will vary from implementation to implementation. The
+following primitive (<code>SCHMAC</code>) is provided in the <span class="sc">PDP-10</span> <span class="sc">MacLISP</span> implementation
+of <span class="sc">SCHEME</span>.</p>
+</section>
+<p><strong><code>(SCHMAC name pattern body)</code></strong></p>
+<div class="in">
+<p>After execution of this form, a syntactic extension keyed on the atom
+<code>name</code> is defined. When a form <code>(name . rest)</code> is
+to be evaluated, <code>rest</code> is matched against the pattern, which
+is a (possibly “dotted”) list of variables. The <code>body</code> is
+then evaluated in an environment where the variables in the pattern have
+as values the corresponding parts of <code>rest</code>. This should
+result in a form to be evaluated in place of the form
+<code>(name . rest)</code>.</p>
+<p>The body is not necessarily <span class="sc">SCHEME</span> code, but
+rather code in the same meta-language used to write the evaluator. In
+the <span class="sc">PDP-10</span> <span class="sc">MacLISP</span> <span class="sc">SCHEME</span> implementation, the body is <span class="sc">MacLISP</span> code.</p>
+<p>As an example, here is a definition of <code>TEST</code>:</p>
+<pre><code>    (SCHMAC TEST (PRED FN ALT)
+            (LIST &#39;(LAMBDA (P F A) (IF P ((F) P) (A)))
+                  PRED
+                  (LIST &#39;LAMBDA &#39;() FN)
+                  (LIST &#39;LAMBDA &#39;() ALT)))</code></pre>
+<p>The body of a SCHMAC almost always performs a complicated consing-up
+of a program structure. Often one needs to make a copy of a standard
+structure, with a few values filled in. To make this easier, <span class="sc">SCHEME</span> provides an “unquoting quote” feature. An
+expression of the form <code>&quot;&lt;s-expression&gt;</code> is just like
+<code>&#39;&lt;s-expression&gt;</code>, except that sub-expressions preceded
+by “<code>,</code>” or “<code>@</code>” represent expressions whose
+values are to be made part of (a copy of) the s-expression at that
+point. A “<code>,</code>” denotes simple inclusion, while
+“<code>@</code>” denotes “splicing” or “segment” inclusion. (Compare
+this with the treatment of lists with embedded forms in <span class="sc">MUDDLE</span> [<a href="#galley-and-pfister-1-2" id="xgalley-and-pfister1" title="The MDL Language">Galley and
+Pfister</a>], which in turn inspired the !” syntax of <span class="sc">CONNIVER</span> [<a href="#mcdermott-and-sussman" id="xmcdermott-and-sussman" title="The CONNIVER Reference Manual">McDermott and Sussman</a>], from
+which <span class="sc">SCHEME</span>’s <code>&quot;</code> syntax is
+derived.) Using this, one can define <code>TEST</code> as follows:</p>
+<pre><code>    (SCHMAC TEST (PRED FN ALT)
+            &quot;((LAMBDA (P F A) (IF P ((F) P) (A)))
+              ,PRED
+              (LAMBDA () ,FN)
+              (LAMBDA () ,ALT)))</code></pre>
+<p>Similarly, <code>LET</code> can be defined as:</p>
+<pre><code>    (SCHMAC LET (DEFNS . BODY)
+            &quot;((LAMBDA ,(MAPCAR &#39;CAR DEFNS)
+                      (BLOCK . ,BODY))
+              @(MAPCAR &#39;CADR DEFNS)))</code></pre>
+<p>One could also write <code>(BLOCK @BODY)</code> instead of
+<code>(BLOCK . ,BODY)</code>.</p>
+<p>Notice the use of <code>(MAPCAR &#39;CAR DEFNS)</code> rather than
+<code>(AMAPCAR CAR DEFNS)</code>, and recall that, as stated above, the
+body of a <code>SCHMAC</code> is <span class="sc">MacLISP</span> code,
+not <span class="sc">SCHEME</span> code. Consider too this definition of
+<code>COND</code>:</p>
+<pre><code>    (SCHMAC COND CLAUSES
+            (COND ((NULL CLAUSES) &#39;&#39;NIL)
+                  ((NULL (CDAR CLAUSES))
+                   &quot;((LAMBDA (V R) (IF V V R))
+                     ,(CAAR CLAUSES)
+                     (LAMBDA () (COND . ,(CDR CLAUSES)))))
+                  ((EQ (CADAR CLAUSES) &#39;=&gt;)
+                   &quot;(TEST ,(CAAR CLAUSES) ,(CADDAR CLAUSES)
+                                          (COND . ,(CDR CLAUSES))))
+                  (T &quot;(IF ,(CAAR CLAUSES)
+                          (BLOCK . ,(CDAR CLAUSES))
+                          (COND . ,(CDR CLAUSES))))))</code></pre>
+<p>We have used <code>COND</code> to define <code>COND</code>! The
+definition is not circular, however; the <span class="sc">MacLISP</span>
+<code>COND</code> is being used to define the <span class="sc">SCHEME</span> <code>COND</code>, and indeed the two have
+slightly different semantics. The definition <strong>would</strong> have
+been circular had we written <code>(COND (V) (R))</code> instead of
+<code>(IF V V R)</code>, for the latter is part of the generated <span class="sc">SCHEME</span> code.</p>
+</div>
+<p><strong><code>(MACRO name pattern body)</code></strong></p>
+<div class="in">
+<p>This is just like <code>SCHMAC</code>, except that <code>body</code>
+is <span class="sc">SCHEME</span> code rather than <span class="sc">MacLISP</span> code. While macros defined with
+<code>SCHMAC</code> run only in a <span class="sc">MacLISP</span>
+implementation of <span class="sc">SCHEME</span>, those defined with
+<code>MACRO</code> should be completely transportable. (We described
+<code>SCHMAC</code> first to emphasize the fact that macros are
+conceptually part of the interpreter, and so conceptually written in the
+meta-language. It so happens, however, that <span class="sc">SCHEME</span> is a good meta-language for <span class="sc">SCHEME</span>, and so introducing this meta-circularity
+provides no serious problems. Contrast this with writing <span class="sc">PL/I</span> macros in <span class="sc">PL/I</span>!)</p>
+<p>The example of defining <code>COND</code> using <code>SCHMAC</code>
+above would be circular if we changed the word <code>SCHMAC</code> to
+<code>MACRO</code>. However, we can avoid this by avoiding the use of
+<code>COND</code> in the definition:</p>
+<pre><code>    (MACRO COND CLAUSES
+             (IF (NULL CLAUSES) &#39;&#39;NIL
+                 (IF (NULL (CDAR CLAUSES))
+                     &quot;((LAMBDA (V R) (IF V V R))
+                       ,(CAAR CLAUSES)
+                       (LAMBDA () (COND . ,(CDR CLAUSES) )))
+                     (IF (EQ (CADAR CLAUSES) &#39;=&gt;)
+                         &quot;(TEST ,(CAAR CLAUSES)
+                                ,(CADDAR CLAUSES)
+                                (COND . ,(CDR CLAUSES)))
+                         &quot;(IF ,(CAAR CLAUSES)
+                               (BLOCK . ,(CDAR CLAUSES))
+                               (COND . ,(CDR CLAUSES)))))))</code></pre>
+<p>We strongly encourage the use of <code>MACRO</code> instead of
+<code>SCHMAC</code> in practice so that macro definitions will not be
+dependent on the properties of a specific implementation.</p>
+</div>
+<p><hr></p>
+</section>
+<section id="d.-primitive-scheme-functions" class="level2">
+<h2>D.  <a href="#contents">Primitive <span class="sc">SCHEME</span>
+Functions</a></h2>
+<p>All the usual <span class="sc">MacLISP</span> SUBRs are available in
+<span class="sc">SCHEME</span> as procedures which are the values of
+global variables. The particular primitives <code>CONS</code>,
+<code>CAR</code>, <code>CDR</code>, <code>ATOM</code>, and
+<code>EQ</code> are part of the kernel of <span class="sc">SCHEME</span>! Others, such as <code>+</code>,
+<code>//</code>, <code>=</code>, <code>EQUAL</code>,
+<code>RPLACA</code>, <code>RPLACD</code>, etc. are quite convenient to
+have.</p>
+<p>Although there is no way in <span class="sc">SCHEME</span> to write a
+LEXPR (a function of a variable number of arguments), <span class="sc">MacLISP</span> LSUBRs are also available to the <span class="sc">SCHEME</span> user. One may wish to regard these as syntactic
+extensions in much the same Way <code>AMAPCAR</code> is; for example,
+<code>LIST</code> may be thought of as a syntactic extension such
+that:</p>
+<pre><code>    (LIST) -&gt; &#39;NIL
+    (LIST x . r) -&gt; (CONS x (LIST . r ))</code></pre>
+<p>Below we also describe some additional primitive functions provided
+with <span class="sc">SCHEME</span>. Their names do not have any special
+syntactic properties in the way that the magic words for syntactic
+extensions described in the previous section do. However, they do deal
+with the underlying implementation, and so could not be programmed
+directly by the user were they not provided as primitives.</p>
+<p>The following primitive functions (<code>PROCP</code> and
+<code>ENCLOSE</code>) are part of the kernel of <span class="sc">SCHEME</span>.</p>
+<p><strong><code>(PROCP thing)</code></strong></p>
+<div class="in">
+<p>This is a predicate which is true of procedures, and not of anything
+else. Thus if <code>(PROCP x)</code> is true, then it is safe to invoke
+the value of <code>x</code>.</p>
+<p>More precisely, if <code>PROCP</code> returns a non-<code>NIL</code>
+value, then the value describes the number of arguments accepted by the
+procedure. For <span class="sc">SCHEME</span> procedures this will be an
+integer, the number of arguments. For primitive functions, this may be
+implementation-dependent; in the <span class="sc">PDP-10</span> <span class="sc">MacLISP</span> implementation of <span class="sc">SCHEME</span>, <code>PROCP</code> of an LSUBR returns the
+<span class="sc">MacLISP</span> <code>ARGS</code> property for that
+LSUBR. If an object given to <code>PROCP</code> is a procedure but the
+number of arguments it requires cannot be determined for some reason,
+then <code>PROCP</code> returns <code>T</code>.</p>
+</div>
+<p><strong><code>(ENCLOSE fnrep envrep)</code></strong></p>
+<div class="in">
+<p><code>ENCLOSE</code> takes two s-expressions, one representing the
+code for a procedure, and the other representing the (lexical)
+environment in which the procedure is to run. <code>ENCLOSE</code>
+returns a (closed) procedure which can be invoked.</p>
+<p>The representation of the code is the standard s-expression
+description (a lambda-expression). The representation of the environment
+is an association list (a-list) of the traditional kind:</p>
+<pre><code>    ((var1 . value1) (var2 . value2) ...)</code></pre>
+<p><code>NIL</code> represents the global lexical environment.</p>
+<p>This description of <code>ENCLOSE</code> should not be construed as
+describing how the implementation of <span class="sc">SCHEME</span>
+represents either environment or code internally. Indeed,
+<code>ENCLOSE</code> could be as simple as <code>CONS</code>, or as
+complicated as a compiler. All that <code>ENCLOSE</code> guarantees to
+do is to compute a procedure object given a description of its desired
+behavior. The description must be in the prescribed form; but the result
+may be in any form convenient to the implementation, as long as it
+satisfies the predicate <code>PROCP</code> {Note <a href="#evaluate-has-disappeared" id="xevaluate-has-disappeared" title="The EVALUATE primitive described in [SCHEME] has been removed fromthe language. We discovered (the hard way) that the straightforward implementation of EVALUATE (evaluate the given expression in the current environment) destroys referential transparency. We then altered it to evaluate the expression in the top-level environment, but were still disturbed by the extent to which one is tied to a particular representation of a procedure to be executed."><code>EVALUATE</code>
+Has Disappeared</a>} {Note <a href="#s-expressions-are-not-functions" id="xs-expressions-are-not-functions" title="Recall that a lambda-expression (i.e. an s-expression whose car is the atomic symbol LAMBDA) is not itself a valid procedure. It is necessary to ENCLOSE it in order to invoke it ...">S-expressions
+Are Not Functions</a>}.</p>
+<p>As an example, we can write <code>APPLY</code> using
+<code>ENCLOSE</code>. One way is to generate a lot of names for the
+arguments involved:</p>
+<pre><code>    (DEFINE APPLY
+            (LAMBDA (FN ARGS)
+                    (LET ((VARS (AMAPCAR (LAMBDA (X) (GENSYM)) ARGS))
+                          (FNVAR (GENSYM)))
+                         ((ENCLOSE &quot;(LAMBDA () (,FNVAR @VARS))
+                                   (CONS (CONS FNVAR FN)
+                                         (AMAPCAR CONS VARS ARGS)))))))</code></pre>
+<p>Here a procedure which will call the procedure <code>FN</code> on the
+required number of arguments is enclosed in an environment with all the
+variables bound to the appropriate values. For those who don’t like
+<code>GENSYM</code>, here is another way to do it:</p>
+<pre><code>    (DEFINE APPLY
+            (LAMBDA (FN ARGS)
+                    (DO ((TAIL &#39;A &quot;(COR ,TAIL))
+                         (REFS NIL (CONS &quot;(CAR ,TAIL) REFS))
+                         (COUNT ARGS (CDR COUNT)))
+                        ((NULL COUNT)
+                         ((ENCLOSE &quot;(LAMBDA (F A) (F @(REVERSE REFS))) NIL)
+                          FN ARGS)))))</code></pre>
+<p>In this version we create a series of forms <code>(CAR A)</code>,
+<code>(CAR (CDR A))</code>, <code>(CAR (CDR (CDR A)))</code>, … to be
+used to access the arguments. (In a way, these are distinct names for
+the arguments in the same way that the gensyms were for the first
+version.) The values <code>FN</code> and <code>ARGS</code> are passed in
+as arguments to the enclosed procedure, rather than giving a non-nil
+environment representation to <code>ENCLOSE</code>.</p>
+<p>As another example, we define a function called
+<code>*LAMBDA</code>:</p>
+<pre><code>    (DEFINE (*LAMBDA VARS BODY)
+            (ENCLOSE &quot;(LAMBDA ,VARS ,BODY) NIL))</code></pre>
+<p>Writing <code>(*LAMBDA &#39;(X Y) &#39;(FOO Y X))</code> is just like writing
+<code>(LAMBDA (X Y) (FOO Y X))</code>. However, if there are any free
+variables in the supplied body, then <code>*LAMBDA</code> will cause
+them to refer to the global environment, not the current one. We cannot
+in general simulate <code>LAMBDA</code> by using <code>*LAMBDA</code>,
+because <span class="sc">SCHEME</span> (purposefully) does not provide a
+general way to get a representation of the current environment. We
+could, of course, require the user to give <code>*LAMBDA</code> a
+representation of the current environment, but this hardly seems
+worthwhile.</p>
+</div>
+<p><br />
+</p>
+<p>The following primitive functions allow for multiprocessing. We do
+not pretend that they are “right” in any sense, and are not particularly
+attached to these specific definitions. They are <strong>not</strong>
+part of the kernel of <span class="sc">SCHEME</span>. (Their primary use
+in practice is for bootstrapping <span class="sc">SCHEME</span> by
+creating an initial process for the top-level user interface loop.)</p>
+<p>There are no primitives for process synchronization, as we have no
+good theory of how best to do this. However, in the <span class="sc">PDP-10</span> <span class="sc">MacLISP</span> implementation
+of <span class="sc">SCHEME</span> we guarantee that SUBRs and LSUBRs
+execute in an uninterruptible fashion; that is, such functions can be
+considered “atomic” for synchronization purposes. The user is invited to
+exploit this fact to invent his own synchronization primitives {Note <a href="#evaluateuninterruptibly-has-disappeared" id="xevaluateuninterruptibly-has-disappeared" title="The EVALUATE!UNINTERRUPTIBLY primitive described in [SCHEME] has been removed from the language. This primitive was half a joke, and we have since discovered that it had a serious flaw in its definition ..."><code>EVALUATE!UNINTERRUPTIBLY</code>
+Has Disappeared</a>}.</p>
+<p><strong><code>(CREATE!PROCESS proc)</code></strong></p>
+<div class="in">
+<p>This is the process generator for multiprocessing. It takes one
+argument, a procedure of no arguments. If the procedure ever terminates.
+the entire process automatically terminates. The value of
+<code>CREATE!PROCESS</code> iS a process ID for the newly generated
+process. Note that the newly created process will not actually run until
+it is explicitly started. When started, the procedure will be invoked
+(with no arguments), and the process will run “in parallel” with all
+other active processes.</p>
+</div>
+<p><strong><code>(START!PROCESS procid)</code></strong></p>
+<div class="in">
+<p>This takes one argument, a process id, and starts up or resumes that
+process, which then runs.</p>
+</div>
+<p><strong><code>(STOP!PROCESS procid)</code></strong></p>
+<div class="in">
+<p>This also takes a process id, but stops the process. The stopped
+process may be continued from where it was stopped by using
+<code>START!PROCESS</code> again on it; The global variable
+<code>**PROCESS**</code> always contains the process id of the currently
+running process; thus a process can stop itself by doing
+<code>(STOP!PROCESS **PROCESS**)</code>.</p>
+</div>
+<p><strong><code>(TERMINATE)</code></strong></p>
+<div class="in">
+<p>This primitive stops and kills the process which invokes it. The
+process may not be resumed by <code>START!PROCESS</code>. Some other
+process is selected to run. If the last process is terminated, <span class="sc">SCHEME</span> automatically prints a warning message, and
+then creates a new process running the standard <span class="sc">SCHEME</span> “read-eval-print” (actually “read–stick (LAMBDA
+() .) around–enclose in top-level environment–invoke–print”) loop.</p>
+<p>An example of the use of <code>TERMINATE</code>:</p>
+<pre><code>    (TERMINATE)</code></pre>
+</div>
+<p><hr></p>
+</section>
+<section id="notes" class="level2">
+<h2><a href="#contents">Notes</a></h2>
+<section id="section" class="level3">
+<h3></h3>
+<div class="in">
+<p>{Note <a href="#notes-are-in-alphabetical-order" id="xnotes" title="The notes are ordered alphabetically by name, not in order of reference within the text.">Notes
+Are in Alphabetical Order</a>}</p>
+</div>
+<section id="aset-has-disappeared" class="level4">
+<h4>{<code>ASET</code> Has Disappeared} <a href="#xaset-has-disappeared" class="fr">^</a><br />
+</h4>
+<div class="in">
+<p>The more general primitive <code>ASET</code> described in [<a href="#scheme-1-2-3-4-5-6-7-8-9" id="xsch4" title="SCHEME: An Interpreter for Extended Lambda Calculus"><span class="sc">SCHEME</span></a>] has been removed from the <span class="sc">SCHEME</span> language. Although the case of a general
+evaluated expression for the variable name causes no real semantic
+difficulty (it can be viewed as a syntactic extension representing a
+large <code>CASE</code> statement, as pointed out in [<a href="#declarative" id="xdeclarative" title="LAMBDA: The Ultimate Declarative">Declarative</a>]), it can be
+confusing to the reader. Moreover, in two years we have not found a use
+for it. Therefore we have replaced <code>ASET</code> with
+<code>ASET&#39;</code>, which requires the name of the variable to be
+modified to appear manifestly.</p>
+<p>We confess to being “cute” when we say that the name of the primitive
+is <code>ASET&#39;</code>. We have not changed the implementation at all,
+but merely require that the first argument be quoted. The form
+<code>(ASET&#39; FOO BAR)</code> is parsed by the <span class="sc">MacLISP</span> reader as <code>(ASET (QUOTE FOO) BAR)</code>.
+Of course, a different implementation of <span class="sc">SCHEME</span>
+might actually take <code>ASET&#39;</code> as a single name. We apologize
+for this nonsense.</p>
+</div>
+</section>
+<section id="block-exploits-applicative-order" class="level4">
+<h4>{<code>BLOCK</code> Exploits Applicative Order} <a href="#xblock-exploits-applicative-order" class="fr">^</a><br />
+</h4>
+<div class="in">
+<p>The definition shown for <code>BLOCK</code> exploits the applicative
+order of evaluation of <span class="sc">SCHEME</span> to perform this
+{Note <a href="#normal-order-loses" id="xnormal-order-loses" title="Our definition of BLOCK exploits the fact that SCHEME is an applicative-order (call-by-value) language in order to enforce sequencing. Sussman has proved that one cannot do a similar thing in a normal-order (call-by-name) language: ...">Normal
+Order Loses</a>}. It does <strong>not</strong> depend on left-to-right
+evaluation of arguments to functions! Notice also that in</p>
+<pre><code>    (BLOCK x . r) -&gt; ((LAMBDA (A B) (B)) x (LAMBDA () (BLOCK . r)))
+</code></pre>
+<p>there can be no conflict between the auxiliary variables
+<code>A</code> and <code>B</code> and any variables occurring in
+<code>x</code> and <code>r</code>. It is thus unnecessary to choose
+variables different from any others appearing in the code. In this
+respect this definition is an improvement over the one given in [<a href="#imperative-1-2-3-4-5-6" id="ximp4" title="LAMBDA: The Ultimate Imperative">Imperative</a>]. This trick
+(which is actually a deep property of the lexical scoping rules) is used
+in a general way in most of the definitions of syntactic extensions: one
+wraps all the “user code” in lambda-expressions in the outer
+environment, passes them in bound to internal names, and then invokes
+them as necessary within the internal code for the definition.</p>
+</div>
+</section>
+<section id="environment-symmetry" class="level4 npb">
+<h4>{Environment Symmetry} <a href="#xenvironment-symmetry" class="fr">^</a><br />
+</h4>
+<div class="in">
+<p>One may think of an escape object as being “closed” with respect to a
+dynamic environment (and here we mean not only fluid variables but the
+chain of pending procedure calls) in much the same way that an ordinary
+procedure is closed with respect to a lexical environment. Just as a
+procedure cannot execute properly except in conjunction with a static
+environment of the appropriate form, so an escape object cannot properly
+resume control except in a dynamic environment of the appropriate
+form.</p>
+</div>
+</section>
+<section id="evaluate-has-disappeared" class="level4 npb">
+<h4>{<code>EVALUATE</code> Has Disappeared} <a href="#xevaluate-has-disappeared" class="fr">^</a><br />
+</h4>
+<div class="in">
+<p>The <code>EVALUATE</code> primitive described in [<a href="#scheme-1-2-3-4-5-6-7-8-9" id="xsch5" title="SCHEME: An Interpreter for Extended Lambda Calculus"><span class="sc">SCHEME</span></a>] has been removed from the language. We
+discovered (the hard way) that the straightforward implementation of
+<code>EVALUATE</code> (evaluate the given expression in the current
+environment) destroys referential transparency. We then altered it to
+evaluate the expression in the top-level environment, but were still
+disturbed by the extent to which one is tied to a particular
+representation of a procedure to be executed.</p>
+</div>
+</section>
+<div class="in">
+<p>We eventually invented an <code>ENCLOSE</code> of one argument (a
+lambda- expression), which enclosed the procedure in the top-level
+environment. This allowed one to remove the dependence on representation
+by making a procedure, and then to pass the procedure around for a while
+before invoking it. We had no provision for closing in an arbitrary
+environment, because we did not want to provide the user with direct
+access to environments as data objects. The excellent idea of allowing
+<code>ENCLOSE</code> to accept a <strong>representation</strong> of an
+environment was suggested to us by R. M. Fano.</p>
+</div>
+<section id="evaluateuninterruptibly-has-disappeared" class="level4 npb">
+<h4>{<code>EVALUATE!UNINTERRUPTIBLY</code> Has Disappeared} <a href="#xevaluateuninterruptibly-has-disappeared" class="fr">^</a><br />
+</h4>
+<div class="in">
+<p>The <code>EVALUATE!UNINTERRUPTIBLY</code> primitive described in [<a href="#scheme-1-2-3-4-5-6-7-8-9" id="xsch6" title="SCHEME: An Interpreter for Extended Lambda Calculus"><span class="sc">SCHEME</span></a>] has been removed from the language. This
+primitive was half a joke, and we have since discovered that it had a
+serious flaw in its definition, namely that the scope of the
+uninterruptibility is lexical. This worked in our limited examples only
+by virtue of the fact that SUBRs were atomic operations. In general,
+this primitive is worse than useless for synchronization purposes.
+Synchronization is clearly a dynamic and not a static phenomenon. We
+have no good theory of synchronization (primitives for this were
+included in [<a href="#scheme-1-2-3-4-5-6-7-8-9" id="xsch7" title="SCHEME: An Interpreter for Extended Lambda Calculus"><span class="sc">SCHEME</span></a>] primarily to show that it could be done,
+however kludgily), and so have defined no replacement for
+<code>EVALUATE!UNINTERRUPTIBLY</code>. We apologize for any confusion
+this mistake may have caused.</p>
+</div>
+</section>
+<section id="fexprs-are-okay-by-us" class="level4 npb">
+<h4>{FEXPRs Are Okay by Us} <a href="#xfexprs-are-okay-by-us" class="fr">^</a><br />
+</h4>
+<div class="in">
+<p>While the syntactic extensions are defined in terms of other
+constructs, they need not be implemented in terms of them. For example,
+in the current <span class="sc">PDP-10</span> <span class="sc">MacLISP</span> implementation of <span class="sc">SCHEME</span>, <code>BLOCK</code> is actually implemented in
+the same way <code>IF</code> and <code>QUOTE</code> are, rather than as
+a macro in terms of <code>LAMBDA</code>. This was done purely to speed
+up the interpreter. The compiler still uses the macro definition (though
+we could change that too if warranted). The point is that the user
+doesn’t have to know about all this.</p>
+</div>
+</section>
+<div class="in">
+<p>It is somewhat an accident that magic forms look like procedure calls
+(see also {Note <a href="#funcall-is-a-pain-1-2-3-4" id="xfuncall3" title="The ambiguity between magic forms and combinations could be eliminated by reserving a special subclass of lists to represent combinations, and allowing all others to represent magic forms. For example, we might say that all lists beginning with the atom CALL are combinations ...">FUNCALL
+is a Pain</a>}): a name appearing in the car of a list may represent
+either a procedure or a magic word, but not both. (We could, for
+example, say that magic forms are distinguished by a magic word in the
+<em>cadr</em> of a list, thus allowing forms such as
+<code>(FOO := (+ FOO 1))</code>, where <code>:=</code> is a magic word
+for assignment. <span class="sc">PLASMA</span> [<a href="#smith-and-hewitt-1-2-3" id="xsmith2" title="A PLASMA Primer (draft)">Smith and Hewitt</a>] allowed just this
+ability with its “italics” or “reserved word” feature.) Thanks to this
+accident many <span class="sc">LISP</span> interpreters store the magic
+function definition in the place where an ordinary procedure definition
+is stored. A special marker (traditionally EXPR/SUBR or FEXPR/FSUBR)
+distinguishes ordinary functions from magic ones. This allows the lookup
+for a magic word definition and an ordinary value to be simultaneous,
+thus speeding up the implementation; it is purely an engineering trick
+and not a semantic essence. However, this trick has led to a
+generalization wherein <code>QUOTE</code> and <code>COND</code> are
+regarded as functions on an equal basis with <code>CAR</code> and
+<code>CONS</code>; to be sure, they take their arguments in a funny way
+- unevaluated - but they are still regarded as functions. This leads to
+all manner of confusion, which has its roots in a confusion between a
+procedure and its representation.</p>
+<p>It is helpful to consider a simple thought experiment. Let us
+postulate a toy language called “<span class="sc">Number-LISP</span>”.
+Programs in this language are written as s-expressions, as usual; the
+kernel primitives <code>LAMBDA</code>, <code>IF</code>,
+<code>LABELS</code>, etc. are all present. However, the primitive
+functions <code>CONS</code>, <code>CAR</code>, and <code>CDR</code> are
+absent; one has only <code>+</code>, <code>-</code>, <code>*</code>,
+<code>//</code>, and <code>=</code>. <code>QUOTE</code> is
+<strong>not</strong> available; the only constants one can write are
+numbers.</p>
+<p>Now <span class="sc">Number-LISP</span> can be used to perform all
+kinds of arithmetic, but it is clearly a poor language in which to write
+a <span class="sc">LISP</span> interpreter. Now consider the magic form
+processors and syntactic extension functions for Number-LISP. They are
+procedures on s-expressions or functions from s-expressions to
+s-expressions which transform one form into another. Whatever processes
+<code>IF</code> or <code>LABELS</code> or <code>BLOCK</code> is clearly.
+not a <span class="sc">Number-LISP</span> procedure, because it must
+deal with the <em>text</em> of a <span class="sc">Number-LISP</span>
+procedure, not just the data to be operated on by that procedure. The
+<code>IF</code>-processor (a “FEXPR”) for <span class="sc">Number-LISP</span> must be coded in the
+<strong>meta-language</strong> for <span class="sc">Number-LISP</span>,
+whatever that may be.</p>
+<p>Now it is one of the great features of ordinary <span class="sc">LISP</span> that it can serve as its own meta-language. This
+provides great power, but also permits great confusion. If the
+implementation allows mixing of levels of definition, we must keep them
+separate in our minds. For this reason we don’t mind using the “FEXPR
+hack” to implement syntactic forms, but we do mind thinking of them as
+functions just like EXPRS.</p>
+</div>
+<section id="funcall-is-a-pain-1-2-3-4" class="level4 npb">
+<h4>{<code>FUNCALL</code> is a Pain} <span class="fr"><a href="#xfuncall1">1</a>, <a href="#xfuncall2">2</a>, <a href="#xfuncall3">3</a>, <a href="#xfuncall4">4</a></span><br />
+</h4>
+<div class="in">
+<p>The ambiguity between magic forms and combinations could be
+eliminated by reserving a special subclass of lists to represent
+combinations, and allowing all others to represent magic forms. For
+example, we might say that all lists beginning with the atom
+<code>CALL</code> are combinations. Then we would write
+<code>(CALL CONS A B)</code> rather than <code>(CONS A B)</code>. One
+could then have a procedure named <code>LAMBDA</code>, for example;
+there could be no confusion between <code>(LAMBDA (A) (B A))</code> and
+<code>(CALL LAMBDA (CALL A) (CALL B A))</code>, as there would be
+between <code>(LAMBDA (A) (B A))</code> as a combination and as a magic
+form denoting a procedure. Notice that <code>CALL</code> is intended to
+be merely a syntactic marker, like <code>LAMBDA</code> or
+<code>IF</code>, and not a function as <code>FUNCALL</code> is in <span class="sc">MacLISP</span> [<a href="#moon-1-2-3-4" id="xmoon3" title="MACLISP Reference Manual, Revision 0">Moon</a>].</p>
+</div>
+</section>
+<div class="in">
+<p>If this <code>CALL</code> convention were adopted, there could be no
+confusion between combinations and other kinds of forms. Not all
+expressions would have meaningful interpretations; for example
+<code>(FOO A B)</code> would not mean anything (certainly not a call to
+the function <code>FOO</code>, which would be written as
+<code>(CALL FOO A B)</code>). The space of meaningful s-expressions
+would be a very sparse subset of all s-expressions, rather than a dense
+one. It would also make writing <span class="sc">SCHEME</span> code very
+clumsy. (These two facts are of course correlated.) Combinations occur
+about as often as all other non-atomic forms put together; we would like
+to write as little as possible to denote a call. As in traditional <span class="sc">LISP</span>, we agree to tolerate the ambiguity in <span class="sc">SCHEME</span> as the price of notational convenience. Indeed,
+this ambiguity is sometimes exploited; it is convenient not to have to
+know whether <code>AMAPCAR</code> is a function or a magic word.</p>
+<p>This compromise does lead to difficulties, however. For example, we
+had wanted to define an iteration feature:</p>
+<pre><code>    (LOOP name varspecs body)</code></pre>
+<p>Unfortunately, there is a great deal of existing code written in
+<span class="sc">SCHEME</span> of the form:</p>
+<pre><code>    (LABELS ((LOOP (LAMBDA ... (LOOP ...) ...)))
+            (LOOP ...))</code></pre>
+<p>because <code>LOOP</code> has become a standard name for use in a
+<code>LABELS</code> procedure which implements an iteration (see, for
+example, our definition of <code>DO</code>!). If <code>LOOP</code> were
+to become a new magic word, then all this existing code would no longer
+work. We were therefore forced to name it <code>ITERATE</code> instead
+(after verifying that no existing code used the name
+<code>ITERATE</code> for another purpose!).</p>
+<p>There would have been no problem if all this code had been written
+as:</p>
+<pre><code>    (LABELS ((LOOP (LAMBDA ... (CALL LOOP ...) ...)))
+            (CALL LOOP ...))</code></pre>
+<p>To this extent <span class="sc">SCHEME</span> has unfortunately,
+despite our best intentions, inherited a certain amount of referential
+opacity.</p>
+</div>
+<section id="global-fluid-environment" class="level4 npb">
+<h4>{Global Fluid Environment} <a href="#xglobal-fluid-environment" class="fr">^</a><br />
+</h4>
+<div class="in">
+<p>There is a question as to the meaning of the global fluid
+environment. In the <span class="sc">PDP-10</span> <span class="sc">MacLISP</span> implementation of <span class="sc">SCHEME</span>, the global lexical and fluid environments
+coincide, but this was an arbitrary choice of convenience influenced by
+the structure of <span class="sc">MacLISP</span>. We recommend that the
+two global environments be kept distinct.</p>
+</div>
+</section>
+<section id="if-is-data-dependent" class="level4 npb">
+<h4>{<code>IF</code> Is Data-Dependent} <a href="#xif-is-data-dependent" class="fr">^</a><br />
+</h4>
+<div class="in">
+<p>We should note that the usefulness of the definition of
+<code>IF</code> explicitly depends on the particular kinds of data types
+and the particular primitive functions available; we expect to use
+<code>IF</code> with primitive predicates such as <code>ATOM</code> and
+<code>EQ</code>. This is in contrast to other kernel forms such as
+<code>LAMBDA</code> and <code>LABELS</code> expressions, whose semantics
+are independent of the data.</p>
+</div>
+</section>
+<div class="in">
+<p>We erred in [<a href="#scheme-1-2-3-4-5-6-7-8-9" id="xsch8" title="SCHEME: An Interpreter for Extended Lambda Calculus"><span class="sc">SCHEME</span></a>] when we stated that a practical
+interpreter must have a little of each of call-by-value and call-by-name
+in it. The argument was roughly that a call-by-name interpreter must
+become call-by- value when a primitive operator is to be applied, and a
+call-by-value interpreter must have some primitive conditional such as
+<code>IF</code>. We did mention the trick of eliminating <code>IF</code>
+in a call-by-name interpreter by defining predicates to return
+<code>(LAMBDA (X Y) X)</code> for TRUE and <code>(LAMBDA (X Y) Y)</code>
+for FALSE, whereupon one typically writes:</p>
+<pre><code>    ((= A B) &lt;do this if TRUE&gt; &lt;do this if FALSE&gt;)</code></pre>
+<p>but noted that it depends critically on the use of normal order
+evaluation.</p>
+<p>What we had not fully understood at that point was the trick of
+simulating call-by-name in terms of call-by-value by using
+lambda-expressions (our use of it in the TRY!TWO!THINGS!IN!PARALLEL
+example notwithstanding!); this trick was described generally in [<a href="#imperative-1-2-3-4-5-6" id="ximp5" title="LAMBDA: The Ultimate Imperative">Imperative</a>]. A special case
+of this trick is to define the primitive predicates in a call-by-value
+interpreter to return <code>(LAMBDA (X Y) (X))</code> for TRUE and
+<code>(LAMBDA (X Y) (Y))</code> for FALSE. Then one can write things
+like:</p>
+<pre><code>    ((= A B)
+     (LAMBDA () &lt;do this if TRUE&gt;)
+     (LAMBDA () &lt;do this if FALSE&gt;))</code></pre>
+<p>and so eliminate a call-by-name-like magic form such as
+<code>IF</code>. One can make the dependence of the conditional on the
+primitive data operations even more explicit by defining predicates not
+to return any particular value, but to require two “continuations” as
+arguments, of which it will invoke one:</p>
+<pre><code>    (= A B
+       (LAMBDA () &lt;do this if TRUE&gt;)
+       (LAMBDA () &lt;do this if FALSE&gt;))</code></pre>
+<p>We were correct when we said that a practical interpreter must have
+call-by-name to some extent in that there must be some way to designate
+two pieces of as yet uninterpreted program text of which only one is to
+be evaluated. We simply did not notice that <code>LAMBDA</code> provides
+this ability, and so a separate primitive such as <code>IF</code> is not
+necessary. We have chosen to retain <code>IF</code> in the language
+because it is traditional, because its implementation is easy to
+understand, and because it allows us to take advantage of many existing
+predicates in the host language in the <span class="sc">PDP-10</span>
+<span class="sc">MacLISP</span> implementation.</p>
+</div>
+<section id="lisp-bnf" class="level4 npb">
+<h4>{<span class="sc">LISP</span> BNF} <a href="#xlisp-bnf" class="fr">^</a><br />
+</h4>
+<div class="in">
+<p>These rules refer to the following rules for <span class="sc">LISP</span> s-expressions:</p>
+<pre><code>    &lt;atomic symbol&gt;::= &lt;alphanumeric string&gt; &lt;letter&gt; &lt;alphanumeric string&gt;
+    &lt;alphanumeric string) ::= &lt;empty&gt; |
+                              &lt;alphanumeric character&gt; &lt;alphanumeric string&gt;
+    &lt;alphanumeric character&gt; ::= &lt;letter&gt; | &lt;digit&gt; | / &lt;character&gt;
+    &lt;letter&gt; ::= A | B | ... | Y | Z | * | $ | % | ...
+    &lt;digit&gt; ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+    &lt;number&gt; ::= &lt;VERY implementation dependent&gt;
+    &lt;string&gt; ::= &quot; &lt;character string&gt; &quot;
+    &lt;character string&gt; ::= ‹empty&gt; | &lt;literal character&gt; &lt;character string&gt;
+    &lt;literal character&gt; ::= &lt;any character except &quot; or /&gt; | / &lt;character&gt;</code></pre>
+</div>
+</section>
+<div class="in">
+<p>(In the <span class="sc">PDP-10</span> <span class="sc">MacLISP</span> implementation of <span class="sc">SCHEME</span>, we use the <code>&quot;</code> character for
+another purpose because <span class="sc">PDP-10</span> <span class="sc">MacLISP</span> does not have a string data type. We mention
+strings only as a familiar example other than numbers of an atomic data
+type other than identifiers.)</p>
+<p>In addition, we assume the usual interchangeability of list notation
+and dot notation for s-expressions: <code>(A B C)</code> =
+<code>(A . (B . (C . NIL)))</code>. Thus the pattern ( <magic word> .
+<s-expression> ) may match the list <code>(COND (A B) (T C))</code>. It
+is the s-expression representation we care about, not particular
+character strings.</p>
+</div>
+<section id="lisp-is-a-ball-of-mud" class="level4 npb">
+<h4>{<span class="sc">LISP</span> Is a Ball of Mud} <a href="#xlisp-is-a-ball-of-mud" class="fr">^</a><br />
+</h4>
+<div class="in">
+<p><span class="sc">LISP</span> is extensible in two ways. First, there
+is the simple ability to define new functions; these are used in a way
+that is both syntactically and semantically identical to built-in
+primitive functions like <code>CAR</code>. This is in contrast to
+“algebraic” programming languages, which either make an arbitrary
+syntactic distinction between addition, say, and a user function, or
+wander into the quagmire of extensible parsers. Second, there is a
+uniform macro facility for transforming one syntactic form into another;
+this facility is based on internal data structures rather than external
+character-string syntax.</p>
+</div>
+</section>
+<div class="in">
+<p>Joel Moses (private communication) once made some remarks on the
+difference between <span class="sc">LISP</span> and <span class="sc">APL</span>, which we paraphrase here: “<span class="sc">APL</span> is like a diamond. It has a beautiful crystal
+structure; all of its parts are related in a uniform and elegant way.
+But if you try to extend this structure in any way – even by adding
+another diamond – you get an ugly kludge. <span class="sc">LISP</span>,
+on the other hand, is like a ball of mud. You can add any amount of mud
+to it (e.g. <span class="sc">MICRO-PLANNER</span> or <span class="sc">CONNIVER</span>) and it still looks like a ball of mud!”</p>
+</div>
+<section id="multiple-throw" class="level4 npb">
+<h4>{Multiple Throw} <a href="#xmultiple-throw" class="fr">^</a><br />
+</h4>
+<div class="in">
+<p>A full implementation of <span class="sc">SCHEME</span> allows this
+to work even if the <code>CATCH</code> has already been “returned from”;
+that is, the escape object can be used to “return from the catch”
+several times. However, we allow the possibility that an implementation
+may allow the escape object to be invoked only from within the execution
+of the form inside the catch. (This is essentially the restriction that
+<span class="sc">MacLISP</span> makes on its <code>CATCH</code>
+construct [<a href="#moon-1-2-3-4" id="xmoon4" title="MACLISP Reference Manual, Revision 0">Moon</a>].) This
+restriction permits a stack discipline for the allocation of
+continuations, and also greatly simplifies the flow analysis problem for
+a compiler [<a href="#rabbit" id="xrabbit" title="Compiler Optimization Based on Viewing LAMBDA as Rename plus Goto"><span class="sc">RABBIT</span></a>].</p>
+</div>
+</section>
+<section id="normal-order-loses" class="level4 npb">
+<h4>{Normal Order Loses} <a href="#xnormal-order-loses" class="fr">^</a><br />
+</h4>
+<div class="in">
+<p>Our definition of <code>BLOCK</code> exploits the fact that <span class="sc">SCHEME</span> is an applicative-order (call-by-value)
+language in order to enforce sequencing. Sussman has proved that one
+cannot do a similar thing in a normal-order (call-by-name) language:</p>
+</div>
+</section>
+<div class="in">
+<div class="in">
+<p><strong>Theorem</strong>: Normal order, as such, is incapable of
+enforcing sequencing (whereas applicative order is) in the form of the
+<code>BLOCK</code> construct.<br />
+<strong>(Informal) proof</strong>: The essence of
+<code>(BLOCK a b)</code> is that <code>a</code> is evaluated before
+<code>b</code>, and that the value of <code>b</code> is the value of the
+<code>BLOCK</code> (or, more correctly, the value or meaning of the
+<code>BLOCK</code> is independent of <code>a</code>; <code>a</code> is
+executed only for its side effects). Now we know that if
+<code>(BLOCK a b)</code> has any value at all, it can be found by using
+normal order (normal order terminates if any order does). Now suppose
+that the computation of <code>a</code> does not terminate, but the
+computation of <code>b</code> does. Then <code>(BLOCK a b)</code> must
+terminate under normal order, because the value of the block is the
+value of <code>b</code>; but this contradicts the requirement that
+<code>a</code> finish before <code>b</code> is calculated. <span class="sc">QED</span></p>
+</div>
+<p>This is an informal indication that normal order is less useful (or
+at least less powerful) in a programming language than applicative
+order. We also noted in [<a href="#scheme-1-2-3-4-5-6-7-8-9" id="xsch9" title="SCHEME: An Interpreter for Extended Lambda Calculus"><span class="sc">SCHEME</span></a>] that normal order iterations tend to
+consume more space than applicative order iterations, because of the
+buildup of thunk structure. Given that one can simulate normal order in
+applicative order by explicitly creating closures [<a href="#imperative-1-2-3-4-5-6" id="ximp6" title="LAMBDA: The Ultimate Imperative">Imperative</a>], there seems to
+be little to recommend normal order over applicative order in a
+practical programming language.</p>
+</div>
+<section id="notes-are-in-alphabetical-order" class="level4 npb">
+<h4>{Notes Are in Alphabetical Order} <a href="#xnotes" class="fr">^</a><br />
+</h4>
+<div class="in">
+<p>The notes are ordered alphabetically by name, not in order of
+reference within the text.</p>
+</div>
+</section>
+<section id="s-expressions-are-not-functions" class="level4 npb">
+<h4>{S-expressions Are Not Functions} <a href="#xs-expressions-are-not-functions" class="fr">^</a><br />
+</h4>
+<div class="in">
+<p>Recall that a lambda-expression (i.e. an s-expression whose car is
+the atomic symbol <code>LAMBDA</code>) is not itself a valid procedure.
+It is necessary to <code>ENCLOSE</code> it in order to invoke it.</p>
+</div>
+</section>
+<div class="in">
+<p>Moreover, the particular representations we have chosen for
+procedures and environments are arbitrary. In principle, one could have
+several kinds of <code>ENCLOSE</code>, each transforming instances of a
+particular representation into procedures. For example, someone might
+actually want to implement a primitive <code>ALGOL-ENCLOSE</code>,
+taking a string and a 2-by-N array representing code and environment for
+an <span class="sc">ALGOL</span> procedure:</p>
+<pre><code>    (ALGOL-ENCLOSE &quot;integer procedure fact(n); value n: integer n:
+                       fact := if n=0 then 1 else n*fact(n-1)&quot;
+                   NULL-ARRAY)</code></pre>
+<p>This could return a factorial function completely acceptable to <span class="sc">SCHEME</span>. Of course, the implementation of the primitive
+<code>ALGOL-ENCLOSE</code> would have to know about the internal
+representations of procedures used by the implementation of <span class="sc">SCHEME</span>; but this is hidden from the user.</p>
+<p>Similarly, one could have <code>APL-ENCLOSE</code>,
+<code>BASIC-ENCLOSE</code>, <code>COBOL-ENCLOSE</code>,
+<code>FORTRAN-ENCLOSE</code>, <code>RPG-ENCLOSE</code> …</p>
+</div>
+<section id="tail-recursive-and" class="level4 npb">
+<h4>{Tail-Recursive <code>AND</code>} <a href="#xtail-recursive-and" class="fr">^</a><br />
+</h4>
+<div class="in">
+<p>The definition of <code>AND</code> has three rules, not only for the
+same reasons <code>OR</code> does, but because <code>AND</code> is not a
+precise dual to <code>OR</code>. <code>OR</code>, on failure, returns
+<code>NIL</code>, but <code>AND</code> does not just return
+non-<code>NIL</code> on success. It must return the non-<code>NIL</code>
+thing returned by its last form.</p>
+</div>
+</section>
+<section id="tail-recursive-or" class="level4 npb">
+<h4>{Tail-Recursive <code>OR</code>} <a href="#xtail-recursive-or" class="fr">^</a><br />
+</h4>
+<div class="in">
+<p>We might have defined <code>OR</code> with only two rules:</p>
+<pre><code>    (OR) -&gt; &#39;NIL
+    (OR x . r) -&gt; (COND (x) (T (OR . r)))</code></pre>
+</div>
+</section>
+<div class="in">
+<p>However, because of the way <code>OR</code> is sometimes used, it is
+a technical convenience to be able to guarantee to the user that the
+last form in an <code>OR</code> is evaluated without an extra “stack
+frame”; that is, a function called as the last form in an
+<code>OR</code> will be invoked tail-recursively. For example:</p>
+<pre><code>    (DEFINE NOT-ALL-NIL-P
+            (LAMBDA (X)
+                    (LABELS ((LOOP
+                              (LAMBDA (Z)
+                                      (OR (CAR Z) (LOOP (CDR Z))))))
+                             (LOOP X))))</code></pre>
+<p>executes iteratively in [SCHEME]{.sc, but would not execute
+iteratively if the two-rule definition of <code>OR</code> were used.</p>
+</div>
+<section id="what-use-is-it" class="level4 npb">
+<h4>{What Use Is It?} <a href="#xwhat-use-is-it" class="fr">^</a><br />
+</h4>
+<div class="in">
+<p>We should perhaps say instead that <code>&lt;identifier&gt;</code> is
+treated the same as <code>(STATIC &lt;identifier&gt;)</code>. The
+<code>STATIC</code> construction is included in <span class="sc">SCHEME</span> primarily for pedagogical purposes, to provide
+symmetry, to <code>(FLUID &lt;identifier&gt;)</code>. The fact that lone
+atomic symbols are interpreted as lexical variables rather than dynamic
+ones is in some sense arbitrary. Some critics of <span class="sc">SCHEME</span> [personal communications] have expressed a
+certain horror that there are two kinds of variables, perhaps imagining
+some confusion in the interpretation of simple identifiers. We can have
+as many kinds of variables as we like (though we have so far discovered
+only two kinds of any great use), as long as we can distinguish them. In
+<span class="sc">SCHEME</span> we distinguish them with a special
+marker, such as <code>STATIC</code> or <code>FLUID</code>; then, as a
+convenience, we prescribe that simple atomic symbols, not marked by such
+a keyword, shall also be interpreted as lexical variables, because that
+is the kind we use most often in <span class="sc">SCHEME</span>. We
+could as easily have defined simple symbols to be interpreted as fluid
+variables, or for that matter as constants (as numbers and strings are).
+We could also have prescribed a different method of distinguishing
+types, e.g. “all variables beginning with I, J, K, L, M, or N shall be
+fluid”. (This is not as silly as it sounds. A fairly wide-spread <span class="sc">LISP</span> convention is to spell global variables with
+leading and trailing <code>*</code>, as in <code>*FOO*</code>, and some
+programmers have wished that the compiler would automatically treat
+variables so spelled as <code>SPECIAL</code>.) Indeed, given the
+read-macro-character facility, we effectively have the syntactic rule
+“all variables beginning with • shall be fluid”. We have settled on the
+current definition of <span class="sc">SCHEME</span> as being the most
+convenient both to implement and to use.</p>
+</div>
+</section>
+<div class="in">
+<p>Compare the use of syntactic markers and read-macro-characters to the
+constructions <code>&lt;GVAL X&gt;</code> = <code>,X</code> = “global
+value of <code>X</code>” and <code>&lt;LVAL X&gt;</code> =
+<code>.X</code> = “local value of <code>X</code>” in <span class="sc">MUDDLE</span> [<a href="#galley-and-pfister-1-2" id="xgalley-and-pfister2" title="The MDL Language">Galley and
+Pfister</a>]. Indeed, in <span class="sc">MUDDLE</span> a simple atomic
+symbol is regarded as a constant, not as an identifier.</p>
+<p>All this suggests another solution to the problem posed in {Note <a href="#funcall-is-a-pain-1-2-3-4" id="xfuncall4" title="The ambiguity between magic forms and combinations could be eliminated by reserving a special subclass of lists to represent combinations, and allowing all others to represent magic forms. For example, we might say that all lists beginning with the atom CALL are combinations ..."><code>FUNCALL</code>
+is a Pain</a>} (the confusion of magic forms with combinations). The
+real problem is distinguishing a magic word from a variable. Let us
+abbreviate <code>(STATIC FOO)</code> to ≡<code>FOO</code>, just as
+<code>(FLUID FOO)</code> can be abbreviated as <code>•FOO</code>. Then
+<code>(</code>≡<code>LOOP A B)</code> would have to be a call on
+the function <code>LOOP</code>, and not a magic form. Similarly, we
+could write <code>(MAGICWORD COND)</code> instead of <code>COND</code>,
+and invent an abbreviation for that too. This all raises as many
+problems as it solves by becoming too clumsy; but then again, maybe it
+isn’t asking too much to require the user to write all magic words in
+boldface (as in the <span class="sc">ALGOL</span> reference language) or
+in italics (as in an early version of <span class="sc">PLASMA</span> [<a href="#smith-and-hewitt-1-2-3" id="xsmith3" title="A PLASMA Primer (draft)">Smith and Hewitt</a>])…</p>
+</div>
+<p><br />
+</p>
+</section>
+</section>
+<section id="acknowledgements" class="level2 npb">
+<h2>Acknowledgements</h2>
+<p>Comments by Carl Hewitt and Berthold Horn were of considerable value
+in preparing this paper. Ed Barton (who is also helping to maintain the
+<span class="sc">PDP-10</span> <span class="sc">MacLISP</span> <span class="sc">SCHEME</span> implementation) made important contributions to
+the revisions of the language definition.</p>
+</section>
+<p><hr></p>
+<section id="references" class="level2">
+<h2>References</h2>
+<section id="section-1" class="level3">
+<h3></h3>
+<section id="declarative" class="level4">
+<h4>[Declarative] <a href="#xdeclarative" class="fr">^</a><br />
+</h4>
+<p>Steele, Guy Lewis Jr. <a href="https://dspace.mit.edu/handle/1721.1/6091" title="dspace.mit.edu/handle/1721.1/6091"><em>LAMBDA: The Ultimate
+Declarative</em></a>. AI Memo 379. MIT AI Lab (Cambridge, November
+1976).</p>
+<div class="ti">
+<p>{{HTML transcription: <a href="https://research.scheme.org/lambda-papers/" title="research.scheme.org/lambda-papers/">research.scheme.org/lambda-papers/</a>.
+}}</p>
+</div>
+</section>
+<section id="galley-and-pfister-1-2" class="level4">
+<h4>[Galley and Pfister] <span class="fr"><a href="#xgalley-and-pfister1">1</a>, <a href="#xgalley-and-pfister2">2</a></span><br />
+</h4>
+<p>Galley, S.W. and Pfister, Greg. <a href="https://apps.dtic.mil/sti/pdfs/ADA070930.pdf" title="apps.dtic.mil/sti/pdfs/ADA070930.pdf"><em>The MDL
+Language</em></a>. Programming Technology Division Document SYS.11.01.
+Project MAC, MIT (Cambridge, November 1975).<br />
+{{See also <a href="https://mdl-language.readthedocs.io/en/latest" title="mdl-language.readthedocs.io/en/latest"><em>The MDL Programming
+Language</em></a>] (transcription at ReadtheDocs.io) }}</p>
+</section>
+<section id="hewitt" class="level4">
+<h4>[Hewitt] <a href="#xhewitt" class="fr">^</a><br />
+</h4>
+<p>Hewitt, Carl. <a href="https://doi.org/10.1016/0004-3702(77)90033-9" title="doi.org/10.1016/0004-3702(77)90033-9"><em>Viewing Control
+Structures as Patterns of Passing Messages</em></a> AI Journal 8, 3
+(June 1977), 323-364.</p>
+</section>
+<section id="imperative-1-2-3-4-5-6" class="level4">
+<h4>[Imperative] <span class="fr"><a href="#ximp1">1</a>, <a href="#ximp2">2</a>, <a href="#ximp3">3</a>, <a href="#ximp4">4</a>, <a href="#ximp5">5</a>, <a href="#ximp6">6</a></span><br />
+</h4>
+<p>Steele, Guy Lewis Jr., and Sussman, Gerald Jay. <a href="https://dspace.mit.edu/handle/1721.1/5790" title="dspace.mit.edu/handle/1721.1/5790"><em>LAMBDA: The Ultimate
+Imperative</em></a>. AI Lab Memo 353. MIT (Cambridge, March 1976).</p>
+<div class="ti">
+<p>{{HTML transcription: <a href="https://research.scheme.org/lambda-papers/" title="research.scheme.org/lambda-papers/">research.scheme.org/lambda-papers/</a>.
+}}</p>
+</div>
+</section>
+<section id="landin" class="level4">
+<h4>[Landin] <a href="#xlandin" class="fr">^</a><br />
+</h4>
+<p>Landin, Peter J. <a href="https://dl.acm.org/doi/10.1145/363744.363749" title="dl.acm.org/doi/10.1145/363744.363749"><em>A Correspondence
+between ALGOL 60 and Church’s Lambda-Notation</em></a>. CACM 8, 2-3 (<a href="https://dl.acm.org/doi/10.1145/363744.363749" title="dl.acm.org/doi/10.1145/363744.363749">February</a> and <a href="https://dl.acm.org/doi/10.1145/363791.363804" title="dl.acm.org/doi/10.1145/363791.363804">March</a> 1965).</p>
+</section>
+<section id="mcdermott-and-sussman" class="level4">
+<h4>[McDermott and Sussman] <a href="#xmcdermott-and-sussman" class="fr">^</a><br />
+</h4>
+<p>McDermott, Drew V. and Sussman, Gerald Jay. <a href="https://dspace.mit.edu/handle/1721.1/6204" title="dspace.mit.edu/handle/1721.1/6204"><em>The CONNIVER Reference
+Manual</em></a>. AI Memo <del>295a</del> 259a. MIT AI Lab (Cambridge,
+January 1974).</p>
+</section>
+<section id="moon-1-2-3-4" class="level4">
+<h4>[Moon] <span class="fr"><a href="#xmoon1">1</a>, <a href="#xmoon2">2</a>, <a href="#xmoon3">3</a>, <a href="#xmoon4">4</a></span><br />
+</h4>
+<p>Moon, David A. <a href="https://www.softwarepreservation.org/projects/LISP/MIT/Moon-MACLISP_Reference_Manual-Apr_08_1974.pdf" title="www.softwarepreservation.org/projects/LISP/MIT/Moon-MACLISP_Reference_Manual-Apr_08_1974.pdf"><em>MACLISP
+Reference Manual, Revision 0</em></a>. Project MAC, MIT (Cambridge,
+April 1974).</p>
+</section>
+<section id="moses" class="level4">
+<h4>[Moses] <a href="#xmoses" class="fr">^</a><br />
+</h4>
+<p>Moses, Joel. <a href="https://dspace.mit.edu/handle/1721.1/5854" title="dspace.mit.edu/handle/1721.1/5854"><em>The Function of FUNCTION
+in LISP</em></a>. AI Memo 199, MIT AI Lab (Cambridge, June 1970).</p>
+</section>
+<section id="naur" class="level4">
+<h4>[Naur] <a href="#xnaur" class="fr">^</a><br />
+</h4>
+<p>Naur, Peter (ed.), et al. <a href="https://dl.acm.org/doi/10.1145/366193.366201" title="dl.acm.org/doi/10.1145/366193.366201"><em>Revised Report on the
+Algorithmic Language ALGOL 60</em></a>. Comm. ACM 6, 1 (January 1963),
+1-20.</p>
+</section>
+<section id="rabbit" class="level4">
+<h4>[<span class="sc">RABBIT</span>] <a href="#xrabbit" class="fr">^</a><br />
+</h4>
+<p>Steele, Guy Lewis Jr. <a href="https://.invalid/_no_online_copy_found_" title="No online copy found"><em>Compiler Optimization Based on Viewing
+LAMBDA as Rename plus Goto</em></a>. S.M. thesis. MIT (Cambridge, May
+1977).</p>
+<div class="ti">
+<p>{{See <a href="https://research.scheme.org/lambda-papers/" title="research.scheme.org/lambda-papers/">research.scheme.org/lambda-papers/</a>.<br />
+See also <em>Compiler Optimization Based on Viewing LAMBDA as RENAME
+plus GOTO</em> in <a href="https://archive.org/details/artificialintell0002unse" title="archive.org/details/artificialintell0002unse"><em>Artificial
+Intelligence, an MIT Perspective, Volume 2</em></a> (MIT Press 1979)
+pp401-431. }}</p>
+</div>
+</section>
+<section id="reynolds" class="level4 npb">
+<h4>[Reynolds] <a href="#xreynolds" class="fr">^</a><br />
+</h4>
+<p>Reynolds, John C. <a href="https://dl.acm.org/doi/10.1145/800194.805852" title="dl.acm.org/doi/10.1145/800194.805852"><em>Definitional
+Interpreters for Higher Order Programming Languages</em></a>. ACM
+Conference Proceedings 1972.</p>
+</section>
+<section id="scheme-1-2-3-4-5-6-7-8-9" class="level4">
+<h4>[<span class="sc">SCHEME</span>] <span class="fr"><a href="#xsch1">1</a>, <a href="#xsch2">2</a>, <a href="#xsch3">3</a>, <a href="#xsch4">4</a>, <a href="#xsch5">5</a>, <a href="#xsch6">6</a>, <a href="#xsch7">7</a>, <a href="#xsch8">8</a>, <a href="#xsch9">9</a></span><br />
+</h4>
+<p>Sussman, Gerald Jay, and Steele, Guy L. Jr. <a href="https://dspace.mit.edu/handle/1721.1/5794" title="dspace.mit.edu/handle/1721.1/5794"><em><span class="sc">SCHEME</span>: An Interpreter for Extended Lambda
+Calculus</em></a>. AI Memo 349. MIT AI Lab (Cambridge, December
+1975).</p>
+<div class="ti">
+<p>{{HTML transcription: <a href="https://research.scheme.org/lambda-papers/" title="research.scheme.org/lambda-papers/">research.scheme.org/lambda-papers/</a>.<br />
+Republished with notes as<br />
+Sussman, G.J., Steele, G.L. <a href="https://www.researchgate.net/publication/227098423_Scheme_A_Interpreter_for_Extended_Lambda_Calculus" title="www.researchgate.net/publication/227098423_Scheme_A_Interpreter_for_Extended_Lambda_Calculus"><em>Scheme:
+A Interpreter for Extended Lambda Calculus</em></a>. Higher-Order and
+Symbolic Computation 11, 405–439 (1998).
+https://doi.org/10.1023/A:1010035624696<br />
+See also: Sussman, G.J., Steele, G.L. <a href="https://doi.org/10.1023/A:1010079421970" title="doi.org/10.1023/A:1010079421970"><em>The First Report on Scheme
+Revisited</em></a>. Higher-Order and Symbolic Computation 11, 399–404
+(1998). https://doi.org/10.1023/A:1010079421970 }}</p>
+</div>
+</section>
+<section id="smith-and-hewitt-1-2-3" class="level4">
+<h4>[Smith and Hewitt] <span class="fr"><a href="#xsmith1">1</a>, <a href="#xsmith2">2</a>, <a href="#xsmith3">3</a></span><br />
+</h4>
+<p>Smith, Brian C. and Hewitt, Carl. <a href="https://www.scribd.com/document/185900689/A-Plasma-Primer" title="www.scribd.com/document/185900689/A-Plasma-Primer"><em>A <span class="sc">PLASMA</span> Primer (draft)</em></a>. MIT AI Lab (Cambridge,
+October 1975).</p>
+</section>
+</section>
+</section>
+</body>
+</html>

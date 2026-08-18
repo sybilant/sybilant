@@ -1,0 +1,2110 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Guy Lewis Steele Jr ©1978 (text and code)" />
+  <meta name="author" content="Roger Turner ©2025 (markup and transcriber notes)" />
+  <meta name="keywords" content="LISP, SCHEME, continuation
+passing, tail recursion, lexical scoping, macros" />
+  <title>Compiler Optimization – Guy L Steele Jr</title>
+  <style>
+html {
+font-size: 12pt;
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: blue;
+}
+a:visited {
+color: blue;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+background-color: #1a1a1a;
+border: none;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+</style>
+  <style>
+:root { 
+background-color: color-mix(in oklab, Canvas 85%, #808080 15%);
+color: color-mix(in oklab, CanvasText 85%, #808080 15%);
+color-scheme: light dark; }
+@media print {
+hr, .pb {
+break-before: always;
+page-break-before: always }
+div.box, div.npb, section.npb, pre, img {
+break-inside: avoid-page;
+page-break-inside: avoid }
+img {
+object-fit: scale-down }
+body {
+padding-top: 25px;
+padding-bottom: 25px }
+}
+code {
+font-family: Greybeard, Menlo, Monaco, Consolas, "Lucida Console", monospace }
+body {
+font-family: Bodoni, serif;
+text-wrap: pretty;
+max-width: 40em;
+padding-right: 30px;
+overflow-wrap: normal;
+line-height: 1.2;
+hyphens: none }
+header {
+margin-bottom: 1.0em }
+h1 {
+font-size: 1.2em;
+margin-top: 0;
+margin-bottom: 0.5em }
+h2 {
+font-size: 1.2em;
+margin-top: 1.0em }
+h4 { margin-top: 0.85em;
+margin-bottom: 0;
+padding-bottom: 0 }
+h4 + p {
+margin-top: 0;
+margin-bottom: 0.85em }
+#notes p, #references p, #bibliography p {
+margin-top: 0 }
+hr {
+margin-top: 3em }
+dd {
+margin-bottom: 0.85em }
+pre code { 
+text-wrap: nowrap;
+overflow-x: scroll;
+font-size: 75% }
+p code, .line-block code, figcaption code, h3 code, dt code { 
+font-size: 85% }
+code em {
+font-style: italic } 
+.large {
+font-size: 150% }
+.small {
+font-size: 80% }
+.sc { 
+font-size: 92% }
+.in {
+margin-left: 1em }
+.in5 {
+margin-left: 5em }
+.ti {
+text-indent: -1em;
+padding-left: 1em;
+margin-top: -0.85em }
+.ti5 {
+text-indent: -5em;
+padding-left: 5em;
+margin-top: -0.85em }
+div.ti2 p {
+text-indent: -2em;
+padding-left: 2em;
+margin-top: -0.85em }
+.fr {
+float: right }
+.fl {
+float: left }
+.fwn {
+font-weight: normal }
+li::marker {
+content: '(' counters(list-item) ') '; }
+div.box {
+padding: 0 0 0.5em 1em;
+border: 1px solid }
+figure {
+margin: 1em 0;
+width: 100% }
+figcaption {
+padding-top: 1em;
+text-align: center }
+a:hover {
+text-decoration: underline }
+a:any-link {
+color: AccentColor }
+</style>
+</head>
+<body>
+<div class="box">
+<p><em>RABBIT: A Compiler for SCHEME</em> [<a href="#steele-1978" id="xsteele-1978" title="RABBIT: A Compiler for SCHEME (A Dialect of LISP) A Study in Compiler Optimization Based on Viewing LAMBDA as RENAME and PROCEDURE CALL as GOTO using the techniques of Macro Definition of Control and Environment Structures Source-to-Source Transformation Procedure Integration and Tail-Recursion">Steele
+1978</a>] contains the note:</p>
+<blockquote>
+<p>Revised version of a dissertation submitted (under the title
+<em>“Compiler Optimization Based on Viewing LAMBDA as RENAME plus
+GOTO”</em>) to the Department of Electrical Engineering and Computer
+Science on May 12, 1977</p>
+</blockquote>
+<p>This is an abridged transcription
+(<a href="https://creativecommons.org/licenses/by-nc/4.0/" title="Creative Commons license deed: creativecommons.org/licenses/by-nc/4.0/">CC
+BY-NC</a> adaptation) of [<a href="#steele-1978" title="RABBIT: A Compiler for SCHEME (A Dialect of LISP) A Study in Compiler Optimization Based on Viewing LAMBDA as RENAME and PROCEDURE CALL as GOTO using the techniques of Macro Definition of Control and Environment Structures Source-to-Source Transformation Procedure Integration and Tail-Recursion">Steele
+1978</a>], omitting text not in the chapter <em>Compiler Optimization
+Based on Viewing LAMBDA as RENAME plus GOTO</em> (in <em>Artificial
+Intelligence, an MIT Perspective, Volume 2</em> (MIT Press 1979)
+pp401-431) [<a href="#steele-1979" title="&#39;Compiler Optimization Based on Viewing LAMBDA as RENAME plus GOTO&#39; in Artificial Intelligence, an MIT Perspective, Volume 2 (MIT Press 1979) pp401-431">Steele
+1979</a>]</p>
+<p>This title page, Contents, links, {{transcriber notes}}, and bridging
+text added.</p>
+</div>
+<p><br />
+</p>
+<p><br />
+</p>
+<div style="text-align: center">
+<h1>
+<p><span class="large">Compiler Optimization</span></p>
+<p>Based on Viewing</p>
+<span class="large">LAMBDA</span> as <span class="large">RENAME</span>
+plus <span class="large">GOTO</span>
+</h1>
+<p><br />
+</p>
+<p>Guy Lewis Steele Jr.</p>
+<p>Massachusetts Institute of Technology </div></p>
+<p><br />
+</p>
+<p><br />
+</p>
+<div id="licence" class="ti small">
+<p>{{<a href="https://dspace.mit.edu/handle/1721.1/6913/AITR-474.pdf" title="Original pdf at MIT: dspace.mit.edu/bitstream/handle/1721.1/6913/AITR-474.pdf">RABBIT:
+A Compiler for SCHEME</a> © 1978 by Guy Lewis Steele Jr, and this
+abridged transcription,<br /> licensed
+<a href="https://creativecommons.org/licenses/by-nc/4.0/" title="Creative Commons license deed: creativecommons.org/licenses/by-nc/4.0/">CC
+BY-NC 4.0</a>
+<svg id="Layer_1" role="img" aria-label alt style="max-width: 1em;max-height:1em;margin-left: .2em;" x="0px" y="0px" width="64px" height="64px" viewBox="5.5 -3.5 64 64" enable-background="new 5.5 -3.5 64 64" xml:space="preserve">
+<g>
+	<circle fill="#FFFFFF" cx="37.785" cy="28.501" r="28.836"></circle>
+	<path d="M37.441-3.5c8.951,0,16.572,3.125,22.857,9.372c3.008,3.009,5.295,6.448,6.857,10.314
+		c1.561,3.867,2.344,7.971,2.344,12.314c0,4.381-0.773,8.486-2.314,12.313c-1.543,3.828-3.82,7.21-6.828,10.143
+		c-3.123,3.085-6.666,5.448-10.629,7.086c-3.961,1.638-8.057,2.457-12.285,2.457s-8.276-0.808-12.143-2.429
+		c-3.866-1.618-7.333-3.961-10.4-7.027c-3.067-3.066-5.4-6.524-7-10.372S5.5,32.767,5.5,28.5c0-4.229,0.809-8.295,2.428-12.2
+		c1.619-3.905,3.972-7.4,7.057-10.486C21.08-0.394,28.565-3.5,37.441-3.5z M37.557,2.272c-7.314,0-13.467,2.553-18.458,7.657
+		c-2.515,2.553-4.448,5.419-5.8,8.6c-1.354,3.181-2.029,6.505-2.029,9.972c0,3.429,0.675,6.734,2.029,9.913
+		c1.353,3.183,3.285,6.021,5.8,8.516c2.514,2.496,5.351,4.399,8.515,5.715c3.161,1.314,6.476,1.971,9.943,1.971
+		c3.428,0,6.75-0.665,9.973-1.999c3.219-1.335,6.121-3.257,8.713-5.771c4.99-4.876,7.484-10.99,7.484-18.344
+		c0-3.543-0.648-6.895-1.943-10.057c-1.293-3.162-3.18-5.98-5.654-8.458C50.984,4.844,44.795,2.272,37.557,2.272z M37.156,23.187
+		l-4.287,2.229c-0.458-0.951-1.019-1.619-1.685-2c-0.667-0.38-1.286-0.571-1.858-0.571c-2.856,0-4.286,1.885-4.286,5.657
+		c0,1.714,0.362,3.084,1.085,4.113c0.724,1.029,1.791,1.544,3.201,1.544c1.867,0,3.181-0.915,3.944-2.743l3.942,2
+		c-0.838,1.563-2,2.791-3.486,3.686c-1.484,0.896-3.123,1.343-4.914,1.343c-2.857,0-5.163-0.875-6.915-2.629
+		c-1.752-1.752-2.628-4.19-2.628-7.313c0-3.048,0.886-5.466,2.657-7.257c1.771-1.79,4.009-2.686,6.715-2.686
+		C32.604,18.558,35.441,20.101,37.156,23.187z M55.613,23.187l-4.229,2.229c-0.457-0.951-1.02-1.619-1.686-2
+		c-0.668-0.38-1.307-0.571-1.914-0.571c-2.857,0-4.287,1.885-4.287,5.657c0,1.714,0.363,3.084,1.086,4.113
+		c0.723,1.029,1.789,1.544,3.201,1.544c1.865,0,3.18-0.915,3.941-2.743l4,2c-0.875,1.563-2.057,2.791-3.541,3.686
+		c-1.486,0.896-3.105,1.343-4.857,1.343c-2.896,0-5.209-0.875-6.941-2.629c-1.736-1.752-2.602-4.19-2.602-7.313
+		c0-3.048,0.885-5.466,2.658-7.257c1.77-1.79,4.008-2.686,6.713-2.686C51.117,18.558,53.938,20.101,55.613,23.187z" />
+</g>
+</svg>
+<svg id="Layer_1" role="img" aria-label alt style="max-width: 1em;max-height:1em;margin-left: .2em;" x="0px" y="0px" width="64px" height="64px" viewBox="5.5 -3.5 64 64" enable-background="new 5.5 -3.5 64 64" xml:space="preserve">
+<g>
+	<circle fill="#FFFFFF" cx="37.637" cy="28.806" r="28.276"></circle>
+	<g>
+		<path d="M37.443-3.5c8.988,0,16.57,3.085,22.742,9.257C66.393,11.967,69.5,19.548,69.5,28.5c0,8.991-3.049,16.476-9.145,22.456
+			C53.879,57.319,46.242,60.5,37.443,60.5c-8.649,0-16.153-3.144-22.514-9.43C8.644,44.784,5.5,37.262,5.5,28.5
+			c0-8.761,3.144-16.342,9.429-22.742C21.101-0.415,28.604-3.5,37.443-3.5z M37.557,2.272c-7.276,0-13.428,2.553-18.457,7.657
+			c-5.22,5.334-7.829,11.525-7.829,18.572c0,7.086,2.59,13.22,7.77,18.398c5.181,5.182,11.352,7.771,18.514,7.771
+			c7.123,0,13.334-2.607,18.629-7.828c5.029-4.838,7.543-10.952,7.543-18.343c0-7.276-2.553-13.465-7.656-18.571
+			C50.967,4.824,44.795,2.272,37.557,2.272z M46.129,20.557v13.085h-3.656v15.542h-9.944V33.643h-3.656V20.557
+			c0-0.572,0.2-1.057,0.599-1.457c0.401-0.399,0.887-0.6,1.457-0.6h13.144c0.533,0,1.01,0.2,1.428,0.6
+			C45.918,19.5,46.129,19.986,46.129,20.557z M33.042,12.329c0-3.008,1.485-4.514,4.458-4.514s4.457,1.504,4.457,4.514
+			c0,2.971-1.486,4.457-4.457,4.457S33.042,15.3,33.042,12.329z" />
+	</g>
+</g>
+</svg>
+<svg id="Layer_1" role="img" aria-label alt style="max-width: 1em;max-height:1em;margin-left: .2em;" x="0px" y="0px" width="64px" height="64px" viewBox="5.5 -3.5 64 64" enable-background="new 5.5 -3.5 64 64" xml:space="preserve">
+<g>
+	<circle fill="#FFFFFF" cx="37.47" cy="28.736" r="29.471"></circle>
+	<g>
+		<path d="M37.442-3.5c8.99,0,16.571,3.085,22.743,9.256C66.393,11.928,69.5,19.509,69.5,28.5c0,8.992-3.048,16.476-9.145,22.458
+			C53.88,57.32,46.241,60.5,37.442,60.5c-8.686,0-16.19-3.162-22.513-9.485C8.644,44.728,5.5,37.225,5.5,28.5
+			c0-8.762,3.144-16.343,9.429-22.743C21.1-0.414,28.604-3.5,37.442-3.5z M12.7,19.872c-0.952,2.628-1.429,5.505-1.429,8.629
+			c0,7.086,2.59,13.22,7.77,18.4c5.219,5.144,11.391,7.715,18.514,7.715c7.201,0,13.409-2.608,18.63-7.829
+			c1.867-1.79,3.332-3.657,4.398-5.602l-12.056-5.371c-0.421,2.02-1.439,3.667-3.057,4.942c-1.622,1.276-3.535,2.011-5.744,2.2
+			v4.915h-3.714v-4.915c-3.543-0.036-6.782-1.312-9.714-3.827l4.4-4.457c2.094,1.942,4.476,2.913,7.143,2.913
+			c1.104,0,2.048-0.246,2.83-0.743c0.78-0.494,1.172-1.312,1.172-2.457c0-0.801-0.287-1.448-0.858-1.943l-3.085-1.315l-3.771-1.715
+			l-5.086-2.229L12.7,19.872z M37.557,2.214c-7.276,0-13.428,2.571-18.457,7.714c-1.258,1.258-2.439,2.686-3.543,4.287L27.786,19.7
+			c0.533-1.676,1.542-3.019,3.029-4.028c1.484-1.009,3.218-1.571,5.2-1.686V9.071h3.715v4.915c2.934,0.153,5.6,1.143,8,2.971
+			l-4.172,4.286c-1.793-1.257-3.619-1.885-5.486-1.885c-0.991,0-1.876,0.191-2.656,0.571c-0.781,0.381-1.172,1.029-1.172,1.943
+			c0,0.267,0.095,0.533,0.285,0.8l4.057,1.83l2.8,1.257l5.144,2.285l16.397,7.314c0.535-2.248,0.801-4.533,0.801-6.857
+			c0-7.353-2.552-13.543-7.656-18.573C51.005,4.785,44.831,2.214,37.557,2.214z" />
+	</g>
+</g>
+</svg>
+(Attribution-NonCommercial 4.0 International).<br /> Transcription by
+Roger Turner: links, Contents page, {{transcriber notes}}, and bridging
+text added.</p>
+</div>
+<div class="in small">
+<p>[<span id="steele-1978">Steele 1978</span>]<br />
+Steele, Guy Lewis Jr. <a href="https://dspace.mit.edu/handle/1721.1/6913" title="dspace.mit.edu/handle/1721.1/6913"><em>RABBIT: A Compiler for
+SCHEME</em></a>. AITR-474 MIT May 1978.<br />
+HTML transcription: <a href="https://research.scheme.org/lambda-papers/" title="research.scheme.org/lambda-papers/">research.scheme.org/lambda-papers/</a>.</p>
+<p>[<span id="steele-1979">Steele 1979</span>]<br />
+Steele, Guy Lewis Jr. [<em>Compiler Optimization Based on Viewing LAMBDA
+as RENAME plus GOTO</em> in <a href="https://archive.org/details/artificialintell0002unse" title="archive.org/details/artificialintell0002unse"><em>Artificial
+Intelligence, an MIT Perspective, Volume 2</em></a> (MIT Press 1979)
+pp401-431. }}</p>
+</div>
+<p><hr></p>
+<section id="contents" class="level2">
+<h2>Contents</h2>
+<div style="line-height: 1.5">
+<div class="line-block"><a href="#lexically-scoped-lisp">1.  
+Lexically-scoped <span class="sc">LISP</span></a><br />
+   <a href="#a.-background">A.   Background</a><br />
+   <a href="#b.-the-thesis">B.   The Thesis</a><br />
+<a href="#the-source-language---scheme">2.   The Source Language - <span class="sc">SCHEME</span></a><br />
+<a href="#the-target-language">3.   The Target Language</a><br />
+<a href="#language-design-considerations">4.   Language Design
+Considerations</a><br />
+<a href="#the-use-of-macros">5.   The Use of Macros</a><br />
+<a href="#the-imperative-treatment-of-applicative-constructs">6.   The
+Imperative Treatment of Applicative Constructs</a><br />
+   <a href="#a.-optimization">A.   Optimization</a><br />
+   <a href="#b.-environment-and-closure-analysis">B.   Environment and
+closure analysis</a><br />
+<a href="#conclusions">7.   Conclusions</a><br />
+<a href="#notes">Notes</a><br />
+<a href="#references">References</a><br />
+<a href="#appendix">Appendix</a></div>
+</div>
+<p><hr></p>
+</section>
+<section id="lexically-scoped-lisp" class="level2">
+<h2><a href="#contents" title="Go to Contents">1. Lexically-scoped <span class="sc">LISP</span></a></h2>
+<p>We have developed a compiler for the lexically-scoped dialect of
+<span class="sc">LISP</span> known as <span class="sc">SCHEME</span>.
+The compiler knows relatively little about specific data manipulation
+primitives such as arithmetic operators, but concentrates on general
+issues of environment and control. Rather than having specialized
+knowledge about a large variety of control and environment constructs,
+the compiler handles only a small basis set which reflects the semantics
+of lambda-calculus. All of the traditional imperative constructs, such
+as sequencing, assignment, looping, <code>GOTO</code>, as well as many
+standard <span class="sc">LISP</span> constructs such as
+<code>AND</code>, <code>OR</code>, and <code>COND</code>, are expressed
+as macros in terms of the applicative basis set. A small number of
+optimization techniques, coupled with the treatment of function calls as
+<code>GOTO</code> statements, serve to produce code as good as that
+produced by more traditional compilers. The macro approach enables
+speedy implementation of new constructs as desired without sacrificing
+efficiency in the generated code.</p>
+<p>A subset of <span class="sc">SCHEME</span> serves as the
+representation intermediate between the optimized <span class="sc">SCHEME</span> code and the final output code; code is
+expressed in this subset in the so-called <em>continuation-passing
+style</em>. As a subset of <span class="sc">SCHEME</span>, it enjoys the
+same theoretical properties; one could even apply the same optimizer
+used on the input code to the intermediate code. However, the subset is
+so chosen that all temporary quantities are made manifest as variables,
+and no control stack is needed to evaluate it. As a result, this
+apparently applicative representation admits an imperative
+interpretation which permits easy transcription to final imperative
+machine code.</p>
+<section id="a.-background" class="level3">
+<h3><a href="#contents" title="Go to Contents">A.   Background</a></h3>
+<p>In [<a href="#scheme-1-2-3-4-5" id="xscheme1" title="[1] Sussman and Steele 1975, SCHEME: An Interpreter for Extended Lambda Calculus"><span class="sc">SCHEME</span></a>] we (Gerald Jay Sussman and the author)
+described the implementation of a dialect of <span class="sc">LISP</span> named <span class="sc">SCHEME</span> with the
+properties of lexical scoping and tail-recursion; this implementation is
+embedded within <span class="sc">MacLISP</span> [<a href="#moon-1-2" id="xmoon1" title="[1] Moon 1974, MACLISP Reference Manual, Revision 0">Moon</a>], a
+version of <span class="sc">LISP</span> which does not have these
+properties. The property of lexical scoping (that a variable can be
+referenced only from points textually within the expression which binds
+it) is a consequence of the fact that all functions are closed in the
+“binding environment.” [<a href="#moses-1-2" id="xmoses1" title="[1] Moses 1970, The Function of FUNCTION in LISP">Moses</a>] That
+is, <span class="sc">SCHEME</span> is a “full-funarg” <span class="sc">LISP</span> dialect. {Note <a href="#note-full-funarg-example" id="xfull-funarg-example" title="As an example of the difference between lexical and dynamic scoping, consider the classic case of the &#39;funarg problem&#39;. We have defined a function MAPCAR which, given a function and a list, produces a new list of the results of the function applied to each element of the given list ...">Full-Funarg
+Example</a>} The property of tail-recursion implies that loops written
+in an apparently recursive form will actually be executed in an
+iterative fashion. Intuitively, function calls do not “push control
+stack”; instead, it is argument evaluation which pushes control stack.
+The two properties of lexical scoping and tail-recursion are not
+independent. In most <span class="sc">LISP</span> systems [<a href="#lisp1.5m" id="xlisp1.5m" title="McCarthy etal 1962, LISP 1.5 Programmer&#39;s Manual"><span class="sc">LISP1.5M</span></a>] [<a href="#moon-1-2" id="xmoon2" title="[2] Moon 1974, MACLISP Reference Manual, Revision 0">Moon</a>]
+[<a href="#teitelman" id="xteitelman" title="Teitelman 1975, InterLISP Reference Manual. Revised edition">Teitelman</a>],
+which use dynamic scoping rather than lexical, tail-recursion is
+impossible because function calls must push control stack in order to be
+able to undo the dynamic bindings after the return of the function. On
+the other hand, it is possible to have a lexically scoped <span class="sc">LISP</span> which does not tail-recurse, but it is easily
+seen that such an implementation only wastes storage space needlessly
+compared to a tail-recursing implementation. [<a href="#steele-1-2-3-4-5" id="xsteele1" title="[1] Steele 1977, Debunking the &#39;Expensive Procedure Call&#39; Myth">Steele</a>]
+Together, these two properties cause <span class="sc">SCHEME</span> to
+reflect lambda-calculus semantics much more closely than dynamically
+scoped <span class="sc">LISP</span> systems. <span class="sc">SCHEME</span> also permits the treatment of functions as
+full-fledged data objects; they may be passed as arguments, returned as
+values, made part of composite data structures, and notated as
+independent, unnamed (“anonymous”) entities. (Contrast this with most
+<span class="sc">ALGOL</span>-like languages, in which a function can be
+written only by declaring it and giving it a name; imagine being able to
+use an integer value only by giving it a name in a declaration!) The
+property of lexical scoping allows this to be done in a consistent
+manner without the possibility of identifier conflicts (that is, <span class="sc">SCHEME</span> “solves the <code>FUNARG</code> problem” [<a href="#moses-1-2" id="xmoses2" title="[2] Moses 1970, The Function of FUNCTION in LISP">Moses</a>]). In
+[<a href="#scheme-1-2-3-4-5" id="xscheme2" title="[2] Sussman and Steele 1975, SCHEME: An Interpreter for Extended Lambda Calculus"><span class="sc">SCHEME</span></a>] we also discussed the technique of
+“continuation-passing style”, a way of writing programs in <span class="sc">SCHEME</span> such that no function ever returns a value.</p>
+<p>In [<a href="#imperative-1-2-3" id="ximperative1" title="[1] Steele and Sussman 1976, LAMBDA: The Ultimate Imperative">Imperative</a>]
+we explored ways of exploiting these properties to implement most
+traditional programming constructs, such as assignment, looping, and
+call-by-name, in terms of function application. Such applicative
+(lambda-calculus) models of programming language constructs are
+well-known to theoreticians (see [<a href="#stoy" id="xstoy" title="Stoy 1974, the Scott-Strachey Approach to the Mathematical Semantics of Programming Languages">Stoy</a>],
+for example), but have not been used in a practical programming system.
+All of these constructs are actually made available in <span class="sc">SCHEME</span> by macros which expand into these applicative
+definitions. This technique has permitted the speedy implementation of a
+rich user-level language in terms of a very small, easy-to-implement
+basis set of primitive constructs. The escape operator
+<code>CATCH</code> is easily modelled by transforming a program into
+continuation-passing style. Transforming a program into this style
+enforces a particular order of argument evaluation, and makes all
+intermediate computational quantities manifest as variables.</p>
+<p>In [<a href="#declarative-1-2-3-4-5-6-7" id="xdeclarative1" title="[1] Steele 1976, LAMBDA: The Ultimate Declarative">Declarative</a>]
+we examined more closely the issue of tail-recursion, and demonstrated
+that the usual view of function calls as pushing a return address must
+lead to an either inefficient or inconsistent implementation, while the
+tail-recursive approach of <span class="sc">SCHEME</span> leads to a
+uniform discipline in which function calls are treated as
+<code>GOTO</code> statements which also pass arguments. We also noted
+that a consequence of lexical scoping is that the only code which can
+reference the value of a variable in a given environment is code which
+is closed in that environment or which receives the value as an
+argument; this in turn implies that a compiler can structure a run-time
+environment in any arbitrary fashion, because it will compile all the
+code which can reference that environment, and so can arrange for that
+code to reference it in the appropriate manner. Such references do not
+require any kind of search (as is commonly and incorrectly believed in
+the <span class="sc">LISP</span> community because of early experience
+with LISP interpreters which search a-lists) because the compiler can
+determine the precise location of each variable in an environment at
+compile time. It is not necessary to use a standard format, because
+neither interpreted code nor other compiled code can refer to that
+environment.</p>
+<p>In [<a href="#declarative-1-2-3-4-5-6-7" id="xdeclarative2" title="[2] Steele 1976, LAMBDA: The Ultimate Declarative">Declarative</a>]
+we also carried on the analysis of continuation-passing style, and noted
+that transforming a program into this style elucidates traditional
+compilation issues such as register allocation because user variables
+and intermediate quantities alike are made manifest as variables on an
+equal footing. Appendix A of [<a href="#declarative-1-2-3-4-5-6-7" id="xdeclarative3" title="[3] Steele 1976B, LAMBDA: The Ultimate Declarative">Declarative</a>]
+contained an algorithm for converting any <span class="sc">SCHEME</span>
+program (not containing <code>ASET</code>) to continuation-passing
+style.</p>
+<p>We have implemented two compilers for the language <span class="sc">SCHEME</span>. The purpose was to explore compilation
+techniques for a language modelled on lambda-calculus, using
+lambda-calculus-style models of imperative programming constructs. Both
+compilers use the strategy of converting the source program to
+continuation-passing style.</p>
+<p>The first compiler (known as <span class="sc">CHEAPY</span>) was
+written as a throw-away implementation to test the concept of conversion
+to continuation-passing style. The first half of <span class="sc">CHEAPY</span> is essentially the algorithm which appears in
+Appendix A of [<a href="#declarative-1-2-3-4-5-6-7" id="xdeclarative4" title="[4] Steele 1976, LAMBDA: The Ultimate Declarative">Declarative</a>],
+and the second is a simple code generator with almost no optimization.
+In conjunction with the writing of <span class="sc">CHEAPY</span>, the
+<span class="sc">SCHEME</span> interpreter was modified to interface to
+compiled functions.</p>
+<p>The second compiler, with which we are primarily concerned here, is
+known as <span class="sc">RABBIT</span>. It, like <span class="sc">CHEAPY</span>, is written almost entirely in <span class="sc">SCHEME</span> (with minor exceptions due only to problems in
+interfacing with certain <span class="sc">MacLISP</span> I/O
+facilities). Unlike <span class="sc">CHEAPY</span>, it is fairly clever.
+It is intended to demonstrate a number of optimization techniques
+relevant to lexical environments and tail-recursive control
+structures.</p>
+</section>
+<section id="b.-the-thesis" class="level3">
+<h3><a href="#contents" title="Go to Contents">B.   The Thesis</a></h3>
+<ol type="1">
+<li>Function calls are not expensive when compiled correctly; they
+should be thought of as <code>GOTO</code> statements that happen to pass
+arguments.</li>
+<li>The combination of cheap function calls, lexical scoping,
+tail-recursion, and “anonymous” notation of functions (which are not
+independent properties of a language, but aspects of a single unified
+approach) permits the definition of a wide variety of “imperative”
+constructs in applicative terms. Because these properties result from
+adhering to the principles of the well-known lambda-calculus [<a href="#church-1-2" id="xchurch1" title="[1] Church 1941, The Calculi of Lambda Conversion">Church</a>],
+such definitions can be lifted intact from existing literature and used
+directly.</li>
+<li>A macro facility (the ability to specify syntactic transformations)
+makes it practical to use these as the only definitions of imperative
+constructs in a programming system. Such a facility makes it extremely
+easy to define new constructs.</li>
+<li>A few well-chosen optimization strategies enable the compilation of
+these applicative definitions into the imperative low-level code which
+one would expect from a traditional compiler.</li>
+<li>The macro facility and the optimization techniques used by the
+compiler can be conceptually unified. The same properties which make it
+easy to write the macros make it easy to define optimizations correctly.
+In the same way that many programming constructs are defined in terms of
+a small, well- chosen basis set, so a large number of traditional
+optimization techniques fall out as special cases of the few used in
+<span class="sc">RABBIT</span>. This is no accident. The separate
+treatment of a large and diverse set of constructs necessitates separate
+optimization techniques for each. As the basis set of constructs is
+reduced, so is the set of interesting transformations. If the basis set
+is properly chosen, their combined effect is “multiplicative” rather
+than “additive”.</li>
+<li>The technique of compiling by converting to continuation-passing
+style elucidates some important compilation issues in a natural way.
+Intermediate quantities are made manifest; so is the precise order of
+evaluation. Moreover, this is all expressed in a language isomorphic to
+a subset of the source language <span class="sc">SCHEME</span>; as a
+result the continuation-passing style version of a program inherits many
+of the philosophical and practical advantages. For example, the same
+optimization techniques can be applied at this level as at the original
+source level. While the use of continuation-passing style may not make
+the decisions any easier, it provides an effective and natural way to
+express the results of those decisions.</li>
+<li>Continuation-passing style, while apparently applicative in nature,
+admits a peculiarly imperative interpretation as a consequence of the
+facts that it requires no control stack to be evaluated and that no
+functions ever return values. As a result, it is easily converted to an
+imperative machine language.</li>
+<li>A <span class="sc">SCHEME</span> compiler should ideally be a
+designer of good data structures, since it may choose any representation
+whatsoever for environments. <span class="sc">RABBIT</span> has a
+rudimentary design knowledge, involving primarily the preferral of
+registers to heap-allocated storage. However, there is room for
+knowledge of “bit-diddling” representations.</li>
+<li>We suggest that those who have tried to design useful <span class="sc">UNCOL</span>s (UNiversal Computer-Oriented Languages) [<a href="#sammet" id="xsammet" title="Sammet 1969, Programming Languages: History and Fundamentals">Sammet</a>]
+[<a href="#coleman" id="xcoleman" title="Coleman 1974, JANUS: A Universal Intermediate Language">Coleman</a>]
+have perhaps been thinking too imperatively, and worrying more about
+data manipulation primitives than about environment and control issues.
+As a result, proposed <span class="sc">UNCOL</span>s have been little
+more than generalizations of contemporary machine languages. We suggest
+that <span class="sc">SCHEME</span> makes an ideal <span class="sc">UNCOL</span> at two levels. The first level is the fully
+applicative level, to which most source-language constructs are easily
+reduced; the second is the continuation-passing style level, which is
+easily reduced to machine language. We envision building a compiler in
+three stages: (a) reduction of a user language to basic <span class="sc">SCHEME</span>, whether by macros, a parser of algebraic
+syntax, or some other means; (b) optimization by means of <span class="sc">SCHEME</span>-level source-to-source transformations, and
+conversion to continuation-passing style; and (c) generation of code for
+a particular machine. <span class="sc">RABBIT</span> addresses itself to
+the second stage. Data manipulation primitives are completely ignored at
+this stage, and are just passed along from input to output. These
+primitives, whether integer arithmetic, string concatenation and
+parsing, or list structure manipulators, are chosen as a function of a
+particular source language and a particular target machine. <span class="sc">RABBIT</span> deals only with fundamental environment and
+control issues common to most modes of algorithmic expression.</li>
+<li>While syntactic issues tend to be rather superficial, we point out
+that algebraic syntax tends to obscure the fundamental nature of
+function calling and tail-recursion by arbitrarily dividing functions
+into syntactic classes such as “operators” and “functions”. ([<a href="#standish-1-2" id="xstandish1" title="[1] Standish etal 1976, The Irvine Program Transformation Catalogue">Standish</a>],
+for example, uses much space to exhibit each conceptually singular
+transformation in a multiplicity of syntactic manifestations.) The lack
+of an “anonymous” notation for functions in most algebraic languages,
+and the inability to treat functions as data objects, is a distinct
+disadvantage. The uniformity of <span class="sc">LISP</span> syntax
+makes these issues easier to deal with.</li>
+</ol>
+<p>To the LISP community in particular we address these additional
+points:</p>
+<ol start="11" type="1">
+<li>Lexical scoping need not be as expensive as is commonly thought.
+Experience with lexically-scoped <em>interpreters</em> is misleading;
+lexical scoping is not inherently slower than dynamic scoping. While
+some implementations may entail access through multiple levels of
+structure, this occurs only under circumstances (accessing of variables
+through multiple levels of closure) which could not even be expressed in
+a dynamically scoped language. Unlike deep-bound dynamic variables,
+compiled lexical access requires no search; unlike shallow-bound dynamic
+variables, lexical binding does not require that values be put in a
+canonical value cell. The compiler has complete discretion over the
+manipulation of environments and variable values. The “display”
+technique used in Algol implementations can be generalized to provide an
+efficient solution to the <span class="sc">FUNARG</span> problem.</li>
+<li>Lexical scoping does not necessarily make <span class="sc">LISP</span> programming unduly difficult. The very existence
+of <span class="sc">RABBIT</span>, a working compiler some fifty pages
+in length written in <span class="sc">SCHEME</span>, first implemented
+in about a month, part-time, substantiates this claim (which is,
+however, admitted to be mostly a matter of taste and experience). <span class="sc">SCHEME</span> has also been used to implement several AI
+problem-solving languages, including <span class="sc">AMORD</span> [<a href="#doyle-1-2" id="xdoyle1" title="[1] Doyle etal 1977, Explicit Control of Reasoning">Doyle</a>].</li>
+</ol>
+<p><hr></p>
+</section>
+</section>
+<section id="the-source-language---scheme" class="level2">
+<h2><a href="#contents" title="Go to Contents">2.   The Source Language
+- <span class="sc">SCHEME</span></a></h2>
+<p>The basic language processed by <span class="sc">RABBIT</span> is a
+subset of the <span class="sc">SCHEME</span> language as described in
+[<a href="#scheme-1-2-3-4-5" id="xscheme3" title="[3] Sussman and Steele 1975, SCHEME: An Interpreter for Extended Lambda Calculus"><span class="sc">SCHEME</span></a>] the primary restrictions being that the
+first argument to <code>ASET</code> must be quoted and that the
+multiprocessing primitives are not accommodated. This subset is
+summarized here. <span class="sc">SCHEME</span> is essentially a
+lexically scoped (“full funarg”) dialect of <span class="sc">LISP</span>. Interpreted programs are represented by
+S-expressions in the usual manner. Numbers represent themselves. Atomic
+symbols are used as identifiers (with the conventional exception of
+<code>T</code> and <code>NIL</code>, which are conceptually treated as
+constants). All other constructs are represented as lists.</p>
+<p>In order to distinguish the various other constructs, <span class="sc">SCHEME</span> follows the usual convention that a list whose
+car is one of a set of distinguished atomic symbols is treated as
+directed by a rule associated with that symbol. All other lists (those
+with non-atomic cars, or with undistinguished atoms in their cars) are
+<em>combinations</em>, or function calls. All subforms of the list are
+uniformly evaluated in an unspecified order, and then the value of the
+first (the function) is applied to the values of all the others (the
+arguments). Notice that the function position is evaluated in the same
+way as the argument positions (unlike most other <span class="sc">LISP</span> systems). (In order to be able to refer to <span class="sc">MacLISP</span> functions, global identifiers evaluate to a
+special kind of functional object if they have definitions as <span class="sc">MacLISP</span> functions of the <code>EXPR</code>,
+<code>SUBR</code>, or <code>LSUBR</code> varieties. Thus
+“<code>(PLUS 1 2)</code>” evaluates to <code>3</code> because the values
+of the subforms are &lt;functional object for <code>PLUS</code>&gt;,
+<code>1</code>, and <code>2</code>; and applying the first to the other
+two causes invocation of the <span class="sc">MacLISP</span> primitive
+<code>PLUS</code>.)</p>
+<p>The atomic symbols which distinguish special constructs are as
+follows:</p>
+<dl>
+<dt><strong><code>LAMBDA</code></strong></dt>
+<dd>
+This denotes a function. A form
+<code>(LAMBDA (var1 var2 ... varn) body)</code> will evaluate to a
+function of n arguments. The <strong>parameters</strong>
+<code>vari</code> are identifiers (atomic symbols) which may be used in
+the body to refer to the respective <strong>arguments</strong> when the
+function is invoked. Note that a <code>LAMBDA</code>-expression is not a
+function, but <em>evaluates</em> to one, a crucial distinction.
+</dd>
+<dt><strong><code>IF</code></strong></dt>
+<dd>
+This denotes a conditional form. <code>(IF a b c)</code> evaluates the
+<strong>predicate</strong> <code>a</code>, producing a value
+<code>x</code>; if <code>x</code> is non-<code>NIL</code>, then the
+<strong>consequent</strong> <code>b</code> is evaluated, and otherwise
+the <strong>alternative</strong> <code>c</code>. If <code>c</code> is
+omitted, <code>NIL</code> is assumed.
+</dd>
+<dt><strong><code>QUOTE</code></strong></dt>
+<dd>
+As in all <span class="sc">LISP</span> systems, this provides a way to
+specify any S-expression as a constant. <code>(QUOTE x)</code> evaluates
+to the S-expression <code>x</code>. This may be abbreviated to
+<code>&#39;x</code>, thanks to the <span class="sc">MacLISP</span>
+read-macro-character feature.
+</dd>
+<dt><strong><code>LABELS</code></strong></dt>
+<dd>
+This primitive permits the local definition of one or more mutually
+recursive functions. The format is:<br />
+<code>  (LABELS ((name1 (LAMBDA ...))</code><br />
+<code>           (name2 (LAMBDA ...))</code><br />
+<code>           ...</code><br />
+<code>           (namen (LAMBDA ...)))</code><br />
+<code>          body)</code><br />
+This evaluates the <code>body</code> in an environment in which the
+names refer to the respective functions, which are themselves closed in
+that same environment. Thus references to these names in the bodies of
+the <code>LAMBDA</code>-expressions will refer to the labelled
+functions.
+</dd>
+<dt><strong><code>ASET&#39;</code></strong></dt>
+<dd>
+This is the primitive side-effect on variables.
+<code>(ASET&#39; var body)</code> evaluates the <code>body</code>, assigns
+the resulting value to the variable <code>var</code>, and returns that
+value. {Note <a href="#note-non-quoted-aset" id="xnon-quoted-aset" title="The SCHEME interpreter permits one to compute the name of the variable, but for technical and philosophical reasons RABBIT forbids this. ...">Non-quoted
+<code>ASET</code></a>} For implementation-dependent reasons, it is
+forbidden by <span class="sc">RABBIT</span> to use <code>ASET&#39;</code> on
+a global variable which is the name of a primitive <span class="sc">MacLISP</span> function, or on a variable bound by
+<code>LABELS</code>. (<code>ASET&#39;</code> is actually used very seldom in
+practice anyway, and all these restrictions are “good programming
+practice”. <span class="sc">RABBIT</span> could be altered to lift these
+restrictions, at some expense and labor.)
+</dd>
+<dt><strong><code>CATCH</code></strong></dt>
+<dd>
+This provides an escape operator facility. [<a href="#landin" id="xlandin" title="Landin 1965, A Correspondence between ALGOL 60 and Church&#39;s Lambda-Notation">Landin</a>]
+[<a href="#reynolds" id="xreynolds" title="Reynolds 1972, Definitional Interpreters for Higher Order Programming Languages">Reynolds</a>]
+<code>(CATCH var body)</code> evaluates the <code>body</code>, which may
+refer to the variable <code>var</code>, which will denote an “escape
+function” of one argument which, when called, will return from the
+<code>CATCH</code>-form with the given argument as the value of the
+<code>CATCH</code>-form. Note that it is entirely possible to return
+from the <code>CATCH</code>-form several times. This raises a difficulty
+with optimization which will be discussed later.
+</dd>
+<dt><strong>Macros</strong></dt>
+<dd>
+Any atomic symbol which has been defined in one of various ways to be a
+macro distinguishes a special construct whose meaning is determined by a
+macro function. This function has the responsibility of rewriting the
+form and returning a new form to be evaluated in place of the old one.
+In this way complex syntactic constructs can be expressed in terms of
+simpler ones.
+</dd>
+</dl>
+<p><hr></p>
+</section>
+<section id="the-target-language" class="level2">
+<h2><a href="#contents" title="Go to Contents">3.   The Target
+Language</a></h2>
+<p>The “target language” is a highly restricted subset of <span class="sc">MacLISP</span>, rather than any particular machine language
+for an actual hardware machine such as the <span class="sc">PDP-10</span>. <span class="sc">RABBIT</span> produces <span class="sc">MacLISP</span> function definitions which are then compiled
+by the standard <span class="sc">MacLISP</span> compiler. In this way we
+do not need to deal with the uninteresting vagaries of a particular
+piece of hardware, nor with the peculiarities of the many and various
+data-manipulation primitives (<code>CAR</code>, <code>RPLACA</code>,
+<code>+</code>, etc.). We allow the <span class="sc">MacLISP</span>
+compiler to deal with them, and concentrate on the issues of environment
+and control which are unique to <span class="sc">SCHEME</span>. While
+for production use this is mildly inconvenient (since the code must be
+passed through two compilers before use), for research purposes it has
+saved the wasteful re-implementation of much knowledge already contained
+in the <span class="sc">MacLISP</span> compiler.</p>
+<p>On the other hand, the use of <span class="sc">MacLISP</span> as a
+target language does not by any means trivialize the task of <span class="sc">RABBIT</span>. The <span class="sc">MacLISP</span>
+function-calling mechanism cannot be used as a target construct for the
+<span class="sc">SCHEME</span> function call, because <span class="sc">MacLISP</span>’s function calls are not guaranteed to behave
+tail-recursively. Since tail-recursion is a most crucial characteristic
+distinguishing <span class="sc">SCHEME</span> from most <span class="sc">LISP</span> systems, we must implement <span class="sc">SCHEME</span> function calls by more primitive methods.
+Similarly, since <span class="sc">SCHEME</span> is a full-funarg dialect
+of <span class="sc">LISP</span> while <span class="sc">MacLISP</span> is
+not, we cannot in general use <span class="sc">MacLISP</span>’s
+variable-binding mechanisms to implement those of <span class="sc">SCHEME</span>. On the other hand, it is a perfectly
+legitimate optimization to use <span class="sc">MacLISP</span>
+mechanisms in those limited situations where they are applicable.</p>
+</section>
+<section id="language-design-considerations" class="level2">
+<h2><a href="#contents" title="Go to Contents">4.   Language Design
+Considerations</a></h2>
+<p>We divide the definition of the <span class="sc">SCHEME</span>
+language into two parts: the environment and control constructs, and the
+data manipulation primitives. Examples of the former are
+<code>LAMBDA</code>-expressions, combinations, and <code>IF</code>;
+examples of the latter are <code>CONS</code>, <code>CAR</code>,
+<code>EQ</code>, and <code>PLUS</code>. Note that we can conceive of a
+version of <span class="sc">SCHEME</span> which did not have
+<code>CONS</code>, for example, and more generally did not have
+S-expressions in its data domain. Such a version would still have the
+same environment and control constructs, and so would hold the same
+theoretical interest for our purposes here. (Such a version, however,
+would be less convenient for purposes of writing a meta-circular
+description of the language, however!)</p>
+<p><span class="sc">SCHEME</span> is a lexically scoped (“full-funarg”)
+dialect of <span class="sc">LISP</span>, and so is an applicative
+language which conforms to the spirit of the lambda-calculus. [<a href="#church-1-2" id="xchurch2" title="[2] Church 1941, The Calculi of Lambda Conversion">Church</a>] By
+the “spirit of lambda-calculus” we mean the essential properties of the
+axioms obeyed by lambda-calculus expressions. Among these are the rules
+of <em>alpha-conversion</em> and <em>beta-conversion</em>. The first
+intuitively implies that we can uniformly rename a function parameter
+and all references to it without altering the meaning of the function.
+An important corollary to this is that we can in fact effectively locate
+all the references. The second implies that in a situation where a known
+function is being called with known argument expressions, we may
+substitute an argument expression for a parameter reference within the
+body of the function (provided no naming conflicts result, and that
+certain restrictions involving side effects are met). Both of these
+operations are of importance to an optimizing compiler. Another property
+which follows indirectly is that of <em>tail-recursion</em>. This
+property is exploited in expressing iteration in terms of applicative
+constructs, and is discussed in some detail in [<a href="#declarative-1-2-3-4-5-6-7" id="xdeclarative5" title="[5] Steele 1976, LAMBDA: The Ultimate Declarative">Declarative</a>].</p>
+<p>There are those to whom lexical scoping is nothing new, for example
+the <span class="sc">ALGOL</span> community. For this audience, however,
+we should draw attention to another important feature of <span class="sc">SCHEME</span>, which is that functions are first-class data
+objects. They may be assigned or bound to variables, returned as values
+of other functions, placed in arrays, and in general treated as any
+other data object. Just as numbers have certain operations defined on
+them, such as addition, so functions have an important operation defined
+on them, namely invocation.</p>
+<p>The ability to treat functions as objects is not at all the same as
+the ability to treat <em>representations</em> of functions as objects.
+It is the latter ability that is traditionally associated with <span class="sc">LISP</span>; functions can be represented as S-expressions.
+In a version of <span class="sc">SCHEME</span> which had no S-expression
+primitives, however, one could still deal with functions (i.e. closures)
+as such, for that ability is part of the fundamental environment and
+control facilities. Conversely, in a <span class="sc">SCHEME</span>
+which does have <code>CONS</code>, <code>CAR</code>, and
+<code>CDR</code>, there is no defined way to use <code>CONS</code> by
+itself to construct a function (although a primitive
+<code>ENCLOSE</code> is now provided which converts an S-expression
+representation of a function into a function), and the <code>CAR</code>
+or <code>CDR</code> of a function is in general undefined. The only
+defined operation on a function is invocation. {Note <a href="#note-operations-on-functions" id="xoperations-on-functions" title="It would certainly be possible to define other operations on functions, such as determining the number of arguments required, or the types of the arguments and returned value, etc. ...">Operations
+on Functions</a>}</p>
+<p>We draw this sharp distinction between environment and control
+constructs on the one hand and data manipulation primitives on the other
+because only the former are treated in any depth by <span class="sc">RABBIT</span>, whereas much of the knowledge of a “real”
+compiler deals with the latter. A <span class="sc">PL/I</span> compiler
+must have much specific knowledge about numbers, arrays, strings, and so
+on. We have no new ideas to present here on such issues, and so have
+avoided this entire area. <span class="sc">RABBIT</span> itself knows
+almost nothing about data manipulation primitives beyond being able to
+recognize them and pass them along to the output code, which is a small
+subset of MacLISP. In this way <span class="sc">RABBIT</span> can
+concentrate on the interesting issues of environment and control, and
+exploit the expert knowledge of data manipulation primitives already
+built into the <span class="sc">MacLISP</span> compiler.</p>
+<p><hr></p>
+</section>
+<section id="the-use-of-macros" class="level2">
+<h2><a href="#contents" title="Go to Contents">5.   The Use of
+Macros</a></h2>
+<p>An important characteristic of the <span class="sc">SCHEME</span>
+language is that its set of primitive constructs is quite small. This
+set is not always convenient for expressing programs, however, and so a
+macro facility is provided for extending the expressive power of the
+language. A macro is best thought of as a <em>syntax rewrite rule</em>.
+As a simple example, suppose we have a primitive <code>GCD</code> which
+takes only two arguments, and we wish to be able to write an invocation
+of a <code>GCD</code> function with any number of arguments. We might
+then define (in a “production-rule” style) the conditional rule:</p>
+<pre><code>    (XGCD)          =&gt; 0
+    (XGCD x)        =&gt; x
+    (XGCD x . rest) =&gt; (GCD x (XGCD . rest))</code></pre>
+<p>(Notice the use of <span class="sc">LISP</span> dots to refer to the
+rest of a list.) This is not considered to be a definition of a function
+<code>XGCD</code>, but a purely syntactic transformation. In principle
+all such transformations could be performed before executing the
+program. In fact, <span class="sc">RABBIT</span> does exactly this,
+although the <span class="sc">SCHEME</span> interpreter naturally does
+it incrementally, as each macro call is encountered.</p>
+<p>Rather than use a separate production-rule/pattern-matching language,
+in practice <span class="sc">SCHEME</span> macros are defined as
+transformation functions from macro-call expressions to resulting
+S-expressions, just as they are in <span class="sc">MacLISP</span>.
+(Here, however, we shall continue to use production rules for purposes
+of exposition.) It is important to note that macros need not be written
+in the language for which they express rewrite rules; rather, they
+should be considered an adjunct to the interpreter, and written in the
+same language as the interpreter (or the compiler). To see this more
+clearly, consider a version of <span class="sc">SCHEME</span> which does
+not have S-expressions in its data domain. If programs in this language
+are represented as S-expressions, then the interpreter for that language
+cannot be written in that language, but in another meta-language which
+does deal with S-expressions. Macros, which transform one S-expression
+(representing a macro call) to another (the replacement form, or the
+interpretation of the call), clearly should be expressed in this
+meta-language also. The fact that in most <span class="sc">LISP</span>
+systems the language and the meta-language appear to coincide is a
+source of both power and confusion.</p>
+<p>We shall give some examples here. The <code>BLOCK</code> macro is
+similar to the <span class="sc">MacLISP</span> <code>PROGN</code>; it
+evaluates all its arguments and returns the value of the last one. One
+critical characteristic is that the last argument is evaluated
+“tail-recursively” (I use horror quotes because normally we speak of
+invocation, not evaluation, as being tail-recursive). An expansion rule
+is given for this in [<a href="#imperative-1-2-3" id="ximperative2" title="[2] Steele and Sussman 1976, LAMBDA: The Ultimate Imperative">Imperative</a>]
+equivalent to:</p>
+<pre><code>    (BLOCK x)         =&gt;  x
+    (BLOCK x . rest)  =&gt;  ((LAMBDA (DUMMY) (BLOCK . rest)) x)</code></pre>
+<p>This definition exploits the fact that <span class="sc">SCHEME</span>
+is evaluated in applicative order, and so will evaluate all arguments
+before applying a function to them. Thus, in the second subrule,
+<code>x</code> must be evaluated, and then the block of all the
+<code>rest</code> is. It is then clear from the first subrule that the
+last argument is evaluated “tail-recursively”.</p>
+<p>One problem with this definition is the occurrence of the variable
+<code>DUMMY</code>, which must be chosen so as not to conflict with any
+variable used by the user. This we refer to as the “<code>GENSYM</code>
+problem”, in honor of the traditional <span class="sc">LISP</span>
+function which creates a “fresh” symbol. It would be nicer to write the
+macro in such a way that no conflict could arise no matter what names
+were used by the user. There is indeed a way, which <span class="sc">ALGOL</span> programmers will recognize as equivalent to the
+use of “thunks”, or call-by-name parameters:</p>
+<pre><code>    (BLOCK x)         =&gt;  x
+    (BLOCK x . rest)  =&gt;  ((LAMBDA (A B) (B))
+                           x
+                           (LAMBDA () (BLOCK . rest)))</code></pre>
+<p>This is a technique which should be understood quite thoroughly,
+since it is the key to writing correct macro rules without any
+possibility of conflicts between names used by the user and those needed
+by the macro. As another example, let us consider the <code>AND</code>
+and <code>OR</code> constructs as used by most <span class="sc">LISP</span> systems. <code>OR</code> evaluates its arguments
+one by one, in order, returning the first non-<code>NIL</code> value
+obtained (without evaluating any of the following arguments), or
+<code>NIL</code> if all arguments produce <code>NIL</code>.
+<code>AND</code> is the dual to this; it returns <code>NIL</code> if any
+argument does, and otherwise the value of the last argument. A
+simple-minded approach to <code>OR</code> would be:</p>
+<pre><code>    (OR)           =&gt;  &#39;NIL
+    (OR x . rest)  =&gt;  (IF x x (OR . rest))</code></pre>
+<p>There is an objection to this, which is that the code for
+<code>x</code> is duplicated. Not only does this consume extra space,
+but it can execute erroneously if <code>x</code> has any side-effects.
+We must arrange to evaluate x only once, and then test its value:</p>
+<pre><code>    (OR)           =&gt;  &#39;NIL
+    (OR x . rest)  =&gt;  ((LAMBDA (V) (IF V V (OR . rest))) x)</code></pre>
+<p>This certainly evaluates <code>x</code> only once, but admits a
+possible naming conflict between the variable <code>V</code> and any
+variables used by rest. This is avoided by the same technique used for
+<code>BLOCK</code>:</p>
+<pre><code>    (OR)          =&gt;  &#39;NIL
+    (OR x . rest)  =&gt;  ((LAMBDA (V R) (IF V V (R)))
+                      x
+                      (LAMBDA () (OR . rest)))</code></pre>
+<p>Let us now consider a rule for the more complicated <code>COND</code>
+construct:</p>
+<pre><code>    (COND)                 =&gt;  &#39;NIL
+    (COND (x) . rest)      =&gt;  (OR x (COND . rest))
+    (COND (x . r) . rest)  =&gt;  (IF x (BLOCK . r) (COND . rest))</code></pre>
+<p>This defines the “extended” <code>COND</code> of modern <span class="sc">LISP</span> systems, which produces <code>NIL</code> if no
+clauses succeed, which returns the value of the predicate in the case of
+a singleton clause, and which allows more than one consequent in a
+clause. An important point here is that one can write these rules in
+terms of other macro constructs such as <code>OR</code> and
+<code>BLOCK</code>.</p>
+<p><span class="sc">SCHEME</span> also provides macros for such
+constructs as <code>DO</code> and <code>PROG</code>, all of which expand
+into similar kinds of code using <code>LAMBDA</code>, <code>IF</code>,
+and <code>LABELS</code> (see below). In particular, <code>PROG</code>
+permits the use of <code>GO</code> and <code>RETURN</code> in the usual
+manner. In this manner all the traditional imperative constructs are
+expressed in an applicative manner. {Note <a href="#note-aset-is-imperative-1-2" id="xaset-is-imperative1" title="It is true that ASET&#39; is an actual imperative which produces a side effect, and is not expressed applicatively. ASET&#39; is used only for two purposes in practice: to initialize global variables (often relating to MacLISP primitives), and to implement objects with state ..."><code>ASET&#39;</code>
+Is Imperative</a>}</p>
+<p>None of this is particularly new; theoreticians have modelled
+imperative constructs in these terms for years. What is new, we think,
+is the serious proposal that a practical interpreter and compiler can be
+designed for a language in which such models serve as the <em>sole
+definitions</em> of these imperative constructs. {Note <a href="#note-dijkstras-opinion" id="xdijkstras-opinion" title="In [Dijkstra] a remark is made to the effect that defining the while-do construct in terms of function calls seems unusually clumsy. In [Steele] we reply that this is due partly to Dijkstra’s choice of ALGOL for expressing the definition. ...">Dijkstra’s
+Opinion</a>} This approach has both advantages and disadvantages.</p>
+<p>One advantage is that the base language is small. A simple-minded
+interpreter or compiler can be written in a few hours. (We have
+re-implemented the <span class="sc">SCHEME</span> interpreter from
+scratch a dozen times or more to test various representation strategies;
+this was practical only because of the small size of the language.
+Similarly, the <span class="sc">CHEAPY</span> compiler is fewer than ten
+pages of code, and could be rewritten in a day or less.) Once the basic
+interpreter is written, the macro definitions for all the complex
+constructs can be used without revision. Moreover, the same macro
+definitions can be used by both interpreter and compiler (or by several
+versions of interpreter and compiler!). Excepting the very few
+primitives such as <code>LAMBDA</code> and <code>IF</code>, it is not
+necessary to “implement a construct twice”, once each in interpreter and
+compiler.</p>
+<p>Another advantage is that new macros are very easy to write (using
+facilities provided in <span class="sc">SCHEME</span>). One can easily
+invent a new kind of <code>DO</code> loop, for example, and implement it
+in <span class="sc">SCHEME</span> for both interpreter and all compilers
+in less than five minutes.</p>
+<p>A third advantage is that the attention of the compiler can be
+focused on the basic constructs. Rather than having specialized code for
+two dozen different constructs, the compiler can have much deeper
+knowledge about each of a few basic constructs. One might object that
+this “deeper knowledge” consists of recognizing the two dozen special
+cases represented by the separate constructs of the former case. This is
+true to some extent. It is also true, however, that in the latter case
+such deep knowledge will carry over to any new constructs which are
+invented and represented as macros.</p>
+<p>Among the disadvantages of the macro approach are lack of speed and
+the discarding of information. Many people have objected that macros are
+of necessity slower than, say, the <code>FSUBR</code> implementation
+used by most <span class="sc">LISP</span> systems. This is true in many
+current interpretive implementations, but need not be true of compilers
+or more cleverly designed interpreters. Moreover, the <code>FSUBR</code>
+implementation is not general; it is very hard for a user to write a
+meaningful <code>FSUBR</code> and then describe to the compiler the best
+way to compile it. The macro approach handles this difficulty
+automatically. We do not object to the use of the <code>FSUBR</code>
+mechanism as a special-case “speed hack” to improve the performance of
+an interpreter, but we insist on recognizing the fact that it is not as
+generally useful as the macro approach.</p>
+<p>Another objection relating to speed is that the macros produce
+convoluted code involving the temporary creation and subsequent
+invocation of many closures. We feel, first of all, that the macro
+writer should concern himself more with producing correct code than fast
+code. Furthermore, convolutedness can be eliminated by a few simple
+optimization techniques in the compiler, to be discussed below. Finally,
+function calls need not be as expensive as is popularly supposed. [<a href="#steele-1-2-3-4-5" id="xsteele2" title="[2] Steele 1977, Debunking the &#39;Expensive Procedure Call&#39; Myth">Steele</a>]</p>
+<p>Information is discarded by macros in the situation, for example,
+where a <code>DO</code> macro expands into a large mess that is not
+obviously a simple loop; later compiler analysis must recover this
+information. This is indeed a problem. We feel that the compiler is
+probably better off having to recover the information anyway, since a
+deep analysis allows it to catch other loops which the user did not use
+<code>DO</code> to express for one reason or another. Another is the
+possibility that <code>DO</code> could leave clues around in the form of
+declarations if desired.</p>
+<p><hr></p>
+</section>
+<section id="the-imperative-treatment-of-applicative-constructs" class="level2">
+<h2><a href="#contents" title="Go to Contents">6. The Imperative
+Treatment of Applicative Constructs</a></h2>
+<p>Given the characteristics of lexical scoping and tail-recursive
+invocations, it is possible to assign a peculiarly imperative
+interpretation to the applicative constructs of <span class="sc">SCHEME</span>, which consists primarily of treating a
+function call as a <code>GOTO</code>. More generally, a function call is
+a <code>GOTO</code> that can pass one or more items to its target; the
+special case of passing no arguments is precisely a <code>GOTO</code>.
+It is never necessary for a function call to save a return address of
+any kind. It is true that return addresses are generated, but we adopt
+one of two other points of view, depending on context. One is that the
+return address, plus any other data needed to carry on the computation
+after the called function has returned (such as previously computed
+intermediate values and other return addresses) are considered to be
+packaged up into an additional argument (the
+<strong>continuation</strong>) which is passed to the target. This lends
+itself to a non-functional interpretation of <code>LAMBDA</code>, and a
+method of expressing programs called the continuation-passing style
+(similar to the message-passing actors paradigm), to be discussed
+further below. The other view, more intuitive in terms of the
+traditional stack implementation, is that the return address should be
+pushed before evaluating arguments rather than before calling a
+function. This view leads to a more uniform function-calling discipline,
+and is discussed in [<a href="#declarative-1-2-3-4-5-6-7" id="xdeclarative6" title="[6] Steele 1976, LAMBDA: The Ultimate Declarative">Declarative</a>]
+and [<a href="#steele-1-2-3-4-5" id="xsteele3" title="[3] Steele 1977, Debunking the &#39;Expensive Procedure Call&#39; Myth">Steele</a>].</p>
+<p>We are led by this point of view to consider a compilation strategy
+in which function calling is to be considered very cheap (unlike the
+situation with <span class="sc">PL/I</span> and <span class="sc">ALGOL</span>, where programmers avoid procedure calls like
+the plague — see [<a href="#steele-1-2-3-4-5" id="xsteele4" title="[4] Steele 1977, Debunking the &#39;Expensive Procedure Call&#39; Myth">Steele</a>]
+for a discussion of this). In this light the code produced by the sample
+macros above does not seem inefficient, or even particularly convoluted.
+Consider the expansion of <code>(OR a b c)</code>:</p>
+<pre><code>    ((LAMBDA (V R) (IF V V (R)))
+     a
+     (LAMBDA () ((LAMBDA (V R) (IF V V (R)))
+                 b
+                 (LAMBDA () ((LAMBDA (V R) (IF V V (R)))
+                             c (LAMBDA () &#39;NIL))))))</code></pre>
+<p>Then we might imagine the following (slightly contrived) compilation
+scenario. First, for expository purposes, we shall rename the variables
+in order to be able to distinguish them.</p>
+<pre><code>    ((LAMBDA (V1 R1) (IF V1 V1 (R1)))
+     a
+     (LAMBDA () ((LAMBDA (V2 R2) (IF V2 V2 (R2)))
+                 b
+                 (LAMBDA () ((LAMBDA (V3 R3) (IF V3 V3 (R3)))
+                             c
+                             (LAMBDA () &#39;NIL))))))</code></pre>
+<p>We shall assign a generated name to each
+<code>LAMBDA</code>-expression, which we shall notate by writing the
+name after the word <code>LAMBDA</code>. These names will be used as
+tags in the output code.</p>
+<pre><code>    ((LAMBDA name1 (V1 R1) (IF V1 V1 (R1)))
+     a
+     (LAMBDA name2 () ((LAMBDA name3 (V2 R2) (IF V2 V2 (R2)))
+                       b
+                       (LAMBDA name4 () ((LAMBDA name5 (V3 R3) (IF V3 V3 (R3)))
+                                         c
+                                         (LAMBDA name6 () &#39;NIL))))))</code></pre>
+<p>Next, a simple analysis shows that the variables <code>R1</code>,
+<code>R2</code>, and <code>R3</code> always denote the
+<code>LAMBDA</code>-expressions named <code>name2</code>,
+<code>name4</code>, and <code>name6</code>, respectively. Now an
+optimizer might simply have substituted these values into the bodies of
+<code>name1</code>, <code>name3</code>, and <code>name5</code> using the
+rule of beta-conversion, but we shall not apply that technique here.
+Instead we shall compile the six functions in a straightforward manner.
+We make use of the additional fact that all six functions are closed in
+identical environments (we count two environments as identical if they
+involve the same variable bindings, regardless of the number of “frames”
+involved; that is, the environment is the same inside and outside a
+<code>(LAMBDA () ...))</code>. Assume a simple target machine with
+argument registers called <code>reg1</code>, <code>reg2</code>, etc.</p>
+<pre><code>    main:   &lt;code for a&gt;            ;result in reg1
+            LOAD reg2,[name2]       ;[name2] is the closure for name2
+            CALL-FUNCTION 2,[namel] ;call name1 with 2 arguments
+
+    name1:  JUMP-IF-NIL reg1,name1a
+            RETURN                  ;return the value in reg1
+    name1a: CALL-FUNCTION 0,reg2    ;call function in reg2, 0 arguments
+
+    name2:  &lt;code for b&gt;            ;result in reg1
+            LOAD reg2,[name4]       ;[name4] is the closure for name4
+            CALL-FUNCTION 2,[name3] ;call name3 with 2 arguments
+
+    name3:  JUMP-IF-NIL reg1,name3a
+            RETURN                  ;return the value in reg1
+    name3a: CALL-FUNCTION 0,reg2    ;call function in reg2, 0 arguments
+
+    name4:  &lt;code for c&gt;            ;result in reg1
+            LOAD reg2,[name6]       ;[name6] is the closure for name6
+            CALL-FUNCTION 2,[name5] ;call name5 with 2 arguments
+
+    name5:  JUMP-IF-NIL reg1,name5a
+            RETURN                  ;return the value in reg1
+    name5a: CALL-FUNCTION 0,reg2    ;call function in reg2, 0 arguments
+
+    name6:  LOAD reg1,&#39;NIL          ;constant NIL in reg1
+            RETURN</code></pre>
+<p>Now we make use of our knowledge that certain variables always denote
+certain functions, and convert <code>CALL-FUNCTION</code> of a known
+function to a simple <code>GOTO</code>. (We have actually done things
+backwards here; in practice this knowledge is used <em>before</em>
+generating any code. We have fudged over this issue here, but will
+return to it later. Our purpose here is merely to demonstrate the
+treatment of function calls as <code>GOTO</code>s.)</p>
+<pre><code>    main:   &lt;code for a&gt;            ;result in reg1
+            LOAD reg2,[name2]       ;[name2] is the closure for name2
+            GOTO name1
+
+    name1:  JUMP-IF-NIL reg1,name1a
+            RETURN                  ;return the value in reg1
+    name1a: GOTO name2
+
+    name2:  &lt;code for b&gt;            ;result in reg1
+            LOAD reg2,[name4]       ;[name4] is the closure for name4
+            GOTO name3
+
+    name3:  JUMP-IF-NIL reg1,name3a
+            RETURN                  ;return the value in reg1
+    name3a: GOTO name4
+
+    name4:  &lt;code for c&gt;            ;result in reg1
+            LOAD reg2,[name6]       ;[name6] is the closure for name6
+            GOTO name5
+
+    name5:  JUMP-IF-NIL reg1,name5a
+            RETURN                  ;return the value in reg1
+    name5a: GOTO name6
+
+    name6:  LOAD reg1,&#39;NIL          ;constant NIL in reg1
+            RETURN</code></pre>
+<p>The construction <code>[foo]</code> indicates the creation of a
+closure for <code>foo</code> in the current environment. This will
+actually require additional instructions, but we shall ignore the
+mechanics of this for now since analysis will remove the need for the
+construction in this case. The fact that the <em>only</em> references to
+the variables <code>R1</code>, <code>R2</code>, and <code>R3</code> are
+function calls can be detected and the unnecessary <code>LOAD</code>
+instructions eliminated. (Once again, this would actually be determined
+ahead of time, and no <code>LOAD</code> instructions would be generated
+in the first place. All of this is determined by a general pre-analysis,
+rather than a peephole post-pass.) Moreover, a <code>GOTO</code> to a
+tag which immediately follows the <code>GOTO</code> can be
+eliminated.</p>
+<pre><code>    main:   &lt;code for a&gt;            ;result in reg1
+    name1:  JUMP-IF-NIL reg1,name1a
+            RETURN                  ;return the value in reg1
+
+    name1a:
+    name2:  &lt;code for b&gt;            ;result in reg1
+    name3:  JUMP-IF-NIL reg1,name3a
+            RETURN                  ;return the value in reg1
+
+    name3a:
+    name4:  &lt;code for c&gt;            ;result in reg1
+    name5:  JUMP-IF-NIL reg1,name5a
+            RETURN                  ;return the value in reg1
+
+    name5a:
+    name6:  LOAD reg1,&#39;NIL          ;constant NIL in reg1
+            RETURN</code></pre>
+<p>This code is in fact about what one would expect out of an ordinary
+<span class="sc">LISP</span> compiler. (There is admittedly room for a
+little more improvement.) <span class="sc">RABBIT</span> indeed produces
+code of essentially this form, by the method of analysis outlined
+here.</p>
+<p>Similar considerations hold for the <code>BLOCK</code> macro.
+Consider the expression <code>(BLOCK a b c)</code>; conceptually this
+should perform <code>a</code>, <code>b</code>, and <code>c</code>
+sequentially. Let us examine the code produced:</p>
+<pre><code>    main:   &lt;code for a&gt;
+    name1:
+    name2:  &lt;code for b&gt;
+    name3:
+    name4:  &lt;code for c&gt;
+            RETURN</code></pre>
+<p>What more could one ask for?</p>
+<p>Notice that this has fallen out of a general strategy involving only
+an approach to compiling <em>function calls</em>, and has involved no
+special knowledge of <code>OR</code> or <code>BLOCK</code> not encoded
+in the macro rules. The cases shown so far are actually special cases of
+a more general approach, special in that all the conceptual closures
+involved are closed in the same environment, and called from places that
+have not disturbed that environment, but only used “registers.” In the
+more general case, the environments of caller and called function will
+be different. This divides into two subcases, corresponding to whether
+the closure was created by a simple <code>LAMBDA</code> or by a
+<code>LABELS</code> construction. The latter involves circular
+references, and so is somewhat more complicated; but it is easy to show
+that in the former case the environment of the caller must be that of
+the (known) called function, possibly with additional values added on.
+This is a consequence of lexical scoping. As a result, the function call
+can be compiled as a <code>GOTO</code> preceded by an environment
+adjustment which consists merely of lopping off some leading portion of
+the current one (intuitively, one simply “pops the unnecessary crud off
+the stack”). <code>LABELS</code>-closed functions also can be treated in
+this way, if one closes all the functions in the same way (which <span class="sc">RABBIT</span> presently does, but this is not always
+desirable). If one does, then it is easy to see the effect of expanding
+a <code>PROG</code> into a giant <code>LABELS</code> as outlined in [<a href="#imperative-1-2-3" id="ximperative3" title="[3] Steele and Sussman 1976, LAMBDA: The Ultimate Imperative">Imperative</a>]
+and elsewhere: normally, a <code>GOTO</code> to a tag at the same level
+of PROG will involve no adjustment of environment, and so compile into a
+simple <code>GOTO</code> instruction, whereas a <code>GOTO</code> to a
+tag at an outer level of PROG probably will involve adjusting the
+environment from that of the inner <code>PROG</code> to that of the
+outer. All of this falls out of the proper imperative treatment of
+function calls.</p>
+<section id="a.-optimization" class="level3">
+<h3><a href="#contents" title="Go to Contents">A.  
+Optimization</a></h3>
+<p>Once the preliminary analysis is done, the optimization phase
+performs certain transformations on the code. The result is an
+equivalent program which will (probably) compile into more efficient
+code. This new program is itself structurally a valid <span class="sc">SCHEME</span> program; that is, all transformations are
+contained within the language. The transformations are thus similar to
+those performed on macro calls, consisting of a syntactic rewriting of
+an expression, except that the situations where such transformations are
+applicable are more easily recognized in the case of macro calls. It
+should be clear that the optimizer and the macro-functions are
+conceptually at the same level in that they may be written in the same
+meta-language that operates on representations of <span class="sc">SCHEME</span> programs. {Note <a href="#note-non-deterministic-optimization" id="xnon-deterministic-optimization" title="To simplify the implementation, RABBIT uses only a deterministic (and very conservative) optimizer. Ideally, an optimizer would be non-deterministic in structure ...">Non-deterministic
+Optimization</a>}</p>
+<p>The simplest transformation is that a combination whose function
+position contains a <code>LAMBDA</code>-expression and which has no
+arguments can be replaced by the body of the
+<code>LAMBDA</code>-expression:</p>
+<pre><code>    ((LAMBDA () body))  =&gt;  body</code></pre>
+<p>There are two transformations on <code>IF</code> expressions. One is
+simply that an <code>IF</code> expression with a constant predicate is
+simplified to its consequent or alternative (resulting in elimination of
+dead code). The other was adapted from [<a href="#standish-1-2" id="xstandish2" title="[2] Standish etal 1976, The Irvine Program Transformation Catalogue">Standish</a>],
+which does not have this precise transformation listed, but gives a more
+general rule. In its original form this transformation is:</p>
+<pre><code>    (IF (IF a b c) d e)  =&gt;  (IF a (IF b d e) (IF c d e))</code></pre>
+<p>One problem with this is that the code for d and e is duplicated.
+This can be avoided by the use of <code>LAMBDA</code>-expressions:</p>
+<pre><code>    ((LAMBDA (Q1 Q2)
+             (IF a
+                 (IF b (Q1) (Q2))
+                 (IF c (Q1) (Q2))))
+     (LAMBDA () d)
+     (LAMBDA () e))</code></pre>
+<p>As before, there is no problem of name conflicts with Q1 and Q2.
+While this code may appear unnecessarily complex, the calls to the
+functions <code>Q1</code> and <code>Q2</code> will, typically, as shown
+above, be compiled as simple <code>GOTO</code>s. As an example, consider
+the expression:</p>
+<pre><code>    (IF (AND PRED1 PRED2) (PRINT &#39;WIN) (ERROR &#39;LOSE))</code></pre>
+<p>Expansion of the <code>AND</code> macro will result in:</p>
+<pre><code>    (IF ((LAMBDA (V R) (IF V (R) &#39;NIL))
+         PRED1
+         (LAMBDA () PRED2))
+        (PRINT &#39;WIN)
+        (ERROR &#39;LOSE))</code></pre>
+<p>(For expository clarity we will not bother to rename all the
+variables, inasmuch as they are already distinct.) Because
+<code>V</code> and <code>R</code> have only one reference apiece (and
+there are no possible interfering side-effects), the corresponding
+arguments can be substituted for them.</p>
+<pre><code>    (IF ((LAMBDA (V R) (IF PRED1 ((LAMBDA () PRED2)) &#39;NIL))
+         PRED1
+         (LAMBDA () PRED2))
+        (PRINT &#39;WIN)
+        (ERROR &#39;LOSE) )</code></pre>
+<p>Now, since <code>V</code> and <code>R</code> have no referents at
+all, they and the corresponding arguments can be eliminated, since the
+arguments have no side-effects.</p>
+<pre><code>    (IF ((LAMBDA () (IF PRED1 ((LAMBDA () PRED2)) &#39;NIL)))
+        (PRINT &#39;WIN)
+        (ERROR &#39;LOSE))</code></pre>
+<p>Next, the combination <code>((LAMBDA () ...))</code> is eliminated in
+two places:</p>
+<pre><code>    (IF (IF PRED1 PRED2 &#39;NIL)
+        (PRINT &#39;WIN)
+        (ERROR &#39;LOSE))</code></pre>
+<p>Now, the transformation on the nested <code>IF</code>’s:</p>
+<pre><code>    ((LAMBDA (Q1 Q2)
+             (IF PRED1
+                 (IF PRED2 (Q1) (Q2))
+                 (IF &#39;NIL (Q1) (Q2))))
+     (LAMBDA () (PRINT &#39;WIN))
+     (LAMBDA () (ERROR &#39;LOSE)))</code></pre>
+<p>Now one <code>IF</code> has a constant predicate and can be
+simplified:</p>
+<pre><code>    ((LAMBDA (Q1 Q2)
+             (IF PRED1
+                 (IF PRED2 (Q1) (Q2))
+                 (Q2)))
+     (LAMBDA () (PRINT &#39;WIN))
+     (LAMBDA () (ERROR &#39;LOSE)))</code></pre>
+<p>The variable <code>Q1</code> has only one referent, and so we
+substitute in, eliminate the variable and argument, and collapse a
+<code>((LAMBDA () ...))</code>:</p>
+<pre><code>    ((LAMBDA (Q2)
+             (IF PRED1
+                 (IF PRED2 (PRINT &#39;WIN) (Q2))
+                 (Q2)))
+     (LAMBDA () (ERROR &#39;LOSE)))</code></pre>
+<p>Recalling that <code>(Q2)</code> is, in effect, a <code>GOTO</code>
+branching to the common piece of code, and that by virtue of later
+analysis no actual closure will be created for either
+<code>LAMBDA</code>-expression, this result is quite reasonable. {Note
+[Evaluation for Control](#note-evaluation-for-control “It is usual in a
+compiler to distinguish at least three ‘evaluation contexts’: value,
+control, and effect. (See [<a href="#wulf-1-2" id="xwulf1" title="[1] Wulf 1975, The Design of an Optimizing Compiler">Wulf</a>],
+for example.) Evaluation for control occurs in the predicate of an IF,
+where the point is not so much to produce a data object as simply to
+decide whether it is true or false. …”){#xevaluation}}</p>
+<p><hr></p>
+</section>
+<section id="b.-environment-and-closure-analysis" class="level3">
+<h3><a href="#contents" title="Go to Contents">B.   Environment and
+Closure Analysis</a></h3>
+<p>Following CPS conversion (see <a href="#appendix">Appendix</a>),
+<span class="sc">RABBIT</span> determines for each
+<code>LAMBDA</code>-expression whether a closure will be needed for it
+at run time. The idea is that in many situations (particularly those
+generated as expansions of macros) one can determine at compile time
+precisely which function will be invoked by a combination, and perhaps
+also what its expected environment will be. There are three
+possibilities:</p>
+<ol type="1">
+<li>If the function denoted by the <code>LAMBDA</code>-expression is
+bound to some variable, and that variable is referenced other than in
+function position, then the closure is being treated as data, and must
+be a full (standard <code>CBETA</code> format) closure. If the function
+itself occurs in non-function position other than in a
+<code>LAMBDA</code>-combination, it must be fully closed.</li>
+<li>If the closure is bound to some variable, and that variable is
+referenced only in function position, but some of these references occur
+within other partially or fully closed functions, then this function
+must be partially closed. By this we mean that the environment for the
+closure must be “consed up”, but no pointer to the code need be added on
+as for a full closure. This function will always be called from places
+that know the name of the function and so can just perform a
+<code>GO</code> to the code, but those such places which are within
+closures must have a complete copy of the necessary environment.</li>
+<li>In other cases (functions bound to variables referenced only in
+function position and never within a closed function, or functions
+occurring in function position of <code>LAMBDA</code>-combinations), the
+function need not be closed. This is because the environment can always
+be fully recovered from the environment at the point of call.</li>
+</ol>
+<p>In order to determine this information, it is necessary to determine,
+for each node, the set of variables referred to from within closed
+functions at or below that node. Thus this process and the process of
+determining functions to close are highly interdependent, and so must be
+accomplished in a single pass.</p>
+<p><hr></p>
+</section>
+</section>
+<section id="conclusions" class="level2">
+<h2><a href="#contents" title="Go to Contents">7. Conclusions</a></h2>
+<p>Lexical scoping, tail-recursion, the conceptual treatment of
+functions (as opposed to representations thereof) as data objects, and
+the ability to notate “anonymous” functions make <span class="sc">SCHEME</span> an excellent language in which to express
+program transformations and optimizations. Imperative constructs are
+easily modelled by applicative definitions. Anonymous functions make it
+easy to avoid needless duplication of code and conflict of variable
+names. A language with these properties is useful not only at the
+preliminary optimization level, but for expressing the results of
+decisions about order of evaluation and storage of temporary quantities.
+These properties make <span class="sc">SCHEME</span> as good a candidate
+as any for an <span class="sc">UNCOL</span>. The proper treatment of
+functions and function calls leads to generation of excellent imperative
+low-level code.</p>
+<p>We have emphasized the ability to treat functions as data objects. We
+should point out that one might want to have a very simple run-time
+environment which did not support complex environment structures, or
+even stacks. Such an end environment does not preclude the use of the
+techniques described here. Many optimizations result in the elimination
+of <code>LAMBDA</code>-expressions; post CPS-conversion analysis
+eliminates the need to close many of the remaining
+<code>LAMBDA</code>-expressions. One could use the macros and internal
+representations of <span class="sc">RABBIT</span> to describe
+intermediate code transformations, and require that the final code not
+actually create any closures. As a concrete example, imagine writing an
+operating system in <span class="sc">SCHEME</span>, with machine words
+as the data domain (and functions excluded from the run-time data
+domain). We could still meaningfully write, for example:</p>
+<pre><code>    (IF (OR (STOPPED (PROCESS I))
+            (AWAITING-INPUT (PROCESS I)))
+        (SCHEDULE-LOOP (+ I 1))
+        (SCHEDULE-PROCESS I))</code></pre>
+<p>While the intermediate expansion of this code would conceptually
+involve the use of functions as data objects, optimizations would reduce
+the final code to a form which did not require closures at run time.</p>
+<p><hr></p>
+</section>
+<section id="notes" class="level2">
+<h2><a href="#contents" title="Go to Contents">Notes</a></h2>
+<section id="section" class="level3">
+<h3></h3>
+<section id="note-aset-is-imperative-1-2" class="level4">
+<h4>{Note <code>ASET&#39;</code> Is Imperative} <span class="fr"><a href="#xaset-is-imperative1">1</a>, <a href="#xaset-is-imperative2">2</a></span><br />
+</h4>
+<p>It is true that <code>ASET&#39;</code> is an actual imperative which
+produces a side effect, and is not expressed applicatively.
+<code>ASET&#39;</code> is used only for two purposes in practice: to
+initialize global variables (often relating to <span class="sc">MacLISP</span> primitives), and to implement objects with
+state (cells, in the <span class="sc">PLASMA</span> sense [<a href="#smith-and-hewitt" id="xsmith" title="Smith and Hewitt 1975, A PLASMA Primer (draft)">Smith and
+Hewitt</a>] [<a href="#hewitt-and-smith" id="xhewitt-and-smith" title="Hewitt and Smith 1975, Towards a Programming Apprentice">Hewitt
+and Smith</a>]). If we were to redesign <span class="sc">SCHEME</span>
+from scratch, I imagine that we would introduce cells as our primitive
+side-effect rather than <code>ASET&#39;</code>. The decision to use
+<code>ASET&#39;</code> was motivated primarily by the desire to interface
+easily to the <span class="sc">MacLISP</span> environment (and, as a
+corollary, to be able to implement <span class="sc">SCHEME</span> in
+three days instead of three years!).</p>
+<p>We note that in approximately one hundred pages of <span class="sc">SCHEME</span> code written by three people, the non-quoted
+<code>ASET</code> has never been used, and <code>ASET&#39;</code> has been
+used only a dozen times or so, always for one of the two purposes
+mentioned above. In most situations where one would like to write an
+assignment of some kind, macros which expand into applicative
+constructions suffice.</p>
+</section>
+<section id="note-dijkstras-opinion" class="level4">
+<h4>{Note Dijkstra’s Opinion} <span class="fr"><a href="#xdijkstras-opinion">^</a></span><br />
+</h4>
+<p>In [<a href="#dijkstra" id="xdijkstra" title="Dijkstra 1976, A Discipline of Programming">Dijkstra</a>] a
+remark is made to the effect that defining the
+<strong>while</strong>-<strong>do</strong> construct in terms of
+function calls seems unusually clumsy. In [<a href="#steele-1-2-3-4-5" id="xsteele5" title="[5] Steele 1977, Debunking the &#39;Expensive Procedure Call&#39; Myth">Steele</a>]
+we reply that this is due partly to Dijkstra’s choice of <span class="sc">ALGOL</span> for expressing the definition. Here we would add
+that, while such a definition is completely workable and is useful for
+compilation purposes, we need never tell the user that we defined
+<strong>while</strong>-<strong>do</strong> in this manner! Only the
+writer of the macros needs to know the complexity involved; the user
+need not, and should not, care as long as the construction works when he
+uses it.</p>
+</section>
+<section id="note-evaluation-for-control" class="level4">
+<h4>{Note Evaluation for Control} <span class="fr"><a href="#xevaluation">^</a></span><br />
+</h4>
+<p>It is usual in a compiler to distinguish at least three “evaluation
+contexts”: value, control, and effect. (See [<a href="#wulf-1-2" id="xwulf2" title="[2] Wulf 1975, The Design of an Optimizing Compiler">Wulf</a>],
+for example.) Evaluation for control occurs in the predicate of an
+<code>IF</code>, where the point is not so much to produce a data object
+as simply to decide whether it is true or false. The results of
+<code>AND</code>, <code>OR</code>, and <code>NOT</code> operations in
+predicates are “encoded in the program counter”. When compiling an
+<code>AND</code>, <code>OR</code>, or <code>NOT</code>, a flag is passed
+down indicating whether it is for value or for control; in the latter
+case, two tags are also passed down, indicating the branch targets for
+success or failure. (This is called “anchor pointing” in [<a href="#allen" id="xallen" title="Allen and Cocke 1972, A Catalogue of Optimizing Transformations">Allen</a>].)</p>
+<p>In <span class="sc">RABBIT</span> this notion falls out automatically
+without any special handling, thanks to the definition of
+<code>AND</code> and <code>OR</code> as macros expanding into
+<code>IF</code> statements. If we were also to define <code>NOT</code>
+as a macro</p>
+<pre><code>    (NOT x)  =&gt;  (IF x &#39;NIL &#39;T)</code></pre>
+<p>then nearly all such special “evaluation for control” cases would be
+handled by virtue of the nested-<code>IF</code> transformation in the
+optimizer.</p>
+<p>One transformation which ought to be in the optimizer is</p>
+<pre><code>    (IF ((LAMBDA (X Y ...) &lt;body&gt;) A B ...) &lt;con&gt; &lt;alt&gt;)
+       =&gt;  ((LAMBDA (X Y ...) (IF &lt;body&gt; &lt;con&gt; &lt;alt&gt;)) A B ...)</code></pre>
+<p>which could be important if the <code>&lt;body&gt;</code> is itself
+an <code>IF</code>. (This transformation would occur at a point (in the
+optimizer) where no conflicts between <code>X</code>, <code>Y</code>,
+and variables used in <code>&lt;con&gt;</code> and
+<code>&lt;alt&gt;</code> could occur.)</p>
+</section>
+<section id="note-full-funarg-example" class="level4">
+<h4>{Note Full-Funarg Example} <span class="fr"><a href="#xfull-funarg-example">^</a></span><br />
+</h4>
+<p>As an example of the difference between lexical and dynamic scoping,
+consider the classic case of the “funarg problem”. We have defined a
+function <code>MAPCAR</code> which, given a function and a list,
+produces a new list of the results of the function applied to each
+element of the given list:</p>
+<pre><code>    (DEFINE MAPCAR
+            (LAMBDA (FN L)
+                    (IF (NULL L) NIL
+                        (CONS (FN (CAR L)) (MAPCAR FN (CDR L))))))</code></pre>
+<p>Now suppose in another program we have a list <code>X</code> and a
+number <code>L</code>, and want to add <code>L</code> to every element
+of <code>X</code>:</p>
+<pre><code>    (MAPCAR (LAMBDA (Z) (+ Z L)) X)</code></pre>
+<p>This works correctly in a lexically scoped language such as <span class="sc">SCHEME</span>, because the <code>L</code> in the function
+<code>(LAMBDA (Z) (+ Z L))</code> refers to the value of <code>L</code>
+at the point the <code>LAMBDA</code>-expression is evaluated. In a
+dynamically scoped language, such as standard <span class="sc">LISP</span>, the <code>L</code> refers to the most recent
+run-time binding of <code>L</code>, which is the binding in the
+definition of <code>MAPCAR</code> (which occurs between the time the
+<code>LAMBDA</code>-expression is passed to <code>MAPCAR</code> and the
+time the <code>LAMBDA</code>-expression is invoked).</p>
+</section>
+<section id="note-non-deterministic-optimization" class="level4">
+<h4>{Note Non-deterministic Optimization} <span class="fr"><a href="#xnon-deterministic-optimization">^</a></span><br />
+</h4>
+<p>To simplify the implementation, <span class="sc">RABBIT</span> uses
+only a deterministic (and very conservative) optimizer. Ideally, an
+optimizer would be non-deterministic in structure; it could try an
+optimization, see how the result interacted with other optimizations,
+and back out if the end result is not as good as desired. We have
+experimented briefly with the use of the <span class="sc">AMORD</span>
+language [<a href="#doyle-1-2" id="xdoyle2" title="[2] Doyle etal 1977, Explicit Control of Reasoning">Doyle</a>] to
+build a non-deterministic compiler, but have no significant results
+yet.</p>
+<p>We can see more clearly the fundamental unity of macros and other
+optimizations in the light of this hypothetical non-deterministic
+implementation. Rather than trying to guess ahead of time whether a
+macro expansion or optimization is desirable, it goes ahead and tries,
+and then measures the utility of the result. The only difference between
+a macro and other optimizations is that a macro call is an
+all-or-nothing situation: if it cannot be expanded for some reason, it
+is of infinite disutility, while if it can its disutility is finite.
+This leads to the idea of non-deterministic macro expansions, which we
+have not pursued.</p>
+</section>
+<section id="note-non-quoted-aset" class="level4">
+<h4>{Note Non-quoted <code>ASET</code>} <span class="fr"><a href="#xnon-quoted-aset">^</a></span><br />
+</h4>
+<p>The <span class="sc">SCHEME</span> interpreter permits one to compute
+the name of the variable, but for technical and philosophical reasons
+<span class="sc">RABBIT</span> forbids this. We shall treat
+“<code>ASET&#39;</code>” as a single syntactic object (think
+“<code>ASETQ</code>”).</p>
+<p>(See also {Note <a href="#note-aset-is-imperative-1-2" id="xaset-is-imperative2" title="It is true that ASET&#39; is an actual imperative which produces a side effect, and is not expressed applicatively. ASET&#39; is used only for two purposes in practice: to initialize global variables (often relating to MacLISP primitives), and to implement objects with state ..."><code>ASET&#39;</code>
+Is Imperative</a>}.)</p>
+</section>
+<section id="note-operations-on-functions" class="level4">
+<h4>{Note Operations on Functions} <span class="fr"><a href="#xoperations-on-functions">^</a></span><br />
+</h4>
+<p>It would certainly be possible to define other operations on
+functions, such as determining the number of arguments required, or the
+types of the arguments and returned value, etc.</p>
+<p><hr></p>
+</section>
+</section>
+</section>
+<section id="references" class="level2">
+<h2><a href="#contents" title="Go to Contents">References</a></h2>
+<section id="section-1" class="level3">
+<h3></h3>
+<p>(Entries marked with a “*” are not referenced in the text.)</p>
+<section id="allen" class="level4">
+<h4>[Allen] <a href="#xallen" class="fr">^</a><br />
+</h4>
+<p>Allen, Frances E., and Cocke, John. <a href="https://www.clear.rice.edu/comp512/Lectures/Papers/1971-allen-catalog.pdf" title="www.clear.rice.edu/comp512/Lectures/Papers/1971-allen-catalog.pdf"><em>A
+Catalogue of Optimizing Transformations</em></a>. In Rustin, Randall
+(ed.), Design and Optimization of Compilers. Proc. Courant Comp. Sci.
+Symp. 5. Prentice-Hall (Englewood Cliffs, N.J., 1972).</p>
+</section>
+<section id="bobrow" class="level4">
+<h4>[Bobrow] <span class="fr">*</span><br />
+</h4>
+<p>Bobrow, Daniel G. and Wegbreit, Ben. <a href="https://dl.acm.org/doi/10.1145/362375.362379" title="dl.acm.org/doi/10.1145/362375.362379"><em>A Model and Stack
+Implementation of Multiple Environments</em></a>. CACM 16, 10 (October
+1973) pp. 591-603.</p>
+</section>
+<section id="church-1-2" class="level4">
+<h4>[Church] <span class="fr"><a href="#xchurch1">1</a>, <a href="#xchurch2">2</a></span><br />
+</h4>
+<p>Church, Alonzo. <a href="https://archive.org/details/AnnalsOfMathematicalStudies6ChurchAlonzoTheCalculiOfLambdaConversionPrincetonUniversityPress1941" title="archive.org/details/AnnalsOfMathematicalStudies6ChurchAlonzoTheCalculiOfLambdaConversionPrincetonUniversityPress1941"><em>The
+Calculi of Lambda Conversion</em></a>. Annals of Mathematics Studies
+Number 6. Princeton University Press (Princeton, 1941). Reprinted by
+Klaus Reprint Corp. (New York, 1965).</p>
+</section>
+<section id="coleman" class="level4">
+<h4>[Coleman] <a href="#xcoleman" class="fr">^</a><br />
+</h4>
+<p>Coleman, Samuel S. <a href="https://.invalid/_no_online_copy_found_" title="No online copy found"><em>JANUS: A Universal Intermediate
+Language</em></a>, PhD thesis, University of Colorado, 1974.</p>
+<div class="ti">
+<p>{{See Coleman etal 1974 <a href="https://onlinelibrary.wiley.com/doi/10.1002/spe.4380040103" title="onlinelibrary.wiley.com/doi/10.1002/spe.4380040103"><em>The
+mobile programming system, Janus</em></a>. }}</p>
+</div>
+</section>
+<section id="declarative-1-2-3-4-5-6-7" class="level4">
+<h4>[Declarative] <span class="fr"><a href="#xdeclarative1">1</a>, <a href="#xdeclarative2">2</a>, <a href="#xdeclarative3">3</a>, <a href="#xdeclarative4">4</a>, <a href="#xdeclarative5">5</a>, <a href="#xdeclarative6">6</a>, <a href="#xdeclarative7">7</a></span><br />
+</h4>
+<p>Steele, Guy Lewis Jr. <a href="https://dspace.mit.edu/handle/1721.1/6091" title="dspace.mit.edu/handle/1721.1/6091"><em>LAMBDA: The Ultimate
+Declarative</em></a>. AI Memo 379. MIT AI Lab (Cambridge, November
+1976).<br />
+{{HTML transcription: <a href="https://research.scheme.org/lambda-papers/" title="research.scheme.org/lambda-papers/">research.scheme.org/lambda-papers/</a>.
+}}</p>
+</section>
+<section id="dijkstra" class="level4">
+<h4>[Dijkstra] <a href="#xdijkstra" class="fr">^</a><br />
+</h4>
+<p>Dijkstra, Edsger W. <a href="https://archive.org/details/disciplineofprog0000dijk" title="archive.org/details/disciplineofprog0000dijk"><em>A Discipline of
+Programming</em></a>. Prentice-Hall (Englewood Cliffs, N.J., 1976)</p>
+</section>
+<section id="doyle-1-2" class="level4">
+<h4>[Doyle] <span class="fr"><a href="#xdoyle1">1</a>, <a href="#xdoyle2">2</a></span><br />
+</h4>
+<p>Jon Doyle, Johan de Kleer, Gerald Jay Sussman, and Guy L. Steele Jr.
+<a href="https://dspace.mit.edu/handle/1721.1/5750"><em>Explicit Control
+of Reasoning</em></a>. AI Memo 427. MIT AI Lab (Cambridge, June
+1977).</p>
+</section>
+<section id="geschke" class="level4">
+<h4>[Geschke] <span class="fr">*</span><br />
+</h4>
+<p>Geschke, Charles M. <a href="https://www.proquest.com/openview/257cdb472f7f80955f5e5be70cb1f2f6/1.pdf" title="www.proquest.com/openview/257cdb472f7f80955f5e5be70cb1f2f6/1.pdf"><em>Global
+program optimizations.</em></a>, PhD thesis, Carnegie-Mellon University,
+1972.</p>
+</section>
+<section id="gries" class="level4">
+<h4>[Gries] <span class="fr">*</span><br />
+</h4>
+<p>Gries, David <a href="https://archive.org/details/compilerconstruc0000grie" title="archive.org/details/compilerconstruc0000grie (Table of Contents only)"><em>Compiler
+Construction for Digital Computers</em></a>, John Wiley and Sons,
+1971.</p>
+</section>
+<section id="hewitt-and-smith" class="level4">
+<h4>[Hewitt and Smith] <span class="fr"><a href="#xhewitt-and-smith">^</a></span><br />
+</h4>
+<p>Hewitt, Carl, and Smith, Brian. <a href="https://dl.acm.org/doi/abs/10.1109/TSE.1975.6312818" title="dl.acm.org/doi/abs/10.1109/TSE.1975.6312818"><em>Towards a
+Programming Apprentice</em></a>. IEEE Transactions on Software
+Engineering SE-1, 1 (March 1975), 26-45.</p>
+</section>
+<section id="imperative-1-2-3" class="level4">
+<h4>[Imperative] <span class="fr"><a href="#ximperative1">1</a>, <a href="#ximperative2">2</a>, <a href="#ximperative3">3</a></span><br />
+</h4>
+<p>Steele, Guy Lewis Jr., and Sussman, Gerald Jay. <a href="https://dspace.mit.edu/handle/1721.1/5790" title="dspace.mit.edu/handle/1721.1/5790"><em>LAMBDA: The Ultimate
+Imperative</em></a>. AI Lab Memo 353. MIT (Cambridge, March 1976).<br />
+{{HTML transcription: <a href="https://research.scheme.org/lambda-papers/" title="research.scheme.org/lambda-papers/">research.scheme.org/lambda-papers/</a>.
+}}</p>
+</section>
+<section id="landin" class="level4">
+<h4>[Landin] <a href="#xlandin" class="fr">^</a><br />
+</h4>
+<p>Landin, Peter J. <a href="https://dl.acm.org/doi/10.1145/363744.363749" title="dl.acm.org/doi/10.1145/363744.363749"><em>A Correspondence
+between ALGOL 60 and Church’s Lambda-Notation</em></a>. CACM Vol. 8,
+No. 2-3, 1965. (<a href="https://dl.acm.org/doi/10.1145/363744.363749" title="dl.acm.org/doi/10.1145/363744.363749">February</a> and <a href="https://dl.acm.org/doi/10.1145/363791.363804" title="dl.acm.org/doi/10.1145/363791.363804">March</a>).</p>
+</section>
+<section id="lisp1.5m" class="level4">
+<h4>[LISP1.5M] <a href="#xlisp1.5m" class="fr">^</a><br />
+</h4>
+<p>McCarthy, John, et al. <a href="https://apps.dtic.mil/sti/tr/pdf/AD0406138.pdf" title="apps.dtic.mil/sti/tr/pdf/AD0406138.pdf"><em>LISP 1.5 Programmer’s
+Manual</em></a>. The MIT Press (Cambridge, 1962).</p>
+<div class="ti">
+<p>{{See also McCarthy et al <a href="https://www.softwarepreservation.org/projects/LISP/book/LISP%201.5%20Programmers%20Manual.pdf" title="www.softwarepreservation.org/projects/LISP/book/LISP%201.5%20Programmers%20Manual.pdf"><em>LISP
+1.5 Programmer’s Manual</em></a> [Second edition] The MIT Press
+(Cambridge, 1965). }}</p>
+</div>
+</section>
+<section id="moon-1-2" class="level4">
+<h4>[Moon] <span class="fr"><a href="#xmoon1">1</a>, <a href="#xmoon2">2</a></span><br />
+</h4>
+<p>Moon, David A. <a href="https://www.softwarepreservation.org/projects/LISP/MIT/Moon-MACLISP_Reference_Manual-Apr_08_1974.pdf" title="www.softwarepreservation.org/projects/LISP/MIT/Moon-MACLISP_Reference_Manual-Apr_08_1974.pdf"><em>MACLISP
+Reference Manual, Revision 0</em></a>. Project MAC, MIT (Cambridge,
+April 1974).</p>
+</section>
+<section id="moses-1-2" class="level4">
+<h4>[Moses] <span class="fr"><a href="#xmoses1">1</a>, <a href="#xmoses2">2</a></span><br />
+</h4>
+<p>Moses, Joel. <a href="https://dspace.mit.edu/handle/1721.1/5854" title="dspace.mit.edu/handle/1721.1/5854"><em>The Function of FUNCTION
+in LISP</em></a>. AI Memo 199, MIT AI Lab (Cambridge, June 1970).</p>
+</section>
+<section id="reynolds" class="level4">
+<h4>[Reynolds] <a href="#xreynolds" class="fr">^</a><br />
+</h4>
+<p>Reynolds, John C. <a href="https://dl.acm.org/doi/10.1145/800194.805852" title="dl.acm.org/doi/10.1145/800194.805852"><em>Definitional
+Interpreters for Higher Order Programming Languages</em></a>. ACM
+Conference Proceedings 1972.</p>
+</section>
+<section id="sammet" class="level4">
+<h4>[Sammet] <a href="#xsammet" class="fr">^</a><br />
+</h4>
+<p>Sammet, Jean E. <a href="https://archive.org/details/programminglangu00unse" title="archive.org/details/programminglangu00unse"><em>Programming
+Languages: History and Fundamentals</em></a>, Prentice-Hall (Englewood
+Cliffs, N.J., 1969).</p>
+</section>
+<section id="smith-and-hewitt" class="level4">
+<h4>[Smith and Hewitt] <span class="fr"><a href="#xsmith">^</a></span><br />
+</h4>
+<p>Smith, Brian C. and Hewitt, Carl. <a href="https://www.scribd.com/document/185900689/A-Plasma-Primer" title="www.scribd.com/document/185900689/A-Plasma-Primer"><em>A PLASMA
+Primer (draft)</em></a>. MIT AI Lab (Cambridge, October 1975).</p>
+</section>
+<section id="standish-1-2" class="level4">
+<h4>[Standish] <span class="fr"><a href="#xstandish1">1</a>, <a href="#xstandish2">2</a></span><br />
+</h4>
+<p>Standish, T. A. etal. <a href="https://escholarship.org/uc/item/79p8s9qv" title="escholarship.org/uc/item/79p8s9qv"><em>The Irvine Program
+Transformation Catalogue</em></a>, University of California TR#161,
+1976.</p>
+</section>
+<section id="steele-1-2-3-4-5" class="level4">
+<h4>[Steele] <span class="fr"><a href="#xsteele1">1</a>, <a href="#xsteele2">2</a>, <a href="#xsteele3">3</a>, <a href="#xsteele4">4</a>, <a href="#xsteele5">5</a></span><br />
+</h4>
+<p>Steele, Guy Lewis Jr. <a href="https://dl.acm.org/doi/abs/10.1145/800179.810196" title="dl.acm.org/doi/abs/10.1145/800179.810196"><em>Debunking the
+‘Expensive Procedure Call’ Myth</em></a> submitted to the 77 ACM
+National Conference.</p>
+<div class="ti">
+<p>{{See also <a href="https://dspace.mit.edu/handle/1721.1/5753" title="dspace.mit.edu/handle/1721.1/5753"><em>Debunking the ‘Expensive
+Procedure Call’ Myth, or, Procedure Call Implementations Considered
+Harmful, or, Lambda: The Ultimate GOTO</em></a> MIT AI Memo 443, October
+1977.<br />
+HTML transcription: <a href="https://research.scheme.org/lambda-papers/" title="research.scheme.org/lambda-papers/">research.scheme.org/lambda-papers/</a>.
+}}</p>
+</div>
+</section>
+<section id="stoy" class="level4">
+<h4>[Stoy] <a href="#xstoy-1974" class="fr">^</a><br />
+</h4>
+<p>Stoy, Joseph <a href="https://.invalid/_no_online_copy_found_" title="No online copy found"><em>The Scott-Strachey Approach to the
+Mathematical Semantics of Programming Languages</em></a>, MIT Laboratory
+for Computer Science, 1974. :::{.ti} {{See Stoy, Joseph E. <a href="https://archive.org/details/denotationalsema0000jose" title="archive.org/details/denotationalsema0000jose"><em>Denotational
+Semantics: The Scott-Strachey Approach to Programming Language
+Theory</em></a> MIT Press (Cambridge, 1977). }} :::</p>
+</section>
+<section id="scheme-1-2-3-4-5" class="level4">
+<h4>[<span class="sc">SCHEME</span>] <span class="fr"><a href="#xscheme1">1</a>, <a href="#xscheme2">2</a>, <a href="#xscheme3">3</a>, <a href="#xscheme4">4</a>, <a href="#xscheme5">5</a></span><br />
+</h4>
+<p>Sussman, Gerald Jay, and Steele, Guy L. Jr. <a href="https://dspace.mit.edu/handle/1721.1/5794" title="dspace.mit.edu/handle/1721.1/5794"><em>SCHEME: An Interpreter for
+Extended Lambda Calculus</em></a>. AI Lab Memo 349. MIT (Cambridge,
+December 1975).</p>
+<div class="ti">
+<p>{{HTML transcription: <a href="https://research.scheme.org/lambda-papers/" title="research.scheme.org/lambda-papers/">research.scheme.org/lambda-papers/</a>.<br />
+Republished with notes as<br />
+Sussman, G.J., Steele, G.L. <a href="https://www.researchgate.net/publication/227098423_Scheme_A_Interpreter_for_Extended_Lambda_Calculus" title="www.researchgate.net/publication/227098423_Scheme_A_Interpreter_for_Extended_Lambda_Calculus"><em>Scheme:
+A Interpreter for Extended Lambda Calculus</em></a>. Higher-Order and
+Symbolic Computation 11, 405–439 (1998).
+https://doi.org/10.1023/A:1010035624696<br />
+See also: Sussman, G.J., Steele, G.L. <a href="https://doi.org/10.1023/A:1010079421970" title="doi.org/10.1023/A:1010079421970"><em>The First Report on Scheme
+Revisited</em></a>. Higher-Order and Symbolic Computation 11, 399–404
+(1998). https://doi.org/10.1023/A:1010079421970 }}</p>
+</div>
+</section>
+<section id="teitelman" class="level4">
+<h4>[Teitelman] <a href="#xteitelman" class="fr">^</a><br />
+</h4>
+<p>Teitelman, Warren. <a href="https://.invalid/_no_online_copy_found_" title="No online copy found"><em>InterLISP Reference Manual Revised
+edition</em></a>. Xerox Palo Alto Research Center (Palo Alto,
+1975).<br />
+{{see <a href="https://www.bitsavers.org/pdf/xerox/interlisp/Interlisp_Reference_Manual_Oct_1974.pdf" title="www.bitsavers.org/pdf/xerox/interlisp/Interlisp_Reference_Manual_Oct_1974.pdf"><em>InterLISP
+Reference Manual</em></a>, 1974 }}</p>
+</section>
+<section id="wand" class="level4">
+<h4>[Wand] <span class="fr">*</span><br />
+</h4>
+<p>Wand, Mitchell and Friedman, Daniel P. <a href="https://legacy.cs.indiana.edu/ftp/techreports/TR55.pdf" title="legacy.cs.indiana.edu/ftp/techreports/TR55.pdf"><em>Compiling
+Lambda Expressions Using Continuations</em></a>, Technical Report 55,
+Indiana University, 1976.</p>
+</section>
+<section id="wulf-1-2" class="level4">
+<h4>[Wulf] <span class="fr"><a href="#xwulf1">1</a>, <a href="#xwulf2">2</a></span><br />
+</h4>
+<p>Wulf, William A., et al. <a href="https://apps.dtic.mil/sti/citations/AD0773838" title="apps.dtic.mil/sti/citations/AD0773838"><em>The Design of an
+Optimizing Compiler</em></a>. American Elsevier (New York, 1975).</p>
+<p><hr></p>
+</section>
+</section>
+</section>
+<section id="appendix" class="level2">
+<h2><a href="#contents" title="Go to Contents">Appendix</a></h2>
+<p>We reproduce here Appendix A of [<a href="#declarative-1-2-3-4-5-6-7" id="xdeclarative7" title="[7] Steele 1976, LAMBDA: The Ultimate Declarative">Declarative</a>]:</p>
+<p>Here we present a set of functions, written in <span class="sc">SCHEME</span>, which convert a <span class="sc">SCHEME</span>
+expression from functional style to pure continuation-passing style.</p>
+<pre><code>(ASET&#39; GENTEMPNUM O)
+
+(DEFINE GENTEMP
+        (LAMBDA (X)
+                (IMPLODE (CONS X (EXPLODEN (ASET&#39; GENTEMPNUM (+ GENTEMPNUM 1)))))))</code></pre>
+<p><code>GENTEMP</code> creates a new unique symbol consisting of a
+given prefix and a unique number.</p>
+<pre><code>(DEFINE CPS (LAMBDA (SEXPR) (SPRINTER (CPC SEXPR NIL &#39;#CONT#))))</code></pre>
+<p><code>CPS</code> (Continuation-Passing Style) is the main function;
+its argument is the expression to be converted. It calls
+<code>CPC</code> (C-P Conversion) to do the real work, and then calls
+<code>SPRINTER</code> to pretty-print the result, for convenience. The
+symbol <code>#CONT#</code> is used to represent the implied continuation
+which is to receive the value of the expression.</p>
+<pre><code>(DEFINE CPC
+        (LAMBDA (SEXPR ENV CONT)
+                (COND ((ATOM SEXPR) (CPC-ATOM SEXPR ENV CONT))
+                      ((EQ (CAR SEXPR) &#39;QUOTE)
+                       (IF CONT &quot;(,CONT ,SEXPR) SEXPR))
+                      ((EQ (CAR SEXPR) &#39;LAMBDA)
+                       (CPC-LAMBDA SEXPR ENV CONT))
+                      ((EQ (CAR SEXPR) &#39;IF)
+                       (CPC-IF SEXPR ENV CONT))
+                      ((EQ (CAR SEXPR) &#39;CATCH)
+                       (CPC-CATCH SEXPR ENV CONT))
+                      ((EQ (CAR SEXPR) &#39;LABELS)
+                       (CPC-LABELS SEXPR ENV CONT))
+                      ((AND (ATOM (CAR SEXPR))
+                            (GET (CAR SEXPR) &#39;AMACRO))
+                       (CPC (FUNCALL (GET (CAR SEXPR) &#39;AMACRO)
+                                     SEXPR) ENV CONT))
+                      (T (CPC-FORM SEXPR ENV CONT)))))</code></pre>
+<p><code>CPC</code> merely dispatches to one of a number of subsidiary
+routines based on the form of the expression <code>SEXPR</code>.
+<code>ENV</code> represents the environment in which <code>SEXPR</code>
+will be evaluated; it is a list of the variable names. When
+<code>CPS</code> initially calls <code>CPC</code>, <code>ENV</code> is
+<code>NIL</code>. <code>CONT</code> is the continuation which will
+receive the value of <code>SEXPR</code>. The double-quote
+(<code>&quot;</code>) is like a single quote, except that within the quoted
+expression any subexpressions preceded by comma (<code>,</code>) are
+evaluated and substituted in (also, any subexpressions preceded by
+atsign (<code>@</code>) are substituted in a list segments). One special
+case handled directly by <code>CPC</code> is a quoted expression;
+<code>CPC</code> also expands any SCHEME macros encountered.</p>
+<pre><code>(DEFINE CPC-ATOM
+        (LAMBDA (SEXPR ENV CONT)
+                ((LAMBDA (AT) (IF CONT &quot;(,CONT ,AT) AT))
+                 (COND ((NUMBERP SEXPR) SEXPR)
+                       ((MEMQ SEXPR ENV) SEXPR)
+                       ((GET SEXPR &#39;CPS-NAME ))
+                       (T (IMPLODE (CONS &#39;% (EXPLODEN SEXPR))))))))</code></pre>
+<p>For convenience, <code>CPC-ATOM</code> will change the name of a
+global atom. Numbers and atoms in the environment are not changed;
+otherwise, a specified name on the property list of the given atom is
+used (properties defined below convert “<code>+</code>” into
+“<code>++</code>”, etc.); otherwise, the name is prefixed with
+“<code>%</code>”. Once the name has been converted, it is converted to a
+form which invokes the continuation on the atom. (If a null continuation
+is supplied, the atom itself is returned.)</p>
+<pre><code>(DEFINE CPC-LAMBDA
+        (LAMBDA (SEXPR ENV CONT)
+                ((LAMBDA (CN)
+                         ((LAMBDA (LX) (IF CONT &quot;(,COMT, LX) LX))
+                          &quot;(LAMBDA (@(CADR SEXPR) ,CN)
+                                   ,(CPC (CADDR SEXPR)
+                                         (APPEND (CADR SEXPR)
+                                                 (CONS CN ENV))
+                                         CN))))
+                 (GENTEMP &#39;C))))</code></pre>
+<p>A <code>LAMBDA</code> expression must have an additional parameter,
+the continuation supplied to its body, added to its parameter list.
+<code>CN</code> holds the name of this generated parameter. A new
+<code>LAMBDA</code> expression is created, with <code>CN</code> added,
+and with its body converted in an environment containing the new
+variables. Then the same test for a null <code>CONT</code> is made as in
+<code>CPC-ATOM</code>.</p>
+<pre><code>(DEFINE CPC-IF
+    (LAMBDA (SEXPR ENV CONT)
+        ((LAMBDA (KN)
+             &quot;((LAMBDA (,KN)
+                       ,(CPC (CADR SEXPR)
+                             ENV
+                             ((LAMBDA (PN)
+                                  &quot;(LAMBDA (,PN)
+                                           (IF ,PN
+                                               ,(CPC (CADDR SEXPR)
+                                                     ENV
+                                                     KN)
+                                               ,(CPC (CADDDR SEXPR)
+                                                     ENV
+                                                     KN))))
+                              (GENTEMP &#39;P))))
+               ,CONT))
+         (GENTEMP &#39;K))))</code></pre>
+<p>First, the continuation for an <code>IF</code> must be given a name
+<code>KN</code> (rather, the name held in <code>KN</code>; but for
+convenience, we will continue to use this ambiguity, for the form of the
+name is indeed <code>Kn</code> for some number <code>n</code>), for it
+will be referred to in two places and we wish to avoid duplicating the
+code. Then, the predicate is converted to continuation-passing style,
+using a continuation which will receive the result and call it
+<code>PN</code>. This continuation will then use an <code>IF</code> to
+decide which converted consequent to invoke. Each consequent is
+converted using continuation <code>KN</code>.</p>
+<pre><code>(DEFINE CPC-CATCH
+        (LAMBDA (SEXPR ENV CONT)
+                ((LAMBDA (EN)
+                         &quot;((LAMBDA (,EN)
+                                   ((LAMBDA (,(CADR SEXPR))
+                                            ,(CPC (CADDR SEXPR)
+                                                  (CONS (CADR SEXPR) ENV)
+                                                  EN))
+                                    (LAMBDA (V C) (,EN V))))
+                           ,CONT))
+                 (GENTEMP &#39;E))))</code></pre>
+<p>This routine handles <code>CATCH</code> as defined in <del>[Sussman
+75]</del> [<a href="#scheme-1-2-3-4-5" id="xscheme4" title="[4] Sussman and Steele 1975, SCHEME: An Interpreter for Extended Lambda Calculus"><span class="sc">SCHEME</span></a>], and in converting it to
+continuation-passing style eliminates all occurrences of
+<code>CATCH</code>. The idea is to give the continuation a name
+<code>EN</code>, and to bind the <code>CATCH</code> variable to a
+continuation <code>(LAMBDA (V C) ...)</code> which ignores its
+continuation and instead exits the catch by calling <code>EN</code> with
+its argument <code>V</code>. The body of the <code>CATCH</code> is
+converted using continuation <code>EN</code>.</p>
+<pre><code>(DEFINE CPC-LABELS
+        (LAMBDA (SEXPR ENV CONT)
+                (DO ((X (CADR SEXPR) (CDR X))
+                     (Y ENV (CONS (CAAR X) Y)))
+                    ((NULL X)
+                     (DO ((W (CADR SEXPR) (CDR W))
+                          (Z NIL (CONS (LIST (CAAR W)
+                                             (CPC (CADAR W) Y NIL))
+                                       Z)))
+                         ((NULL W)
+                          &quot;(LABELS ,(REVERSE Z)
+                                   ,(CPC (CADDR SEXPR) Y CONT))))))))</code></pre>
+<p>Here we have used <code>DO</code> loops as defined in <span class="sc">MacLISP</span> (<code>DO</code> is implemented as a macro in
+<span class="sc">SCHEME</span>). There are two passes, one performed by
+each <code>DO</code>. The first pass merely collects in <code>Y</code>
+the names of all the labelled <code>LAMBDA</code> expressions. The
+second pass converts all the <code>LAMBDA</code> expressions using a
+null continuation and an environment augmented by all the collected
+names in <code>Y</code>, collecting them in <code>Z</code>. At the end,
+a new <code>LABELS</code> is constructed using the results in
+<code>Z</code> and a converted <code>LABELS</code> body.</p>
+<pre><code>(DEFINE CPC-FORM
+    (LAMBDA (SEXPR ENV CONT)
+        (LABELS ((LOOP1
+                    (LAMBDA (X Y Z)
+                        (IF (NULL X)
+                            (DO ((F (REVERSE (CONS CONT Y))
+                                    (IF (NULL (CAR Z)) F
+                                        (CPC (CAR Z)
+                                             ENV
+                                             &quot;(LAMBDA (,(CAR Y) ,F)))))
+                                 (Y Y (CDR Y))
+                                 (Z Z (CDR Z)))
+                                ((NULL Z) F))
+                            (COND ((OR (NULL (CAR X))
+                                       (ATOM (CAR X)))
+                                   (LOOP1 (CDR X)
+                                          (CONS (CPC (CAR X) ENV NIL) Y)
+                                          (CONS NIL Z)))
+                                  ((EQ (CAAR X) &#39;QUOTE)
+                                   (LOOP1 (CDR X)
+                                          (CONS (CAR X) Y)
+                                          (CONS NIL Z)))
+                                  ((EQ (CAAR X) &#39;LAMBDA)
+                                   (LOOP1 (CDR X)
+                                          (CONS (CPC (CAR X) ENV NIL) Y)
+                                          (CONS NIL Z)))
+                                  (T (LOOP1 (CDR X)
+                                            (CONS (GENTEMP &#39;T) Y)
+                                            (CONS (CAR X) Z))))))))
+                (LOOP1 SEXPR NIL NIL))))</code></pre>
+<p>This, the most complicated routine, converts forms (function calls).
+This also operates in two passes. The first pass, using
+<code>LOOP1</code>, uses <code>X</code> to step down the expression,
+collecting data in <code>Y</code> and <code>Z</code>. At each step, if
+the next element of <code>X</code> can be evaluated trivially, then it
+is converted with a null continuation and added to <code>Y</code>, and
+<code>NIL</code> is added to <code>Z</code>. Otherwise, a temporary name
+<code>TN</code> for the result of the subexpression is created and put
+in <code>Y</code>, and the subexpression itself is put in
+<code>Z</code>. On the second pass (the <code>DO</code> loop), the final
+continuation-passing form is constructed in <code>F</code> from the
+inside out. At each step, if the element of <code>Z</code> is non-null,
+a new continuation must be created. (There is actually a bug in
+<code>CPC-FORM</code>, which has to do with variables affected by
+side-effects. This is easily fixed by changing <code>LOOP1</code> so
+that it generates temporaries for variables even though variables
+evaluate trivially. This would only obscure the examples presented
+below, however, and so this was omitted.)</p>
+<pre><code>(LABELS ((BAR
+          (LAMBDA (DUMMY X Y)
+                  (IF (NULL X) &#39;|CPS ready to go!|
+                      (BAR (PUTPROP (CAR X) (CAR Y) &#39;CPS-NAME)
+                           (CDR X)
+                           (CDR Y))))))
+        (BAR NIL
+             &#39;(+  -  *  //   ^  T  NIL)
+             &#39;(++ -- ** //// ^^ &#39;T &#39;NIL)))</code></pre>
+<p>This loop sets up some properties so that “<code>+</code>” will
+translate into “<code>++</code>” instead of “<code>%+</code>”, etc.</p>
+<p>Now let us examine some examples of the action of <code>CPS</code>.
+First, let us try our old friend <code>FACT</code>, the iterative
+factorial program.</p>
+<pre><code>(DEFINE FACT
+        (LAMBDA (N)
+                (LABELS ((FACT1 (LAMBDA (M A)
+                                        (IF (= M 0) A
+                                            (FACT1 (- M 1) (* M A))))))
+                        (FACT1 N 1))))</code></pre>
+<p>Applying <code>CPS</code> to the <code>LAMBDA</code> expression for
+<code>FACT</code> yields:</p>
+<pre><code>(#CONT#
+    (LAMBDA (N C7)
+        (LABELS ((FACT1
+            (LAMBDA (M A C10)
+                ((LAMBDA (K11)
+                    (%= M 0
+                        (LAMBDA (P12)
+                            (IF P12 (K11 A)
+                                (-- M 1
+                                    (LAMBDA (T13)
+                                        (** M A
+                                            (LAMBDA (T14)
+                                                (FACT1 T13 T14 K11)
+                                                ))))))))
+                     C10))))
+                 (FACT1 N 1 C7))))</code></pre>
+<p>As an example of <code>CATCH</code> elimination, here is a routine
+which is a paraphrase of the <code>SQRT</code> routine from
+<del>[Sussman 75]</del> [<a href="#scheme-1-2-3-4-5" id="xscheme5" title="[5] Sussman and Steele 1975, SCHEME: An Interpreter for Extended Lambda Calculus"><span class="sc">SCHEME</span></a>]:</p>
+<pre><code>(DEFINE SQRT
+        (LAMBDA (X EPS)
+                ((LAMBDA (ANS LOOPTAG)
+                         (CATCH RETURNTAG
+                                (BLOCK (ASET&#39; LOOPTAG (CATCH M M))
+                                       (IF ---
+                                           (RETURNTAG ANS)
+                                           NIL)
+                                       (ASET&#39; ANS ===)
+                                       (LOOPTAG LOOPTAG))))
+                 1.0
+                 NIL)))</code></pre>
+<p>Here we have used “<code>---</code>” and “<code>===</code>” as
+ellipses for complicated (and relatively uninteresting) arithmetic
+expressions. Applying <code>CPS</code> to the <code>LAMBDA</code>
+expression for <code>SQRT</code> yields:</p>
+<pre><code>(#CONT#
+ (LAMBDA (X EPS C33)
+     ((LAMBDA (ANS LOOPTAG C34)
+          ((LAMBDA (E35)
+               ((LAMBDA (RETURNTAG)
+                    ((LAMBDA (E52)
+                         ((LAMBDA (M) (E52 M))
+                          (LAMBDA (V C) (E52 V))))
+                     (LAMBDA (T51)
+                             (%ASET&#39; LOOPTAG T51
+                                (LAMBDA (T37)
+                                  ((LAMBDA (A B C36) (B C36))
+                                   T37
+                                   (LAMBDA (C40)
+                                       ((LAMBDA (K47)
+                                          ((LAMBDA (P50)
+                                               (IF P50
+                                                   (RETURNTAG ANS K47)
+                                                   (K47 &#39;NIL)))
+                                           %---))
+                                        (LAMBDA (T42)
+                                            ((LAMBDA (A B C41) (B C41))
+                                             T42
+                                             (LAMBDA (C43)
+                                                 (%ASET&#39; ANS %===
+                                                    (LAMBDA (T45)
+                                                       ((LAMBDA (A B C44)
+                                                                (B C44))
+                                                        T45
+                                                        (LAMBDA (C46)
+                                                           (LOOPTAG
+                                                            LOOPTAG
+                                                            C46))
+                                                        C43))))
+                                             C40))))
+                                    E35))))))
+                (LAMBDA (V C) (E35 V))))
+           C34))
+      1.0
+      &#39;NIL
+      C33)))</code></pre>
+<p>Note that the <code>CATCH</code>es have both been eliminated. It is
+left as an exercise for the reader to verify that the
+continuation-passing version correctly reflects the semantics of the
+original.</p>
+</section>
+</body>
+</html>

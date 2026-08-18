@@ -1,0 +1,2535 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta http-equiv="content-security-policy" content="img-src &#39;self&#39; data:" />
+  <meta name="author" content="Guy Lewis Steele Jr ©1976 (text and code)" />
+  <meta name="author" content="Gerald Jay Sussman ©1976 (text and code)" />
+  <meta name="author" content="Roger Turner ©2025 (markup and transcriber notes)" />
+  <meta name="keywords" content="LISP, recursion, iteration, compound
+statements, expressions, go to, assignment, continuation passing, escape
+expressions, fluid variables, call by name, call by need, call by
+reference, lexical scoping, dynamic binding" />
+  <title>LAMBDA: The Ultimate Imperative (The Lambda Papers)</title>
+  <style>
+html {
+font-size: 12pt;
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: blue;
+}
+a:visited {
+color: blue;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+background-color: #1a1a1a;
+border: none;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+</style>
+  <style>
+:root { 
+background-color: color-mix(in oklab, Canvas 85%, #808080 15%);
+color: color-mix(in oklab, CanvasText 85%, #808080 15%);
+color-scheme: light dark; }
+@media print {
+hr, .pb {
+break-before: always;
+page-break-before: always }
+div.box, div.npb, section.npb, pre, img {
+break-inside: avoid-page;
+page-break-inside: avoid }
+img {
+object-fit: scale-down }
+body {
+padding-top: 25px;
+padding-bottom: 25px }
+}
+code {
+font-family: Greybeard, Menlo, Monaco, Consolas, "Lucida Console", monospace }
+body {
+font-family: Bodoni, serif;
+text-wrap: pretty;
+max-width: 40em;
+padding-right: 30px;
+overflow-wrap: normal;
+line-height: 1.2;
+hyphens: none }
+header {
+margin-bottom: 1.0em }
+h1 {
+font-size: 1.2em;
+margin-top: 0;
+margin-bottom: 0.5em }
+h2 {
+font-size: 1.2em;
+margin-top: 1.0em }
+h4 { margin-top: 0.85em;
+margin-bottom: 0;
+padding-bottom: 0 }
+h4 + p {
+margin-top: 0;
+margin-bottom: 0.85em }
+#notes p, #references p, #bibliography p {
+margin-top: 0 }
+hr {
+margin-top: 3em }
+dd {
+margin-bottom: 0.85em }
+pre code { 
+text-wrap: nowrap;
+overflow-x: scroll;
+font-size: 75% }
+p code, .line-block code, figcaption code, h3 code, dt code { 
+font-size: 85% }
+code em {
+font-style: italic } 
+.large {
+font-size: 150% }
+.small {
+font-size: 80% }
+.sc { 
+font-size: 92% }
+.in {
+margin-left: 1em }
+.in5 {
+margin-left: 5em }
+.ti {
+text-indent: -1em;
+padding-left: 1em;
+margin-top: -0.85em }
+.ti5 {
+text-indent: -5em;
+padding-left: 5em;
+margin-top: -0.85em }
+div.ti2 p {
+text-indent: -2em;
+padding-left: 2em;
+margin-top: -0.85em }
+.fr {
+float: right }
+.fl {
+float: left }
+.fwn {
+font-weight: normal }
+li::marker {
+content: '(' counters(list-item) ') '; }
+div.box {
+padding: 0 0 0.5em 1em;
+border: 1px solid }
+figure {
+margin: 1em 0;
+width: 100% }
+figcaption {
+padding-top: 1em;
+text-align: center }
+a:hover {
+text-decoration: underline }
+a:any-link {
+color: AccentColor }
+</style>
+</head>
+<body>
+<p><div style="text-align: center"> MASSACHUSETTS INSTITUTE OF
+TECHNOLOGY<br />
+ARTIFICIAL INTELLIGENCE LABORATORY </div></p>
+<p>AI Memo No. 353 <span class="fr">March 10, 1976</span></p>
+<div style="text-align: center">
+<h1>
+<p><span class="large">LAMBDA</span></p>
+THE ULTIMATE IMPERATIVE
+</h1>
+<p>by</p>
+<p>Guy Lewis Steele Jr. and Gerald Jay Sussman </div></p>
+<section id="abstract" class="level2">
+<h2>Abstract:</h2>
+<div style="line-height: 1.2">
+<p>We demonstrate how to model the following common programming
+constructs in terms of an applicative order language similar to <span class="sc">LISP</span>:</p>
+<div class="line-block">      Simple Recursion<br />
+      Iteration<br />
+      Compound Statements and Expressions<br />
+      <span class="sc">GO TO</span> and Assignment<br />
+      Continuation-Passing<br />
+      Escape Expressions<br />
+      Fluid Variables<br />
+      Call by Name, Call by Need, and Call by Reference</div>
+<p>The models require only (possibly self-referent) lambda application,
+conditionals, and (rarely) assignment. No complex data structures such
+as stacks are used. The models are transparent, involving only local
+syntactic transformations.</p>
+<p>Some of these models, such as those for <span class="sc">GO TO</span>
+and assignment, are already well known, and appear in the work of
+Landin, Reynolds, and others. The models for escape expressions, fluid
+variables, and call by need with side effects are new. This paper is
+partly tutorial in intent, gathering all the models together for
+purposes of context.</p>
+<p>This report describes research done at the Artificial Intelligence
+Laboratory of the Massachusetts Institute of Technology. Support for the
+laboratory’s artificial intelligence research is provided in part by the
+Advanced Research Projects Agency of the Department of Defense under
+Office of Naval Research contract N00014-75-C-0643.<br />
+<br />
+</p>
+</div>
+<div id="licence" class="ti small">
+<p>{{<a href="https://dspace.mit.edu/bitstream/handle/1721.1/5790/AIM-353.pdf" title="Original pdf at MIT: dspace.mit.edu/bitstream/handle/1721.1/5790/AIM-353.pdf">LAMBDA
+The Ultimate Imperative</a> © 1976 by Guy Lewis Steele Jr. and Gerald
+Jay Sussman, and this transcription, licensed
+<a href="https://creativecommons.org/licenses/by-nc/4.0/" title="Creative Commons license deed: creativecommons.org/licenses/by-nc/4.0/">CC
+BY-NC 4.0</a>
+<svg id="Layer_1" role="img" aria-label alt style="max-width: 1em;max-height:1em;margin-left: .2em;" x="0px" y="0px" width="64px" height="64px" viewBox="5.5 -3.5 64 64" enable-background="new 5.5 -3.5 64 64" xml:space="preserve">
+<g>
+	<circle fill="#FFFFFF" cx="37.785" cy="28.501" r="28.836"></circle>
+	<path d="M37.441-3.5c8.951,0,16.572,3.125,22.857,9.372c3.008,3.009,5.295,6.448,6.857,10.314
+		c1.561,3.867,2.344,7.971,2.344,12.314c0,4.381-0.773,8.486-2.314,12.313c-1.543,3.828-3.82,7.21-6.828,10.143
+		c-3.123,3.085-6.666,5.448-10.629,7.086c-3.961,1.638-8.057,2.457-12.285,2.457s-8.276-0.808-12.143-2.429
+		c-3.866-1.618-7.333-3.961-10.4-7.027c-3.067-3.066-5.4-6.524-7-10.372S5.5,32.767,5.5,28.5c0-4.229,0.809-8.295,2.428-12.2
+		c1.619-3.905,3.972-7.4,7.057-10.486C21.08-0.394,28.565-3.5,37.441-3.5z M37.557,2.272c-7.314,0-13.467,2.553-18.458,7.657
+		c-2.515,2.553-4.448,5.419-5.8,8.6c-1.354,3.181-2.029,6.505-2.029,9.972c0,3.429,0.675,6.734,2.029,9.913
+		c1.353,3.183,3.285,6.021,5.8,8.516c2.514,2.496,5.351,4.399,8.515,5.715c3.161,1.314,6.476,1.971,9.943,1.971
+		c3.428,0,6.75-0.665,9.973-1.999c3.219-1.335,6.121-3.257,8.713-5.771c4.99-4.876,7.484-10.99,7.484-18.344
+		c0-3.543-0.648-6.895-1.943-10.057c-1.293-3.162-3.18-5.98-5.654-8.458C50.984,4.844,44.795,2.272,37.557,2.272z M37.156,23.187
+		l-4.287,2.229c-0.458-0.951-1.019-1.619-1.685-2c-0.667-0.38-1.286-0.571-1.858-0.571c-2.856,0-4.286,1.885-4.286,5.657
+		c0,1.714,0.362,3.084,1.085,4.113c0.724,1.029,1.791,1.544,3.201,1.544c1.867,0,3.181-0.915,3.944-2.743l3.942,2
+		c-0.838,1.563-2,2.791-3.486,3.686c-1.484,0.896-3.123,1.343-4.914,1.343c-2.857,0-5.163-0.875-6.915-2.629
+		c-1.752-1.752-2.628-4.19-2.628-7.313c0-3.048,0.886-5.466,2.657-7.257c1.771-1.79,4.009-2.686,6.715-2.686
+		C32.604,18.558,35.441,20.101,37.156,23.187z M55.613,23.187l-4.229,2.229c-0.457-0.951-1.02-1.619-1.686-2
+		c-0.668-0.38-1.307-0.571-1.914-0.571c-2.857,0-4.287,1.885-4.287,5.657c0,1.714,0.363,3.084,1.086,4.113
+		c0.723,1.029,1.789,1.544,3.201,1.544c1.865,0,3.18-0.915,3.941-2.743l4,2c-0.875,1.563-2.057,2.791-3.541,3.686
+		c-1.486,0.896-3.105,1.343-4.857,1.343c-2.896,0-5.209-0.875-6.941-2.629c-1.736-1.752-2.602-4.19-2.602-7.313
+		c0-3.048,0.885-5.466,2.658-7.257c1.77-1.79,4.008-2.686,6.713-2.686C51.117,18.558,53.938,20.101,55.613,23.187z" />
+</g>
+</svg>
+<svg id="Layer_1" role="img" aria-label alt style="max-width: 1em;max-height:1em;margin-left: .2em;" x="0px" y="0px" width="64px" height="64px" viewBox="5.5 -3.5 64 64" enable-background="new 5.5 -3.5 64 64" xml:space="preserve">
+<g>
+	<circle fill="#FFFFFF" cx="37.637" cy="28.806" r="28.276"></circle>
+	<g>
+		<path d="M37.443-3.5c8.988,0,16.57,3.085,22.742,9.257C66.393,11.967,69.5,19.548,69.5,28.5c0,8.991-3.049,16.476-9.145,22.456
+			C53.879,57.319,46.242,60.5,37.443,60.5c-8.649,0-16.153-3.144-22.514-9.43C8.644,44.784,5.5,37.262,5.5,28.5
+			c0-8.761,3.144-16.342,9.429-22.742C21.101-0.415,28.604-3.5,37.443-3.5z M37.557,2.272c-7.276,0-13.428,2.553-18.457,7.657
+			c-5.22,5.334-7.829,11.525-7.829,18.572c0,7.086,2.59,13.22,7.77,18.398c5.181,5.182,11.352,7.771,18.514,7.771
+			c7.123,0,13.334-2.607,18.629-7.828c5.029-4.838,7.543-10.952,7.543-18.343c0-7.276-2.553-13.465-7.656-18.571
+			C50.967,4.824,44.795,2.272,37.557,2.272z M46.129,20.557v13.085h-3.656v15.542h-9.944V33.643h-3.656V20.557
+			c0-0.572,0.2-1.057,0.599-1.457c0.401-0.399,0.887-0.6,1.457-0.6h13.144c0.533,0,1.01,0.2,1.428,0.6
+			C45.918,19.5,46.129,19.986,46.129,20.557z M33.042,12.329c0-3.008,1.485-4.514,4.458-4.514s4.457,1.504,4.457,4.514
+			c0,2.971-1.486,4.457-4.457,4.457S33.042,15.3,33.042,12.329z" />
+	</g>
+</g>
+</svg>
+<svg id="Layer_1" role="img" aria-label alt style="max-width: 1em;max-height:1em;margin-left: .2em;" x="0px" y="0px" width="64px" height="64px" viewBox="5.5 -3.5 64 64" enable-background="new 5.5 -3.5 64 64" xml:space="preserve">
+<g>
+	<circle fill="#FFFFFF" cx="37.47" cy="28.736" r="29.471"></circle>
+	<g>
+		<path d="M37.442-3.5c8.99,0,16.571,3.085,22.743,9.256C66.393,11.928,69.5,19.509,69.5,28.5c0,8.992-3.048,16.476-9.145,22.458
+			C53.88,57.32,46.241,60.5,37.442,60.5c-8.686,0-16.19-3.162-22.513-9.485C8.644,44.728,5.5,37.225,5.5,28.5
+			c0-8.762,3.144-16.343,9.429-22.743C21.1-0.414,28.604-3.5,37.442-3.5z M12.7,19.872c-0.952,2.628-1.429,5.505-1.429,8.629
+			c0,7.086,2.59,13.22,7.77,18.4c5.219,5.144,11.391,7.715,18.514,7.715c7.201,0,13.409-2.608,18.63-7.829
+			c1.867-1.79,3.332-3.657,4.398-5.602l-12.056-5.371c-0.421,2.02-1.439,3.667-3.057,4.942c-1.622,1.276-3.535,2.011-5.744,2.2
+			v4.915h-3.714v-4.915c-3.543-0.036-6.782-1.312-9.714-3.827l4.4-4.457c2.094,1.942,4.476,2.913,7.143,2.913
+			c1.104,0,2.048-0.246,2.83-0.743c0.78-0.494,1.172-1.312,1.172-2.457c0-0.801-0.287-1.448-0.858-1.943l-3.085-1.315l-3.771-1.715
+			l-5.086-2.229L12.7,19.872z M37.557,2.214c-7.276,0-13.428,2.571-18.457,7.714c-1.258,1.258-2.439,2.686-3.543,4.287L27.786,19.7
+			c0.533-1.676,1.542-3.019,3.029-4.028c1.484-1.009,3.218-1.571,5.2-1.686V9.071h3.715v4.915c2.934,0.153,5.6,1.143,8,2.971
+			l-4.172,4.286c-1.793-1.257-3.619-1.885-5.486-1.885c-0.991,0-1.876,0.191-2.656,0.571c-0.781,0.381-1.172,1.029-1.172,1.943
+			c0,0.267,0.095,0.533,0.285,0.8l4.057,1.83l2.8,1.257l5.144,2.285l16.397,7.314c0.535-2.248,0.801-4.533,0.801-6.857
+			c0-7.353-2.552-13.543-7.656-18.573C51.005,4.785,44.831,2.214,37.557,2.214z" />
+	</g>
+</g>
+</svg>
+(Attribution-NonCommercial 4.0 International).<br /> Transcription by
+Roger Turner: links and {{transcriber notes}} added. }}</p>
+</div>
+<hr>
+<header>
+<div class="small">
+<p><span class="fl">Steele and Sussman</span>
+<span style="text-align: center">March 10, 1976 </span><span class="fr">LAMBDA: The Ultimate Imperative</span></p>
+</div>
+</header>
+</section>
+<section id="contents" class="level2">
+<h2>Contents</h2>
+<div style="line-height: 1.1">
+<div class="line-block"><a href="#introduction">Introduction</a><br />
+1.   <a href="#simple-loops">Simple Loops</a><br />
+1.1.   <a href="#simple-recursion">Simple Recursion</a><br />
+1.2.   <a href="#iteration">Iteration</a><br />
+2.   <a href="#imperative-programming">Imperative Programming</a><br />
+2.1.   <a href="#compound-statements">Compound Statements</a><br />
+2.2.   <a href="#the-go-to-statement">The <span class="sc">GO TO</span>
+Statement</a><br />
+2.3.   <a href="#simple-assignment">Simple Assignment</a><br />
+2.4.   <a href="#compound-expressions">Compound Expressions</a><br />
+3.   <a href="#continuations">Continuations</a><br />
+3.1.   <a href="#continuation-passing-recursion">Continuation-Passing
+Recursion</a><br />
+3.2.   <a href="#escape-expressions">Escape Expressions</a><br />
+3.3.   <a href="#dynamic-variable-scoping">Dynamic Variable
+Scoping</a><br />
+3.3.1.   <a href="#free-global-variables">Free (Global)
+Variables</a><br />
+3.3.2.   <a href="#dynamic-binding">Dynamic Binding</a><br />
+4.   <a href="#parameter-passing-mechanisms">Parameter Passing
+Mechanisms</a><br />
+4.1.   <a href="#call-by-name">Call-By-Name</a><br />
+4.2.   <a href="#call-by-need">Call-By-Need</a><br />
+4.3.   <a href="#fast-call-by-name">Fast Call-By-Name</a><br />
+4.4.   <a href="#assignment-by-reference">Assignment by
+Reference</a><br />
+<a href="#conclusions">Conclusions</a><br />
+<a href="#notes">Notes</a><br />
+  {<a href="#alonzowins">Alonzowins</a>}<br />
+  {<a href="#callbyneed">Callbyneed</a>}<br />
+  {<a href="#churchwins">Churchwins</a>}<br />
+  {<a href="#closures">Closures</a>}<br />
+  {<a href="#consgenerators">Consgenerators</a>}<br />
+  {<a href="#cplstuff">Cplstuff</a>}<br />
+  {<a href="#envproblem">Envproblem</a>}<br />
+  {<a href="#evalorder">Evalorder</a>}<br />
+  {<a href="#features">Features</a>}<br />
+  {<a href="#flowgraph">Flowgraph</a>}<br />
+  {<a href="#funargcons">Funargcons</a>}<br />
+  {<a href="#funoffun">Funoffun</a>}<br />
+  {<a href="#gotophobia">Gotophobia</a>}<br />
+  {<a href="#hewitthack">Hewitthack</a>}<br />
+  {<a href="#jensensdevice">Jensensdevice</a>}<br />
+  {<a href="#j-operator">J-operator</a>}<br />
+  {<a href="#jrsthack">Jrsthack</a>}<br />
+  {<a href="#labelsdef">Labelsdef</a>}<br />
+  {<a href="#landinknewthis">Landinknewthis</a>}<br />
+  {<a href="#mccarthywins">Mccarthywins</a>}<br />
+  {<a href="#muddlevcells">Muddlevcells</a>}<br />
+  {<a href="#plasmafluids">Plasmafluids</a>}<br />
+  {<a href="#schemenote">Schemenote</a>}<br />
+  {<a href="#schemepaper">Schemepaper</a>}<br />
+  {<a href="#stackfluids">Stackfluids</a>}<br />
+<a href="#bibliography">Bibliography</a></div>
+</div>
+<p><hr></p>
+<blockquote>
+<p><em>People who like this sort of thing will find this is the sort of
+thing they like.</em><br />
+– <em>Abraham Lincoln</em></p>
+</blockquote>
+</section>
+<section id="introduction" class="level2">
+<h2><a href="#contents" title="Go to Contents">Introduction</a></h2>
+<p>We catalogue a number of common programming constructs. For each
+construct we examine “typical” usage in well-known programming
+languages, and then capture the essence of the semantics of the
+construct in terms of a common meta-language.</p>
+<p>The lambda calculus {Note <a href="#alonzowins" id="xalonzowins" title="The lambda calculus was originally developed by Alonzo Church as a formal axiomatic system of logic. [Church 41] Happily, it may be re-interpreted in several interesting ways as a model for computation.">Alonzowins</a>}
+is often used as such a meta-language. Lambda calculus offers clean
+semantics, but it is clumsy because it was designed to be a
+<em>minimal</em> language rather than a <em>convenient</em> one. All
+lambda calculus “functions” must take exactly one “argument”; the only
+“data type” is lambda expressions; and the only “primitive operation” is
+variable substitution. While its utter simplicity makes lambda calculus
+ideal for logicians, it is too primitive for use by programmers. The
+meta-language we use is a programming language called <span class="sc">SCHEME</span> {Note <a href="#schemepaper" id="xschemepaper" title="SCHEME is fully described in [Sussman 75], which contains a complete reference manual as well as a fully documented implementation of the language in MacLISP [Moon 74].">Schemepaper</a>}
+which is based on lambda calculus.</p>
+<p><span class="sc">SCHEME</span> is a dialect of <span class="sc">LISP</span>. [<a href="#mccarthy-62" id="xmccarthy-62" title="[1] McCarthy et al 1962, LISP 1.5 Programmer’s Manual">McCarthy
+62</a>] It is an expression-oriented, applicative order,
+interpreter-based language which allows one to manipulate programs as
+data. It differs from most current dialects of <span class="sc">LISP</span> in that it closes all lambda expressions in the
+environment of their definition or declaration, rather than in the
+execution environment. {Note <a href="#closures" id="xclosures" title="Most modern LISP systems, such as MacLISP [Moon 74] and InterLISP [Teitelman 74], scope variables dynamically. They often provide a special feature (the FUNARG device) for lexical scoping, but in most implementations this feature is not completely general.">Closures</a>}
+This preserves the substitution semantics of lambda calculus, and has
+the consequence that all variables are lexically scoped, as in <span class="sc">ALGOL</span>. [<a href="#naur-63-1-2" id="xnaur-631" title="[1] Naur et al 1963, Revised Report on the Algorithmic Language ALGOL 60">Naur
+63</a>] Another difference is that <span class="sc">SCHEME</span> is
+implemented in such a way that tail-recursions execute without net
+growth of the interpreter stack. {Note <a href="#schemenote" id="xschemenote" title="This is discussed in detail in [Sussman 75], where an actual implementation is described. The theoretical justification is described there, and later in this paper also.">Schemenote</a>}
+We have chosen to use <span class="sc">LISP</span> syntax rather than,
+say, <span class="sc">ALGOL</span> syntax because we want to treat
+programs as data for the purpose of describing transformations on the
+code. <span class="sc">LISP</span> supplies names for the parts of an
+executable expression and standard operators for constructing
+expressions and extracting their components. The use of <span class="sc">LISP</span> syntax makes the structure of such expressions
+manifest. We use <span class="sc">ALGOL</span> as an <em>expository</em>
+language, because it is familiar to many people, but <span class="sc">ALGOL</span> is not sufficiently powerful to express the
+necessary concepts; in particular, it does not allow functions to return
+functions as values. We are thus forced to use a dialect of <span class="sc">LISP</span> in many cases.</p>
+<p>We will consider various complex programming language constructs and
+show how to model them in terms of only a few simple ones. As far as
+possible we will use only three control constructs from <span class="sc">SCHEME</span>: <code>LAMBDA</code> expressions, as in <span class="sc">LISP</span>, which are just functions with lexically scoped
+free variables; <code>LABELS</code>, which allows declaration of
+mutually recursive procedures {Note <a href="#labelsdef" id="xlabelsdef" title="The LABELS construct of SCHEME is isomorphic to Landin’s let rec construct [Landin 65] and Reynold’s letrec construct [Reynolds 72]. Its purpose is to allow a function to refer to itself. It is more convenient than the more familiar LABEL construct of LISP 1.5 ...">Labelsdef</a>};
+and <code>IF</code>, a primitive conditional expression. For more
+complex modelling we will introduce an assignment primitive
+(<code>ASET</code>). We will freely assume the existence of other common
+primitives, such as arithmetic functions.</p>
+<p>The constructs we will examine are divided into four broad classes.
+The first is <a href="#simple-loops"><em>Simple Loops</em></a>; this
+contains simple recursions and iterations, and an introduction to the
+notion of continuations. The second is <a href="#imperative-programming"><em>Imperative Constructs</em></a>; this
+includes compound statements, <span class="sc">GO TO</span>, and simple
+variable assignments. The third is <a href="#continuations"><em>Continuations</em></a>, which encompasses the
+distinction between statements and expressions, escape operators (such
+as Landin’s J-operator [<a href="#landin-65-1-2-3-4-5-6-7" id="xlan1" title="[1] Landin 1965, A Correspondence between ALGOL 60 and Church’s Lambda-Notation">Landin
+65</a>] and Reynold’s <strong>escape</strong> expression [<a href="#reynolds-72-1-2-3-4-5-6" id="xrey1" title="[1] Reynolds 1972, Definitional Interpreters for Higher Order Programming Languages">Reynolds
+72</a>]), and fluid (dynamically bound) variables. The fourth is <a href="#parameter-passing-mechanisms"><em>Parameter Passing
+Mechanisms</em></a>, such as <span class="sc">ALGOL</span> call-by-name
+and <span class="sc">FORTRAN</span> call-by-location.</p>
+<p>Some of the models presented here are already well-known,
+particularly those for <span class="sc">GO TO</span> and assignment. [<a href="#mccarthy-60-1-2" id="xmccarthy1" title="[1] McCarthy 1960, Recursive functions of symbolic expressions and their computation by machine - I">McCarthy
+60</a>] [<a href="#landin-65-1-2-3-4-5-6-7" id="xlan2" title="[2] Landin 1965, A Correspondence between ALGOL 60 and Church’s Lambda-Notation">Landin
+65</a>] [<a href="#reynolds-72-1-2-3-4-5-6" id="xrey2" title="[2] Reynolds 1972, Definitional Interpreters for Higher Order Programming Languages">Reynolds
+72</a>] Those for escape operators, fluid variables, and call-by-need
+with side effects are new.</p>
+</section>
+<section id="simple-loops" class="level2 npb">
+<h2>1. <a href="#contents" title="Go to Contents">Simple Loops</a></h2>
+<p>By <em>simple loops</em> we mean constructs which enable programs to
+execute the same piece of code repeatedly in a controlled manner.
+Variables may be made to take on different values during each
+repetition, and the number of repetitions may depend on data given to
+the program.</p>
+<section id="simple-recursion" class="level3">
+<h3>1.1. <a href="#contents" title="Go to Contents">Simple
+Recursion</a></h3>
+<p>One of the easiest ways to produce a looping control structure is to
+use a recursive function, one which calls itself to perform a
+subcomputation. For example, the familiar factorial function may be
+written recursively in <span class="sc">ALGOL</span>:</p>
+<div class="line-block">    <strong>integer</strong>
+<strong>procedure</strong> <em>fact</em>(<em>n</em>);
+<strong>value</strong> <em>n</em>; <strong>integer</strong>
+<em>n</em>;<br />
+        <em>fact</em> := <strong>if</strong> <em>n</em>=0
+<strong>then</strong> 1 <strong>else</strong>
+<em>n</em>*<em>fact</em>(<em>n</em>-1);</div>
+</section>
+</section>
+<p>The invocation <em>fact</em>(<em>n</em>) computes the product of the
+integers from 1 to <em>n</em> using the identity <span style="text-wrap: nowrap"><em>n</em>! = <em>n</em>(<em>n</em>-1)!
+ (<em>n</em>&gt;0).</span> If <em>n</em> is zero, 1 is returned;
+otherwise <em>fact</em> calls itself recursively to compute
+(<em>n</em>-1)!, then multiplies the result by <em>n</em> and returns
+it.</p>
+<p>This same function may be written in <span class="sc">SCHEME</span>
+as follows:</p>
+<pre><code>  (DEFINE FACT
+     (LAMBDA (N) (IF (= N 0) 1
+                     (* N (FACT (- N 1))))))</code></pre>
+<p><span class="sc">SCHEME</span> does not require an assignment to the
+“variable” <em>fact</em> to return a value as <span class="sc">ALGOL</span> does. The <code>IF</code> primitive is the <span class="sc">ALGOL</span> <strong>if-then-else</strong> rendered in <span class="sc">LISP</span> syntax. Note that the arithmetic primitives are
+prefix operators in <span class="sc">SCHEME</span>.</p>
+<section id="iteration" class="level3">
+<h3>1.2. <a href="#contents" title="Go to Contents">Iteration</a></h3>
+<p>There are many other ways to compute factorial. One important way is
+through the use of <em>iteration</em>.</p>
+<p>A common iterative construct is the <code>DO</code> loop. The most
+general form we have seen in any programming language is the <span class="sc">MacLISP</span> <code>DO</code> [<a href="#moon-74-1-2-3-4" id="xmoon1" title="[1] Moon 1974, MACLISP Reference Manual, Revision 0">Moon
+74</a>]. It permits the simultaneous initialization of any number of
+control variables and the simultaneous stepping of these variables by
+arbitrary functions at each iteration step. The loop is terminated by an
+arbitrary predicate, and an arbitrary value may be returned. The
+<code>DO</code> loop may have a body, a series of expressions executed
+for effect on each iteration. A version of the <span class="sc">MacLISP</span> <code>DO</code> construct has been adopted in
+<span class="sc">SCHEME</span>.</p>
+<div class="npb">
+<p>The general form of a <span class="sc">SCHEME</span> <code>DO</code>
+is:</p>
+<pre><code>  (DO ((&lt;var1&gt; &lt;init1&gt; &lt;step1&gt;)
+       (&lt;var2&gt; &lt;init2&gt; &lt;step2&gt;)
+       . . .
+       (&lt;varn&gt; &lt;initn&gt; &lt;stepn&gt;))
+      (&lt;pred&gt; &lt;value&gt;)
+      &lt;optional body&gt;)</code></pre>
+</div>
+<p>The semantics of this are that the variables are bound and
+initialized to the values of the
+<code>&lt;init</code><em>i</em><code>&gt;</code> expressions, which must
+all be evaluated in the environment outside the <code>DO</code>; then
+the predicate <code>&lt;pred&gt;</code> is evaluated in the new
+environment, and if <code>TRUE</code>, the <code>&lt;value&gt;</code> is
+evaluated and returned. Otherwise the <code>&lt;optional body&gt;</code>
+is evaluated, then each of the steppers
+<code>&lt;step</code><em>i</em><code>&gt;</code> is evaluated in the
+current environment, all the variables made to have the results as their
+values, the predicate evaluated again, and so on.</p>
+<p>Using <code>DO</code> loops in both <span class="sc">ALGOL</span> and
+<span class="sc">SCHEME</span>, we may express <code>FACT</code> by
+means of iteration.</p>
+<div class="line-block">    <strong>integer</strong>
+<strong>procedure</strong> <em>fact</em>(<em>n</em>);
+<strong>value</strong> <em>n</em>, <strong>integer</strong>
+<em>n</em>;<br />
+        <strong>begin</strong><br />
+            <strong>integer</strong> <em>m</em>, <em>ans</em>;<br />
+            <em>ans</em> := 1;<br />
+            <strong>for</strong> <em>m</em> := <em>n</em>
+<strong>step</strong> -1 <strong>until</strong> 0 <strong>do</strong>
+<em>ans</em> := <em>m</em>*<em>ans</em>;<br />
+            <em>fact</em> := <em>ans</em>;<br />
+        <strong>end</strong>;</div>
+<pre><code>  (DEFINE FACT
+          (LAMBDA (N)
+                  (DO ((M N (- M 1))
+                       (ANS 1 (* M ANS)))
+                      ((= M 0) ANS))))</code></pre>
+<p>Note that the <span class="sc">SCHEME</span> <code>DO</code> loop in
+<code>FACT</code> has no body – the stepping functions do all the work.
+The <span class="sc">ALGOL</span> <strong>do</strong> loop has an
+assignment in its body; because an <span class="sc">ALGOL</span>
+<strong>do</strong> loop can step only one variable, we need the
+assignment to step the variable “manually”.</p>
+<p>In reality the <span class="sc">SCHEME</span> <code>DO</code>
+construct is not a primitive; it is a macro which expands into a
+function which performs the iteration by tail-recursion. Consider the
+following definition of <code>FACT</code> in <span class="sc">SCHEME</span>. Although it appears to be recursive, since it
+“calls itself”, it is entirely equivalent to the <code>DO</code> loop
+given above, for it is the code that the <code>DO</code> macro expands
+into! It captures the essence of our intuitive notion of iteration,
+because execution of this program will not produce internal structures
+(e.g. stacks or variable bindings) which increase in size with the
+number of iteration steps.</p>
+<pre><code>  (DEFINE FACT
+     (LAMBDA (N)
+         (LABELS ((FACT1 (LAMBDA (M ANS)
+                             (IF (= M 0) ANS
+                                     (FACT1 (- M 1)
+                                            (* M ANS))))))
+                  (FACT1 N 1))))</code></pre>
+<p>From this we can infer a general way to express iterations in <span class="sc">SCHEME</span> in a manner isomorphic to the <span class="sc">MacLISP</span> <code>DO</code>. The expansion of the general
+<code>DO</code> loop</p>
+<pre><code>  (DO ((&lt;var1&gt; &lt;init1&gt; &lt;step1&gt;)
+       (&lt;var2&gt; &lt;init2&gt; &lt;step2&gt;)
+       . . .
+       (&lt;varn&gt; &lt;initn&gt; &lt;stepn&gt;))
+      (&lt;pred&gt; &lt;value&gt;)
+      &lt;body&gt;)</code></pre>
+<p>is this:</p>
+<pre><code>  (LABELS ((DOLOOP
+            (LAMBDA (DUMMY &lt;var1&gt; &lt;var2&gt; ... &lt;varn&gt;)
+                (IF &lt;pred&gt; &lt;value&gt;
+                    (DOLOOP &lt;body&gt; &lt;step1&gt; &lt;step2&gt; ... &lt;stepn&gt;)))))
+          (DOLOOP NIL &lt;init1&gt; &lt;init2&gt; ... &lt;initn&gt;))</code></pre>
+<p>The identifiers <code>DOLOOP</code> and <code>DUMMY</code> are chosen
+so as not to conflict with any other identifiers in the program.</p>
+<p>Note that, unlike most implementations of <code>DO</code>, there are
+<em>no side effects</em> in the steppings of the iteration variables.
+<code>DO</code> loops are usually modelled using assignment statements.
+For example:</p>
+<div class="line-block">    <strong>for</strong> <em>x</em> :=
+<em>a</em> <strong>step</strong> <em>b</em> <strong>until</strong>
+<em>c</em> <strong>do</strong> <em>&lt;statement&gt;</em>;</div>
+<p>can be modelled as follows: [<a href="#naur-63-1-2" id="xnaur-632" title="[2] Naur et al 1963, Revised Report on the Algorithmic Language ALGOL 60">Naur
+63</a>]</p>
+<div class="line-block">    <strong>begin</strong><br />
+          <em>x</em> := <em>a</em>;<br />
+      <em>L</em>: <strong>if</strong>
+(<em>x</em>-<em>c</em>)*<em>sign</em>(<em>b</em>) &gt; 0
+<strong>then</strong> <strong>go</strong> <strong>to</strong>
+<em>Endloop</em>;<br />
+          <em>&lt;statement&gt;</em>;<br />
+          <em>x</em> := <em>x</em>+<em>b</em>;<br />
+          <strong>go</strong> <strong>to</strong> <em>L</em>;<br />
+      <em>Endloop</em>:<br />
+    <strong>end</strong>;</div>
+<p>Later we will see how such assignment statements can in general be
+modelled without using side effects.</p>
+<p><hr></p>
+</section>
+<section id="imperative-programming" class="level2">
+<h2>2. <a href="#contents" title="Go to Contents">Imperative
+Programming</a></h2>
+<p>Lambda calculus (and related languages, such as “pure <span class="sc">LISP</span>”) is often used for modelling the applicative
+constructs of programming languages. However, they are generally thought
+of as inappropriate for modelling imperative constructs. In this section
+we show how imperative constructs may be modelled by applicative <span class="sc">SCHEME</span> constructs.</p>
+<section id="compound-statements" class="level3">
+<h3>2.1. <a href="#contents" title="Go to Contents">Compound
+Statements</a></h3>
+<p>The simplest kind of imperative construct is the statement sequencer,
+for example the compound statement in <span class="sc">ALGOL</span>:</p>
+<div class="line-block">    <strong>begin</strong><br />
+            <em>S1</em>;<br />
+            <em>S2</em>;<br />
+    <strong>end</strong></div>
+<p>This construct has two interesting properties:<br />
+(1) It performs statement S1 <em>before</em> S2, and so may be used for
+sequencing.<br />
+(2) S1 is useful only for its side effects. (In <span class="sc">ALGOL</span>, S2 must also be a statement, and so is also
+useful only for side effects, but other languages have compound
+expressions containing a statement followed by an expression.)<br />
+The <span class="sc">ALGOL</span> compound statement may actually
+contain any number of statements, but such statements can be expressed
+as a series of nested two-statement compounds. That is:</p>
+<div class="npb">
+<div class="line-block">    <strong>begin</strong><br />
+            <em>S1</em>;<br />
+            <em>S2</em>;<br />
+            …<br />
+            <em>Sn-1</em>;<br />
+            <em>Sn</em>;<br />
+    <strong>end</strong></div>
+</div>
+<p>is equivalent to:</p>
+<div class="npb">
+<div class="line-block">    <strong>begin</strong><br />
+            <em>S1</em>;<br />
+            <strong>begin</strong><br />
+                    <em>S2</em>;<br />
+                    <strong>begin</strong><br />
+                            …<br />
+                                    <strong>begin</strong><br />
+                                            <em>Sn-1</em>;<br />
+                                            <em>Sn</em>;<br />
+                                    <strong>end</strong>;<br />
+                            …<br />
+                    <strong>end</strong>;<br />
+            <strong>end</strong>;<br />
+    <strong>end</strong></div>
+</div>
+<p>It is not immediately apparent that this sequencing can be expressed
+in a purely applicative language. We can, however, take advantage of the
+implicit sequencing of applicative order evaluation. Thus, for example,
+we may write a two-statement sequence as follows:</p>
+<pre><code>  ((LAMBDA (DUMMY) S2) S1)</code></pre>
+<p>where <code>DUMMY</code> is an identifier not used in
+<code>S2</code>. From this it is manifest that the value of
+<code>S1</code> is ignored, and so is useful only for side effects.
+(Note that we did not claim that <code>S1</code> is expressed in a
+purely applicative language, but only that the sequencing can be so
+expressed.) From now on we will use the form <code>(BLOCK S1 S2)</code>
+as an abbreviation for this expression, and
+<code>(BLOCK S1 S2 ... Sn-1 Sn)</code> as an abbreviation for</p>
+<pre><code>  (BLOCK S1 (BLOCK S2 (BLOCK ... (BLOCK Sn-1 Sn)... )))</code></pre>
+</section>
+<section id="the-go-to-statement" class="level3 npb">
+<h3>2.2. <a href="#contents" title="Go to Contents">The <span class="sc">GO TO</span> Statement</a></h3>
+<p>A more general imperative structure is the compound statement with
+labels and <span class="sc">GO TO</span>s. Consider the following code
+fragment due to Jacopini, taken from Knuth: [<a href="#knuth-74-1-2" id="xknuth1" title="[1] Knuth 1974, Structured Programming with go to Statements">Knuth
+74</a>]</p>
+<div class="line-block">    <strong>begin</strong><br />
+    <em>L1</em>: <strong>if</strong> <em>B1</em> <strong>then</strong>
+<strong>go</strong> <strong>to</strong> <em>L2</em>;<br />
+          <em>S1</em>;<br />
+          <strong>if</strong> <em>B2</em> <strong>then</strong>
+<strong>go</strong> <strong>to</strong> <em>L2</em>;<br />
+          <em>S2</em>;<br />
+          <strong>go</strong> <strong>to</strong> <em>L1</em>;<br />
+    <em>L2</em>: <em>S3</em>;<br />
+    <strong>end</strong></div>
+</section>
+<p>It is perhaps surprising that this piece of code can be
+<em>syntactically</em> transformed into a purely applicative style. For
+example, in <span class="sc">SCHEME</span> we could write:</p>
+<pre><code>  (LABELS ((L1 (LAMBDA ()
+                       (IF B1 (L2)
+                           (BLOCK S1
+                                  (IF B2 (L2)
+                                      (BLOCK S2 (L1)))))))
+           (L2 (LAMBDA () S3)))
+          (L1))</code></pre>
+<p>As with the <code>DO</code> loop, this transformation depends
+critically on <span class="sc">SCHEME</span>’s treatment of
+tail-recursion and on lexical scoping of variables. The labels are names
+of functions of no arguments. In order to “go to” the labeled code, we
+merely call the function named by that label.</p>
+<section id="simple-assignment" class="level3 npb">
+<h3>2.3. <a href="#contents" title="Go to Contents">Simple
+Assignment</a></h3>
+<p>Of course, all this sequencing of statements is useless unless the
+statements have side effects. An important side effect is
+<em>assignment</em>. For example, one often uses assignment to place
+intermediate results in a named location (i.e. a variable) so that they
+may be used more than once later without recomputing them:</p>
+<div class="line-block">    <strong>begin</strong><br />
+        <strong>real</strong> <em>a2</em>, <em>sqrtdisc</em>;<br />
+        <em>a2</em> := 2*<em>a</em>;<br />
+        <em>sqrtdisc</em> := <em>sqrt</em>(<em>b</em>^2 -
+4*<em>a</em>*<em>c</em>);<br />
+        <em>root1</em> := (- <em>b</em> + <em>sqrtdisc</em>) /
+<em>a2</em>;<br />
+        <em>root2</em> := (- <em>b</em> - <em>sqrtdisc</em>) /
+<em>a2</em>;<br />
+        <em>print</em>(<em>root1</em>);<br />
+        <em>print</em>(<em>root2</em>);<br />
+        <em>print</em>(<em>root1</em> + <em>root2</em>);<br />
+    <strong>end</strong></div>
+</section>
+<p>It is well known that such naming of intermediate results may be
+accomplished by calling a function and binding the formal parameter
+variables to the results:</p>
+<pre><code>  ((LAMBDA (A2 SQRTDISC)
+           ((LAMBDA (ROOT1 ROOT2)
+                    (BLOCK (PRINT ROOT1)
+                           (PRINT ROOT2)
+                           (PRINT (+ ROOT1 ROOT2))))
+            (/ (+ (- B) SQRTDISC) A2)
+            (/ (- (- B) SQRTDISC) A2)))
+   (* 2 A)
+   (SQRT (- (^ B 2) (* 4 A C))))</code></pre>
+<p>This technique can be extended to handle all simple variable
+assignments which appear as statements in blocks, even if arbitrary
+<span class="sc">GO TO</span> statements also appear in such blocks.
+{Note <a href="#mccarthywins" id="xmccarthywins" title="This was realized as early as 1960 by John McCarthy. In section 6 of [McCarthy 60] he describes a technique for transforming a flowchart into a purely recursive procedure.">Mccarthywins</a>}</p>
+<p>For example, here is a program which uses <span class="sc">GO
+TO</span> statements in the form presented before; it determines the
+parity of a non-negative integer by counting it down until it reaches
+zero.</p>
+<div class="line-block">    <strong>begin</strong><br />
+    <em>L1</em>: <strong>if</strong> <em>a</em> = 0
+<strong>then</strong> <strong>begin</strong> <em>parity</em> := 0;
+<strong>go</strong> <strong>to</strong> <em>L2</em>;
+<strong>end</strong>;<br />
+          <em>a</em> := <em>a</em> - 1;<br />
+          <strong>if</strong> <em>a</em> = 0 <strong>then</strong>
+<strong>begin</strong> <em>parity</em> := 1; <strong>go</strong>
+<strong>to</strong> <em>L2</em>; <strong>end</strong>;<br />
+          <em>a</em> := <em>a</em> - 1;<br />
+          <strong>go</strong> <strong>to</strong> <em>L1</em>;<br />
+    <em>L1</em>: <em>print</em>(<em>parity</em>);<br />
+    <strong>end</strong></div>
+<div class="npb">
+<p>This can be expressed in <span class="sc">SCHEME</span>:</p>
+<pre><code>  (LABELS ((L1 (LAMBDA (A PARITY)
+                       (IF (= A 0) (L2 A 0)
+                           (L3 (- A 1) PARITY))))
+           (L3 (LAMBDA (A PARITY)
+                       (IF (= A 0) (L2 A 1)
+                           (L1 (- A 1) PARITY))))
+           (L2 (LAMBDA (A PARITY)
+                       (PRINT PARITY))))
+          (L1 A PARITY))</code></pre>
+</div>
+<p>The trick is to pass the set of variables which may be altered as
+arguments to the label functions. {Note <a href="#flowgraph" id="xflowgraph" title="The reader may have noticed that the variable PARITY is uselessly passed around between L1 and L3. This could easily be optimized out by a compiler using analysis of data flow graphs. For example ...">Flowgraph</a>}
+It may be necessary to introduce new labels (such as <code>L3</code>) so
+that an assignment may be transformed into the binding for a function
+call. At worst, one may need as many labels as there are statements (not
+counting the eliminated assignment and <span class="sc">GO TO</span>
+statements).</p>
+<section id="compound-expressions" class="level3 npb">
+<h3>2.4. <a href="#contents" title="Go to Contents">Compound
+Expressions</a></h3>
+<p>At this point we are almost in a position to model the most general
+form of compound statement. In <span class="sc">LISP</span>, this is
+called the “<code>PROG</code> feature”. In addition to statement
+sequencing and <span class="sc">GO TO</span> statements, one can return
+a <em>value</em> from a <code>PROG</code> by using the
+<code>RETURN</code> statement.</p>
+</section>
+<p>Let us first consider the simplest compound statement, which in <span class="sc">SCHEME</span> we call <code>BLOCK</code>. Recall that</p>
+<div class="line-block">    <code>(BLOCK S1 S2)</code>   is defined to
+be   <code>((LAMBDA (DUMMY) S2) S1)</code></div>
+<p>Notice that this not only performs <code>S1</code> before
+<code>S2</code>, but also returns the value of <code>S2</code>.
+Furthermore, we defined <code>(BLOCK S1 S2 ... Sn)</code> so that it
+returns the value of <code>Sn</code>. Thus <code>BLOCK</code> may be
+used as a <em>compound expression</em>, and models a <span class="sc">LISP</span> <code>PROGN</code>, which is a <code>PROG</code>
+with no <span class="sc">GO TO</span> statements and an implicit
+<code>RETURN</code> of the last “statement” (really an expression).</p>
+<p>Most <span class="sc">LISP</span> compilers compile <code>DO</code>
+expressions by macro-expansion. We have already seen one way to do this
+in <span class="sc">SCHEME</span> using only variable binding. A more
+common technique is to expand the <code>DO</code> into a
+<code>PROG</code>, using variable assignments instead of bindings. Thus
+the iterative factorial program:</p>
+<pre><code>  (DEFINE FACT
+          (LAMBDA (N)
+                  (DO ((M N (- M 1))
+                       (ANS 1 (* M ANS)))
+                      ((= M 0) ANS))))</code></pre>
+<p>would expand into:</p>
+<pre><code>  (DEFINE FACT
+          (LAMBDA (N)
+                  (PROG (M ANS)
+                        (SSETQ M   N
+                               ANS 1)
+                   LP   (IF (= M 0) (RETURN ANS))
+                        (SSETQ M    (- M 1)
+                               ANS  (* M ANS))
+                        (GO LP))))</code></pre>
+<p>where <code>SSETQ</code> is a simultaneous multiple assignment
+operator. (<code>SSETQ</code> is not a <span class="sc">SCHEME</span>
+(or <span class="sc">LISP</span>) primitive. It can be defined in terms
+of a single assignment operator, but we are more interested here in
+<code>RETURN</code> than in simultaneous assignment. The
+<code>SSETQ</code>s will all be removed anyway and modelled by lambda
+binding.) We can apply the same technique we used before to eliminate
+<span class="sc">GO TO</span> statements and assignments from compound
+statements:</p>
+<pre><code>  (DEFINE FACT
+          (LAMBDA (N)
+                  (LABELS ((L1 (LAMBDA (M ANS)
+                                       (LP N 1)))
+                           (LP (LAMBDA (M ANS)
+                                       (IF (= M 0) (RETURN ANS)
+                                           (L2 M ANS))))
+                           (L2 (LAMBDA (M ANS)
+                                       (LP (- M 1) (* M ANS)))))
+                          (L1 NIL NIL))))</code></pre>
+<p>We still haven’t done anything about <code>RETURN</code>. Let’s
+see…</p>
+<div class="line-block">  ==&gt; the value of <code>(FACT 0)</code> is
+the value of <code>(L1 NIL NIL)</code><br />
+  ==&gt; Which is the value of <code>(LP 0 1)</code><br />
+  ==&gt; which is the value of
+<code>(IF (= 0 0) (RETURN 1) (L2 0 1))</code><br />
+  ==&gt; which is the value of <code>(RETURN 1)</code></div>
+<p>Notice that if <code>RETURN</code> were the <em>identity
+function</em> <code>(LAMBDA (X) X)</code>, we would get the right
+answer. This is in fact a general truth: if we just replace a call to
+<code>RETURN</code> with its argument, then our old transformation on
+compound statements extends to general compound expressions,
+i.e. <code>PROG</code>.</p>
+<p><hr></p>
+</section>
+<section id="continuations" class="level2">
+<h2>3. <a href="#contents" title="Go to Contents">Continuations</a></h2>
+<p>Up to now we have thought of <span class="sc">SCHEME</span>’s
+<code>LAMBDA</code> expressions as functions, and of a combination such
+as <code>(G (F X Y))</code> as meaning “apply the function
+<code>F</code> to the values of <code>X</code> and <code>Y</code>, and
+<em>return a value</em> so that the function <code>G</code> can be
+applied and return a value …” But notice that we have seldom used
+<code>LAMBDA</code> expressions as functions. Rather, we have used them
+as control structures and environment modifiers. For example, consider
+the expression:</p>
+<pre><code>  (BLOCK (PRINT 3) (PRINT 4))</code></pre>
+<p>This is defined to be an abbreviation for:</p>
+<pre><code>  ((LAMBDA (DUMMY) (PRINT 4)) (PRINT 3))</code></pre>
+<p>We do not care about the value of this <code>BLOCK</code> expression;
+it follows that we do not care about the value of the
+<code>(LAMBDA (DUMMY) ...)</code>. We are not using <code>LAMBDA</code>
+as a function at all.</p>
+<p>It is possible to write useful programs in terms of
+<code>LAMBDA</code> expressions in which we never care about the value
+of <em>any</em> lambda expression. We have already demonstrated how one
+could represent any “<span class="sc">FORTRAN</span>” program in these
+terms: all one needs is <code>PROG</code> (with <code>GO</code> and
+<code>SETQ</code>), and <code>PRINT</code> to get the answers out. The
+ultimate generalization of this imperative programming style is
+<em>continuation-passing</em>. {Note <a href="#churchwins" id="xchurchwins" title="Reynolds uses the term “continuation” in [Reynolds 72]. Church clearly understood the use of continuations; it is the only way to get anything accomplished at all in pure lambda calculus! ...">Churchwins</a>}</p>
+<section id="continuation-passing-recursion" class="level3 npb">
+<h3>3.1. <a href="#contents" title="Go to Contents">Continuation-Passing
+Recursion</a></h3>
+<p>Consider the following alternative definition of <code>FACT</code>.
+It has an extra argument, the <em>continuation</em>, which is a function
+to call with the answer, when we have it, rather than return a
+value.</p>
+<div class="line-block">    <strong>procedure</strong>
+<em>fact</em>(<em>n</em>, <em>c</em>); <strong>value</strong>
+<em>n</em>, <em>c</em>;<br />
+            <strong>integer</strong> <em>n</em>;
+<strong>procedure</strong> <em>c</em>(<strong>integer</strong>
+<strong>value</strong>);<br />
+            <strong>if</strong> <em>n</em>=0 <strong>then</strong>
+<em>c</em>(1) <strong>else</strong><br />
+                <strong>begin</strong><br />
+                    <strong>procedure</strong> <em>temp</em>(<em>a</em>)
+<strong>value</strong> <em>a</em>, <strong>integer</strong>
+<em>a</em>;<br />
+                            <em>c</em>(<em>n</em>*<em>a</em>);<br />
+                    <em>fact</em>(<em>n</em>-1, <em>temp</em>);<br />
+                <strong>end</strong>;</div>
+<pre><code>  (DEFINE FACT
+     (LAMBDA (N C)
+        (IF (= N 0) (C 1)
+            (FACT (- N 1)
+                  (LAMBDA (A) (C (* N A)))))))</code></pre>
+</section>
+<div class="npb">
+<p>It is fairly clumsy to use this version of <code>FACT</code> in <span class="sc">ALGOL</span>; it is necessary to do something like this:</p>
+<div class="line-block">    <strong>begin</strong><br />
+        <strong>integer</strong> <em>ans</em>;<br />
+        <strong>procedure</strong> <em>temp</em>(<em>x</em>);
+<strong>value</strong> <em>x</em>; <strong>integer</strong>
+<em>x</em>;<br />
+                <em>ans</em> := <em>x</em>;<br />
+        <em>fact</em>(3, <em>temp</em>);<br />
+        <strong>comment</strong> <em>Now the variable “ans” has</em>
+6;<br />
+    <strong>end</strong>;</div>
+<p>Procedure <em>fact</em> does not return a value, nor does
+<em>temp</em>; we must use a side effect to get the answer out.</p>
+</div>
+<p><code>FACT</code> is somewhat easier to use in <span class="sc">SCHEME</span>. We can call it like an ordinary function in
+<span class="sc">SCHEME</span> if we supply an identity function as the
+second argument. For example, <code>(FACT 3 (LAMBDA (X) X))</code>
+returns 6. Alternatively, we could write
+<code>(FACT 3 (LAMBDA (X) (PRINT X)))</code>; we do not care about the
+value of this, but about what gets printed. A third way to use the value
+is to write</p>
+<pre><code>  (FACT 3 (LAMBDA (X) (SQRT X)))</code></pre>
+<p>instead of</p>
+<pre><code>  (SQRT (FACT 3 (LAMBDA (X) X)))</code></pre>
+<p>In either of these cases we care about the value of the continuation
+given to <code>FACT</code>. Thus we care about the value of
+<code>FACT</code> if and only if we care about the value of its
+continuation!</p>
+<p>We can redefine other functions to take continuations in the same
+way. For example, suppose we had arithmetic primitives which took
+continuations; to prevent confusion, call the version of
+“<code>+</code>” which takes a continuation “<code>++</code>” etc.
+Instead of writing</p>
+<pre><code>  (- (^ B 2) (* 4 A C))</code></pre>
+<p>we can write</p>
+<pre><code>  (^^ B 2
+      (LAMBDA (X)
+              (** 4 A C
+                  (LAMBDA (Y)
+                          (-- X Y &lt;the-continuation&gt;)))))</code></pre>
+<p>where <code>&lt;the-continuation&gt;</code> is the continuation for
+the entire expression.</p>
+<p>This is an obscure way to write an algebraic expression, and we would
+not advise writing code this way in general, but continuation-passing
+brings out certain important features of the computation:<br />
+[1] The operations to be performed appear in the order in which they are
+performed. In fact, they <em>must</em> be performed in this order.
+Continuation-passing removes the need for the rule about left-to-right
+argument evaluation. {Note <a href="#evalorder" id="xevalorder" title="We can see that continuation-passing removes the need for the left-to-right rule if we consider the form of SCHEME expressions in continuation-passing style. In the style of Church, we can describe a SCHEME expression recursively ...">Evalorder</a>}<br />
+[2] In the usual applicative expression there are two implicit temporary
+values: those of <code>(^ B 2)</code> and <code>(* 4 A C)</code>. The
+first of these values must be preserved over the computation of the
+second, whereas the second is used as soon as it is produced. These
+facts are <em>manifest</em> in the appearance and use of the variable X
+and Y in the continuation-passing version.</p>
+<p>In short, the continuation-passing version specifies <em>exactly</em>
+and explicitly what steps are necessary to compute the value of the
+expression. One can think of conventional functional application for
+value as being an abbreviation for the more explicit
+continuation-passing style. Alternatively, one can think of the
+interpreter as supplying to each function an implicit default
+continuation of one argument. This continuation will receive the value
+of the function as its argument, and then carry on the computation. In
+an interpreter this implicit continuation is represented by the control
+stack mechanism for function returns.</p>
+<p>Now consider what computational steps are implied by:</p>
+<pre><code>  (LAMBDA (A B C ...) (F X Y Z ...))</code></pre>
+<p>When we “apply” the <code>LAMBDA</code> expression we have some
+values to apply it to; we let the names <code>A</code>, <code>B</code>,
+<code>C</code> … refer to these values. We then determine the values of
+<code>X</code>, <code>Y</code>, <code>Z</code>… and pass these values
+(along with “the buck”, i.e. control!) to the lambda expression
+<code>F</code> (<code>F</code> is either a lambda expression or a name
+for one). Passing control to <code>F</code> is an <em>unconditional
+transfer</em>. {Note <a href="#jrsthack" id="xjrsthack" title="This statement is equivalent to the well-known “JRST hack” , which states that the sequence of PDP-10 instructions PUSHJ P,FOO/POPJ P is equivalent to JRST FOO except no stack slot is used.">Jrsthack</a>}
+{Note <a href="#hewitthack" id="xhewitthack" title="Not only does an unconditional transfer to F occur, but values may be passed. One may think of these values as “messages” to be sent to the lambda expression F. This is precisely what Hewitt is flaming about (except for cells and serializers). [Smith 75]">Hewitthack</a>}</p>
+<p>Note that we want <em>values</em> from <code>X</code>,
+<code>Y</code>, <code>Z</code>, … If these are simple expressions, such
+as variables, constants, or <code>LAMBDA</code> expressions, the
+evaluation process is trivial, in that no temporary storage is required.
+In pure continuation-passing style, all evaluations are trivial: no
+combination is nested within another, and therefore no “hidden
+temporaries” are required. But if <code>X</code> is a combination, say
+<code>(G P Q)</code>, then we want to think of <code>G</code> as a
+function, because we want a value from it, and we will need an implicit
+temporary place to keep the result while evaluating <code>Y</code> and
+<code>Z</code>. (An interpreter usually keeps these temporary places in
+the control stack! On the other hand, we do <em>not</em> necessarily
+need a value from <code>F</code>. This is what we mean by
+tail-recursion: <code>F</code> is called tail-recursively, whereas
+<code>G</code> is not. A better name for tail-recursion would be
+“tail-transfer”, since no real recursion is implied. This is why we have
+made such a fuss about tail-recursion: it can be used for transfer of
+control without making any commitment about whether the expression
+expected to return a value. Thus it can be used to model statement-like
+control structures. Put another way, tail-recursion does not require a
+control stack as nested recursion does. In our models of iteration and
+imperative style all the <code>LAMBDA</code> expressions used for
+control (to simulate <code>GO</code> statements, for example) are called
+in tail-recursive fashion.</p>
+<section id="escape-expressions" class="level3 npb">
+<h3>3.2. <a href="#contents" title="Go to Contents">Escape
+Expressions</a></h3>
+<p>Reynolds [<a href="#reynolds-72-1-2-3-4-5-6" id="xrey3" title="[3] Reynolds 1972, Definitional Interpreters for Higher Order Programming Languages">Reynolds
+72</a>] defines the construction</p>
+<div class="line-block">    <strong>escape</strong> <em>x</em>
+<strong>in</strong> <em>r</em></div>
+<p>to evaluate the expression <em>r</em> in an environment such that the
+variable <em>x</em> is bound to an <em>escape function</em>. If the
+escape function is never applied, then the value of the escape
+expression is the value of <em>r</em>. If the escape function is applied
+to an argument <em>a</em>, however, then evaluation of <em>r</em> is
+aborted and the escape expression returns <em>a</em>. {Note <a href="#j-operator" id="xj-operator" title="The escape function is analogous to the “program point” returned by Landin’s J-operator. [Landin 65] This program point contains the SECD “dump” in exactly the way a SCHEME DELTA expression contains the “clink” [Sussman 75]">J-operator</a>}
+(Reynolds points out that this definition is not quite accurate, since
+the escape function may be called even after the escape expression has
+returned a value; if this happens, it “returns again”!)</p>
+</section>
+<p>As an example of the use of an escape expression, consider this
+procedure to compute the harmonic mean of an array of numbers. If any of
+the numbers is zero, we want the answer to be zero. We have a function
+<em>harmsum</em> which will sum the reciprocals of numbers in an array,
+or call an escape function with zero if any of the numbers is zero. (The
+implementation shown here is awkward because <span class="sc">ALGOL</span> requires that a function return its value by
+assignment.)</p>
+<div class="npb">
+<div class="line-block">    <strong>begin</strong><br />
+        <strong>real</strong> <strong>procedure</strong>
+<em>harmsum</em>(<em>a</em>, <em>n</em>, <em>escfun</em>);<br />
+                <strong>real</strong> <strong>array</strong> <em>a</em>;
+<strong>integer</strong> <em>n</em>; <strong>real</strong>
+<strong>procedure</strong> <em>escfun</em>(<strong>real</strong>);<br />
+            <strong>begin</strong><br />
+                    <strong>real</strong> <em>sum</em>;<br />
+                    <em>sum</em> := 0;<br />
+                    <strong>for</strong> <em>i</em> := 0
+<strong>until</strong> <em>n</em>-1 <strong>do</strong><br />
+                            <strong>begin</strong><br />
+                                    <strong>if</strong>
+<em>a</em>[<em>i</em>]=0 <strong>then</strong> <em>escfun</em>(0);<br />
+                                    <em>sum</em> := <em>sum</em> +
+1/<em>a</em>[<em>i</em>];<br />
+                            <strong>end</strong>;<br />
+                    <em>harmsum</em> := <em>sum</em>;<br />
+            <strong>end</strong>;<br />
+        <strong>real</strong> <strong>array</strong>
+<em>b</em>[0:99];<br />
+        <strong>print</strong>(<strong>escape</strong> <em>x</em>
+<strong>in</strong> 100/<em>harmsum</em>(<em>b</em>, 100,
+<em>x</em>));<br />
+    <strong>end</strong></div>
+</div>
+<p>If <em>harmsum</em> exits normally, the number of elements is divided
+by the sum and printed. Otherwise, zero is returned from the escape
+expression and printed without the division ever occurring.</p>
+<p>This program can be written in <span class="sc">SCHEME</span> using
+the built-in escape operator <code>CATCH</code>:</p>
+<pre><code>  (LABELS ((HARMSUM
+            (LAMBDA (A N ESCFUN)
+                (LABELS ((LOOP
+                          (LAMBDA (I SUM)
+                              (IF (= I N) SUM
+                                  (IF (= (A I) 0) (ESCFUN 0)
+                                      (LOOP (+ I 1)
+                                            (+ SUM (/ 1 (A I)))))))))
+                        (LOOP 0 0)))))
+          (BLOCK (ARRAY B 100)
+                 (PRINT (CATCH X (/ 100 (HARMSUM B 100 X))))))</code></pre>
+<p>This actually works, but elucidates very little about the nature of
+<code>ESCAPE</code>. We can eliminate the use of <code>CATCH</code> by
+using continuation-passing. Let us do for <code>HARMSUM</code> what we
+did earlier for <code>FACT</code>. Let it take an extra argument
+<code>C</code>, which is called as a function on the result.</p>
+<pre><code>  (LABELS ((HARMSUM
+            (LAMBDA (A N ESCFUN C)
+                (LABELS ((LOOP
+                          (LAMBDA (I SUM)
+                              (IF (= I N) (C SUM)
+                                  (IF (= (A I) 0) (ESCFUN 0)
+                                      (LOOP (+ I 1)
+                                            (+ SUM(/ 1 (A I)))))))))
+                        (LOOP 0 0)))))
+          (BLOCK (ARRAY B 100)
+                 (LABELS ((AFTER-THE -CATCH
+                           (LAMBDA (Z) (PRINT Z))))
+                         (HARMSUM B
+                                  100
+                                  AFTER-THE-CATCH
+                                  (LAMBDA (Y) (AFTER-THE-CATCH
+                                                     (/ 100 Y)))))))</code></pre>
+<p>Notice that if we use <code>ESCFUN</code>, then <code>C</code> does
+<em>not</em> get called. In this way the division is avoided. This
+example shows how <code>ESCFUN</code> may be considered to be an
+“alternate continuation”.</p>
+<section id="dynamic-variable-scoping" class="level3 npb">
+<h3>3.3. <a href="#contents" title="Go to Contents">Dynamic Variable
+Scoping</a></h3>
+<p>In this section we will consider the problem of dynamically scoped,
+or “fluid”, variables. These do not exist in <span class="sc">ALGOL</span>, but are typical of many <span class="sc">LISP</span> implementations, <span class="sc">ECL</span>, and
+<span class="sc">APL</span>. We will see that fluid variables may be
+modelled in more than one way, and that one of these is closely related
+to continuation-passing.</p>
+</section>
+<section id="free-global-variables" class="level3 npb">
+<h3>3.3.1. <a href="#contents" title="Go to Contents">Free (Global)
+Variables</a></h3>
+<p>Consider the following program to compute square roots:</p>
+<pre><code>  (DEFINE SQRT
+          (LAMBDA (X EPSILON)
+                  (PROG (ANS)
+                        (SETQ ANS 1.0)
+                   A    (COND ((&lt; (ABS (-$ X (*$ ANS ANS))) EPSILON)
+                              (RETURN ANS)))
+                        (SETQ ANS (//$ (+$ X (//$ X ANS)) 2.0))
+                        (GO A))))</code></pre>
+</section>
+<p>This function takes two arguments: the radicand and the numerical
+tolerance for the approximation. Now suppose we want to write a program
+<code>QUAD</code> to compute solutions to a quadratic equation.</p>
+<pre><code>  (DEFINE QUAD
+          (LAMBDA (A B C)
+                  ((LAMBDA (A2 SQRTDISC)
+                           (LIST (/ (+ (- B) SQRTDISC) A2)
+                                 (/ (- (- B) SQRTDISC) A2)))
+                   (* 2 A)
+                   (SQRT (- (^ B 2) (* 4 A C)) &lt;tolerance&gt;))))</code></pre>
+<p>It is not clear what to write for <code>&lt;tolerance&gt;</code>. One
+alternative is to pick some tolerance for use by <code>QUAD</code> and
+write it as a constant in the code. This is undesirable because it makes
+<code>QUAD</code> inflexible and hard to change. Another is to make
+<code>QUAD</code> take an extra argument and pass it to
+<code>SQRT</code>:</p>
+<pre><code>  (DEFINE QUAD
+          (LAMBDA (A B C EPSILON)
+          ...
+          (SQRT ... EPSILON) ...))</code></pre>
+<p>This is undesirable because <code>EPSILON</code> is not really part
+of the problem <code>QUAD</code> is supposed to solve, and we don’t want
+the user to have to provide it. Furthermore, if <code>QUAD</code> were
+built into some larger function, and that into another, all these
+functions would have to pass <code>EPSILON</code> down as an extra
+argument. A third possibility would be to pass the <code>SQRT</code>
+function as an argument to <code>QUAD</code> (don’t laugh!), the theory
+being to bind <code>EPSILON</code> at the appropriate level like
+this:</p>
+<pre><code>  (QUAD 3 4 5 (LAMBDA (X) (SQRT X &lt;tolerance&gt;)))</code></pre>
+<p>where we define <code>QUAD</code> as:</p>
+<pre><code>  (DEFINE QUAD
+          (LAMBDA (A B C SQRT) ...))</code></pre>
+<p>This is as bad as the second case. The user should no more have to
+provide a <code>SQRT</code> function than a tolerance for a
+<code>SQRT</code> function.</p>
+<p>We might also consider providing several <code>SQRT</code> functions
+with several built-in tolerances (versions for single, double, and
+triple precision…). But then we would have to write several versions of
+<code>QUAD</code>, and several versions of anything which called
+<code>QUAD</code>.</p>
+<p>Now suppose that not only <code>SQRT</code> but all the arithmetic
+functions were to take tolerances as arguments (to specify single or
+double precision, say). It would then be very inconvenient to write
+<code>QUAD</code> at all using any of the above approaches. The
+algorithm for <code>QUAD</code> is independent of tolerance
+considerations. What we would like is a way to say, just before running
+<code>QUAD</code> (or the larger system which calls <code>QUAD</code>),
+“I want the tolerance to be x from now on until I say otherwise.” In
+some ways this is the approach taken by many compilers, such as those
+for <span class="sc">FORTRAN</span>. We could write <code>QUAD</code> in
+<span class="sc">FORTRAN</span>, and then tell the compiler the
+tolerance (precision) we want just before compilation. The tolerance
+would be a <em>free parameter</em> in <code>QUAD</code> (and in
+<code>SQRT</code>, which would take only one argument), a parameter
+which is not bound anywhere. Thus we would write <code>SQRT</code> like
+this:</p>
+<pre><code>  (DEFINE SQRT
+          (LAMBDA (X)
+                  (PROG (ANS)
+                        (SETQ ANS 1.0)
+                   A    (COND ((&lt; (ABS (-$ X (*$ ANS ANS) )) EPSILON)
+                               (RETURN ANS)))
+                        (SETQ ANS (//$ (+$ X (//$ X ANS)) 2.0))
+                        (GO A))))</code></pre>
+<p>The variable <code>EPSILON</code> is <em>free</em> in
+<code>SQRT</code>. What does this mean in a lexically scoped language
+such as <span class="sc">SCHEME</span>? <span class="sc">ALGOL</span>
+provides no clues; such a free variable is not allowed. We will say that
+free variables in <span class="sc">SCHEME</span> are “bound at the top
+level”, i.e. that around all programs is an implicit global environment
+in which all variables are bound; free variables refer to these global
+bindings. We can modify these global bindings by using assignments..
+Thus we might say <code>(ASET &#39;EPSILON 1.0E-5)</code>, and then use
+<code>QUAD</code> for a while, and <code>SQRT</code> would see
+<code>EPSILON</code> as being <code>1.0E-5</code>. Subsequently we might
+set <code>EPSILON</code> to some other value, and use <code>QUAD</code>
+some more with the new value in effect. Although perhaps not formally
+aesthetic, this solution offers a great deal in convenience.</p>
+<section id="dynamic-binding" class="level3 npb">
+<h3>3.3.2. <a href="#contents" title="Go to Contents">Dynamic
+Binding</a></h3>
+<p>Suppose now we want to write a function <code>FOO</code> which uses
+<code>SQRT</code> in such a way that for <code>FOO</code> to compute a
+single-precision result it must calculate square roots in double
+precision. We could write:</p>
+<pre><code>  (DEFINE FOO
+          (LAMBDA ...
+                  ((LAMBOA (OLDEPSILON)
+                           (BLOCK (ASET &#39;EPSILON (* EPSILON EPSILON))
+                                  ((LAMBDA (ANSWER)
+                                        (BLOCK (ASET &#39;EPSILON OLDEPSILON)
+                                               ANSWER ))
+                                   (... (SQRT ...) ...))))
+                   EPSILON)))</code></pre>
+</section>
+<p>That is, we save the current value of <code>EPSILON</code>, square it
+to double the precision, calculate the answer using <code>SQRT</code>,
+and then set <code>EPSILON</code> back to its original value. This will
+work, but is very clumsy. The setting and resetting of
+<code>EPSILON</code> reminds us of variable binding. What we would like
+to do is to bind <code>EPSILON</code> across the usage of
+<code>SQRT</code> within <code>FOO</code>.</p>
+<p>We could try writing:</p>
+<pre><code>  (DEFINE FOO
+          (LAMBDA ...
+                  ((LAMBDA (EPSILON)
+                           (... (SQRT ...) ...))
+                   (* EPSILON EPSILON))))</code></pre>
+<p>but this will not work. Because <span class="sc">SCHEME</span> is a
+<em>lexically</em> scoped language, <code>SQRT</code> must always refer
+to the “top level” binding of <code>EPSILON</code>; it is not affected
+by the binding of <code>EPSILON</code> within <code>FOO</code>. In other
+dialects of <span class="sc">LISP</span> this <em>would</em> work; this
+is usually accomplished at the expense of lexical scoping. Thus, while
+<code>FOO</code> would work “correctly” in such <span class="sc">LISP</span> systems, some of our other examples would not.
+The standard view is that in such dialects functions are closed in the
+activation environment rather than in the definition environment, and so
+free variables take on values determined by the caller’s environment.
+Fluid variables are thus considered to be a consequence of the function
+closing discipline. {Note <a href="#funoffun" id="xfunoffun" title="Moses gives a good description of this dichotomy in [Moses 70].">Funoffun</a>}
+As a result, some languages offer just lexical scoping (<span class="sc">ALGOL</span> and <span class="sc">SCHEME</span>) while others
+offer just dynamic scoping (most <span class="sc">LISP</span>s, <span class="sc">EL1</span>, and <span class="sc">APL</span>).</p>
+<div class="npb">
+<p>Some <span class="sc">LISP</span> dialects allow a function to be
+closed in either environment, thus allowing that function’s free
+variables to be either lexical or fluid, using the “funarg device”. But
+suppose we wanted to have two free variables in a function, one
+lexically scoped and the other fluidly scoped? Consider this
+example:</p>
+<pre><code>  (DEFINE GENERATE-SQRT-OF-GIVEN-EXTRA-TOLERANCE
+          (LAMBDA (FACTOR)
+                  (LAMBDA (X)
+                          ((LAMBDA (EPSILON) (SQRT X))
+                           (* EPSILON FACTOR)))))</code></pre>
+</div>
+<p>We want <code>GENERATE-SQRT-OF-GIVEN-EXTRA-TOLERANCE</code> to return
+a function which will always compute a square root to a tolerance which
+is more precise than the current <code>EPSILON</code> by the factor
+specified. This generated function is to accept an argument
+<code>X</code> and compute <code>SQRT</code> in an environment in which
+<code>EPSILON</code> is dynamically bound to
+<code>(* EPSILON FACTOR)</code>. Here we have a dilemma: in which
+environment should the <code>(LAMBDA (X) ...)</code> be closed? If it is
+closed in the definition environment, then in the expression
+<code>(* EPSILON FACTOR)</code> the variable <code>EPSILON</code> will
+refer to the top level value and not to the dynamic binding. If it is
+closed in the activation environment, then the variable
+<code>FACTOR</code> will refer to its dynamic binding and not to the
+lexical binding within
+<code>GENERATE-SQRT-OF-GIVEN-EXTRA-TOLERANCE</code>.</p>
+<p>Some <span class="sc">LISP</span> dialects provide hybrid scoping, in
+which lexically bound variables are lexically scoped, and lexically free
+variables are “dynamically” scoped as in <code>FOO</code>. This is easy
+for a compiler to do correctly, but fairly difficult to do in an
+interpreter. Furthermore, it will not generally solve problems of the
+<code>GENERATE-SQRT-OF-GIVEN-EXTRA-TOLERANCE</code> type.</p>
+<p>We want to treat fluid variables as interesting objects in their own
+right, rather than as consequences of various function closing and
+variable lookup disciplines. Let us distinguish fluid variables from
+lexically scoped variables by prefixing them with a colon. Thus
+<code>:EPSILON</code> is a reference to the fluid variable
+<code>EPSILON</code>. We can now write
+<code>GENERATE-SQRT-OF-GIVEN-EXTRA-TOLERANCE</code> as follows:</p>
+<pre><code>  (DEFINE GENERATE-SQRT-OF-GIVEN-EXTRA-TOLERANCE
+          (LAMBDA (FACTOR)
+                  (LAMBDA (X)
+                          ((LAMBDA (:EPSILON) (SQRT X))
+                           (* :EPSILON FACTOR)))))</code></pre>
+<p>The <code>(LAMBDA (X) ...)</code> is closed in the definition
+environment, and so <code>FACTOR</code> is correctly scoped, while the
+<code>:</code> in front of <code>EPSILON</code> indicates that it is
+dynamically scoped rather than referring to the top level binding. (For
+now we will ignore the problem of exactly what
+<code>(LAMBDA (:EPSILON) ...)</code> means.)</p>
+<p>We want the semantics of fluid variables to be “the value of a fluid
+variable is determined by the caller’s environment; or if not there, by
+his caller’s environment, and so on”. How can we model these semantics
+in a purely lexically scoped language such as <span class="sc">SCHEME</span>? One way for the caller to specify the values
+of variables is to pass them down as arguments to the called function.
+This leads us back around to our original definition of
+<code>SQRT</code>, in which <code>EPSILON</code> is passed as an
+argument.</p>
+<div class="npb">
+<p>Another way is to provide a way to ask the caller what the value of a
+fluid variable is. Suppose we let <em>every</em> function take an extra
+argument <code>FENV</code> which represents the dynamic environment for
+fluid variables. Then we could replace occurrences of
+<code>:EPSILON</code> by <code>(LOOKUP &#39;EPSILON FENV)</code>, where
+<code>LOOKUP</code> is defined as:</p>
+<pre><code>  (DEFINE LOOKUP
+          (LAMBDA (VAR FENV)
+                  (IF (NULL FENV)
+                      (TOP-LEVEL-VALUE VAR)
+                      (IF (EQ VAR (CAAR FENV))
+                          (CDAR FENV)
+                          (LOOKUP VAR (CDR FENV))))))</code></pre>
+<p>The fluid environment <code>FENV</code> is structured here as a
+standard <span class="sc">LISP</span> a-list: a list of association
+pairs, each of which is a variable name and a value consed together.</p>
+</div>
+<p>In order to make this work we must arrange for every caller to pass
+its <code>FENV</code> to all the functions it calls, so that they may
+access fluid variables. Thus we would have to write:</p>
+<pre><code>  (DEFINE GENERATE-SQRT-OF-GIVEN-EXTRA-TOLERANCE
+          (LAMBDA (FACTOR FENV)
+                  (LAMBDA (X FENV)
+                          ((LAMBDA (:EPSILON) (SQRT X FENV))
+                            (* (LOOKUP &#39;EPSILON FENV) FACTOR FENV)))))</code></pre>
+<p>There is still the problem of modelling
+<code>(LAMBDA (:EPSILON) ...)</code>; thus far all we have done is pass
+the same <code>FENV</code> from caller to caller. But all that is needed
+to bind a fluid variable is to add a binding to the a-list:</p>
+<pre><code>  (DEFINE GENERATE-SQRT-OF-GIVEN-EXTRA-TOLERANCE
+          (LAMBDA (FACTOR FENV)
+                  (LAMBDA (X FENV)
+                          (SQRT X (CONS (CONS &#39;EPSILON
+                                               (* (LOOKUP &#39;EPSILON FENV)
+                                                  FACTOR
+                                                  FENV))
+                                        FENV)))))</code></pre>
+<p>What we have done, in effect, is to bundle all the variables that
+would have to be passed down into a single data structure which is
+passed down.</p>
+<p>Now functions such as <code>*</code> (or, for that matter,
+<code>GENERATE-SQRT-OF-GIVEN-EXTRA-TOLERANCE</code> itself) which do not
+use fluid variables need not have <code>FENV</code> passed to them. But
+if we define all functions to receive <code>FENV</code> as an extra
+argument, then in practice we may uniformly suppress this fact in our
+notation! This is in fact a good criterion by which to judge a language
+of any kind: it should allow one to suppress that which carries little
+information.) This demonstrates how to implement fluid variable
+primitives in a lexically scoped language without the problems of
+<code>FOO</code>.</p>
+<p>Recall that the interpreter already supplies an implicit extra
+argument to every function, the default continuation. We stated earlier
+that this implicit continuation may be identified with the interpreter’s
+control stack; just now we saw that fluid variables are scoped according
+to control depth rather than lexical depth. {Note <a href="#stackfluids" id="xstackfluids" title="Real stack-oriented LISP implementations ([Moon 74] [Teitelman 74] cf. [Sussman 75]) in fact either keep fluid bindings on the control stack, or use a separate stack which more or less pushes and pops in parallel with the control stack.">Stackfluids</a>}
+We can combine these two mechanisms.</p>
+<p>We have implemented <code>FENV</code> as a data structure and used a
+separate function, <code>LOOKUP</code>, access it. An alternative would
+be to let <code>FENV</code> be a lookup function which accepts an
+identifier and returns its fluid binding. Instead of
+<code>(LOOKUP &#39;X FENV)</code>, we write <code>(FENV &#39;X)</code>. In order
+to create new bindings, we create a new function which “knows about” the
+new bindings, and passes the buck if the given variable is not among
+them. For example:</p>
+<pre><code>  (DEFINE GENERATE-SQRT-OF-GIVEN-EXTRA-TOLERANCE
+          (LAMBDA (FACTOR FENV)
+                  (LAMBDA (X FENV)
+                          (SQRT X ((LAMBDA (EPSILON-VALUE)
+                                           (LAMBDA (VAR)
+                                                   (IF (EQ VAR &#39;EPSILON)
+                                                       EPSILON-VALUE
+                                                       (FENV VAR))))
+                                   (* (FENV &#39;EPSILON)
+                                   FACTOR
+                                   FENV))))))</code></pre>
+<p>The second argument to <code>SQRT</code> is the
+<code>(LAMBDA (VAR) ...)</code>, closed in an environment in which
+<code>EPSILON-VALUE</code> has the fluid binding for
+<code>EPSILON</code>, calculated just before <code>SQRT</code> is
+called, and in which <code>FENV</code> has the old fluid
+environment.</p>
+<p>Now that both the continuations and fluid environments are functions,
+we may combine them into a single function if we want. The function can
+take two arguments. The first is <code>RETURN</code> to do the
+continuation action, or <code>LOOKUP</code> to look up a variables. The
+second is the return value or the variable to look up. Another way would
+be to let the continuation take a single argument with the data packaged
+up: <code>(LOOKUP X)</code> or <code>(RETURN X)</code>. We could then
+extend this set of messages to the continuation to include
+<code>(ASSIGN X Y)</code>, to assign a value to a fluid variable, or
+<code>(BAKTRACE &lt;output-file&gt;)</code> to print a <span class="sc">LISP 1.5</span> or <span class="sc">MacLISP</span> style
+backtrace. {Note <a href="#plasmafluids" id="xplasmafluids" title="This indicates an obvious method for implementing fluid variables in PLASMA in a natural way. All that would be required is a slight change to the implicitly supplied continuations.">Plasmafluids</a>}</p>
+<p><hr></p>
+</section>
+<section id="parameter-passing-mechanisms" class="level2">
+<h2>4. <a href="#contents" title="Go to Contents">Parameter Passing
+Mechanisms</a></h2>
+<p>Parameter passing mechanisms, such as “call-by-name”, are not usually
+considered to be control structures. Such mechanisms may be used to get
+the effects of complex control structures such as coroutines. We have
+seen that fluid variables are closely related to control structures. It
+will be instructive to model these other parameter mechanisms in <span class="sc">SCHEME</span> as we have modelled the more conventional
+control structures.</p>
+<section id="call-by-name" class="level3">
+<h3>4.1. <a href="#contents" title="Go to Contents">Call-By-Name</a></h3>
+<p>Consider this example {Note <a href="#consgenerators" id="xconsgenerators" title="This example is from [Friedman 75]. Landin uses a similar technique to describe streams in [Landin 65]. Henderson and Morris [Henderson 75] present several examples in this vein, including an elegant solution to the samefringe problem of Hewitt [Hewitt 74] [Smith 75].">Consgenerators</a>}
+of a recursive definition of an infinite sequence:</p>
+<div class="line-block">    <strong>list</strong>
+<strong>procedure</strong> <em>terms</em>(<em>n</em>);
+<strong>value</strong> <em>n</em>; <strong>integer</strong>
+<em>n</em>;<br />
+            <em>terms</em> := <em>cons</em>(1/(<em>n</em>^2),
+<em>terms</em>(<em>n</em>+1));</div>
+<p>Here we have assumed the existence of a list data type in <span class="sc">ALGOL</span> and made the appropriate extensions. The
+function <em>cons</em> takes two arguments and returns a data structure
+such that the function <em>car</em>, when applied to the value of
+<em>cons</em>, returns the first argument given to <em>cons</em>;
+similarly the function <em>cdr</em> extracts the second argument given
+to <em>cons</em>. The function <em>terms</em> is intended to produce an
+infinite list whose elements are elements of the sequence</p>
+<pre><code>     1    1    1         1
+    ———, ———, ———, ..., ———, ...
+     1    4    9        n^2</code></pre>
+<p>beginning with the n<sup>th</sup> term. Thus</p>
+<div class="line-block">    <em>car</em>(<em>cdr</em>(<em>cdr</em>(<em>terms</em>(3))))
+= 1/25</div>
+<p>If <em>cons</em> takes its arguments by value, then this function
+will diverge. If it takes its arguments by name, then it need not
+diverge. It is possible to implement <em>cons</em> in such a way that
+its arguments are not evaluated until <em>car</em> or <em>cdr</em> is
+applied to the data structure which is its value. {Note <a href="#funargcons" id="xfunargcons" title="Church understood the problem of divergent arguments; this is evident in his distinction between lambda calculus and lambda-K calculus. Fischer [Fischer 72] specifically discusses the use of functional values to simulate CONS.">Funargcons</a>}
+To explain this requires the use of functions which return functions as
+values. Here <span class="sc">ALGOL</span> fails us, and it will be
+necessary to use only <span class="sc">SCHEME</span> for explanations.
+For the moment, let us pretend that <span class="sc">SCHEME</span> has
+call-by-name parameters, indicated by writing each parameter, x, called
+by name, as <code>(NAME X)</code>. Later we will see how to simulate
+call-by-name in an applicative order language.</p>
+<pre><code>  (DEFINE CBN-CONS
+          (LAMBDA ((NAME X) (NAME Y))
+                  (LAMBDA (A)
+                          (IF A X Y))))</code></pre>
+<p>Notice that <code>CBN-CONS</code> returns a value which is a
+<em>function</em>. The components of the data structure represented by
+CBN-CONS applied to two arguments are the retained bindings of the
+variables X and Y. That is, the returned function has associated with it
+an environment in which <code>X</code> and <code>Y</code> are still
+bound to the “thunks” [<a href="#ingerman-61" id="xingerman-61" title="[1] Ingerman 1961, Thunks -- A Way of Compiling Procedure Statements with Some Comments on Procedure Declarations">Ingerman
+61</a>] for the call-by-name arguments even though <code>CBN-CONS</code>
+has returned. The reason why the arguments to <code>CBN-CONS</code> are
+not yet evaluated is that <code>CBN-CONS</code> never referenced them.
+If, however, we were to apply the returned function, it would then
+reference <code>X</code> or <code>Y</code> (as necessary) and return the
+value. Thus we may express <em>car</em> and <em>cdr</em> in this
+manner:</p>
+<pre><code>  (DEFINE CBN-CAR (LAMBDA (S) (S T)))
+
+  (DEFINE CBN-CDR (LAMBDA (S) (S NIL)))</code></pre>
+<p>where <code>T</code> and <code>NIL</code> are the true and false
+Boolean constants.</p>
+<p>In <span class="sc">SCHEME</span> the <em>terms</em> function is
+written:</p>
+<pre><code>  (DEFINE TERMS
+          (LAMBDA (N)
+                  (CBN-CONS (/ 1 (^ N 2))
+                            (TERMS (+ N 1)))))</code></pre>
+<p>Because <span class="sc">SCHEME</span> really uses applicative order
+(call-by-value), this function always diverges, but we can simulate
+call-by-name by use of functional arguments. {Note <a href="#landinknewthis" id="xlandinknewthis" title="In [Landin 65] Landin uses this same technique to model call-by-name. However, he modelled assignment to call-by-name parameters in a way much different from the one we use later: he uses L-values rather than an extra assignment thunk.">Landinknewthis</a>}</p>
+<pre><code>  (DEFINE TERMS
+          (LAMBDA (N)
+                  (CBN-CONS (LAMBDA () (/ 1 (^ N 2)))
+                            (LAMBDA () (TERMS (+ N 1))))))
+
+  (DEFINE CBN-CONS
+          (LAMBDA (X Y)
+                  (LAMBDA (A)
+                          (IF A (X) (Y)))))</code></pre>
+<p>The trick here is to explicitly pass the “thunk” that an <span class="sc">ALGOL</span> compiler implicitly creates to handle a
+call-by-name parameter. The value is then accessed by calling the thunk.
+Since <span class="sc">SCHEME</span> closes the lambda expression in the
+lexical environment, the thunk will be evaluated in the lexical
+environment as it should be.</p>
+<p>This implementation of call-by-name is incomplete. We have not yet
+considered the problem of assignment of a call-by-name parameter. For
+now we consider only access mechanisms; later we will deal with
+assignment.</p>
+</section>
+<section id="call-by-need" class="level3 npb">
+<h3>4.2. <a href="#contents" title="Go to Contents">Call-By-Need</a></h3>
+<p>One problem with using call-by-name is that it is inherently
+inefficient because several references to the same variable will require
+several re-evaluations of the thunk.</p>
+</section>
+<div class="line-block">    <strong>begin</strong><br />
+        <strong>real</strong> <strong>procedure</strong>
+<em>cube</em>(<em>x</em>); <strong>real</strong> <em>x</em>;<br />
+                <em>cube</em> := <em>x</em>*<em>x</em>*<em>x</em>;<br />
+        <em>print</em>(<em>cube</em>(<em>sqrt</em>(5)));<br />
+    <strong>end</strong></div>
+<p>In this code the square root of <code>5</code> will be calculated
+three times, since <em>cube</em> takes its parameter by name and
+references it three times. The “call-by-need” mechanism {Note <a href="#callbyneed" id="xcallbyneed" title="The term “call-by-need” is due to Wadsworth. [Wadsworth 71] This technique is similar to the “delay rule” of Vuillemin. [Vuillemin 74]">Callbyneed</a>}
+overcomes this difficulty. A call-by-need parameter is passed as if it
+were call-by-name; but when the thunk is first referenced, after
+computing the value it replaces itself with the value, and all
+subsequent references happen as if it were call-by-value. We may express
+this in <span class="sc">SCHEME</span> by:</p>
+<pre><code>  (LABELS ((CUBE (LAMBDA (X) (* (X) (X)(X)))))
+          (PRINT (CUBE (NEED-THUNK (LAMBDA () (SQRT 5))))))</code></pre>
+<p>where <code>NEED-THUNK</code> constructs a call-by-need thunk given a
+primitive thunk:</p>
+<pre><code>  (DEFINE NEED-THUNK
+          (LAMBDA (VALUE)
+                  ((LAMBDA (FLAG)
+                           (LAMBDA ()
+                                   (BLOCK (IF FLAG
+                                              (BLOCK (ASET &#39;VALUE (VALUE))
+                                                     (ASET &#39;FLAG NIL)))
+                                          VALUE)))
+                  T)))</code></pre>
+<p>The function <code>ASET</code> is the primitive <span class="sc">SCHEME</span> assignment statement. It produces a <em>true
+side effect</em> on the value of the variable (as opposed to the
+assignments we have expressed in terms of binding). The use of
+<code>ASET</code> reflects the fact that the call-by-need thunk has
+<em>state</em>.</p>
+<p>As before, the value of the parameter is referenced by calling it as
+a function. The thunk contains two state variables <code>VALUE</code>
+and <code>FLAG</code>. If <code>FLAG</code> is <code>T</code>, then the
+thunk has never been referenced, and <code>VALUE</code> contains the
+“real” (call-by-name style) thunk. When the parameter is first
+referenced, the real thunk is evaluated and the result stored in
+<code>VALUE</code> (thereby throwing away the real thunk, which is no
+longer needed), and <code>FLAG</code> is set to <code>NIL</code>.</p>
+<section id="fast-call-by-name" class="level3 npb">
+<h3>4.3. <a href="#contents" title="Go to Contents">Fast
+Call-By-Name</a></h3>
+<p>Call-by-need does not fully capture the essence of call-by-name. If a
+side effect occurs between two references of a parameter, the parameter
+will yield the same value if passed call-by-need, but may yield
+different values if passed call-by-name. {Note <a href="#jensensdevice" id="xjensensdevice" title="The technique of repeatedly modifying a variable passed call-by-name in order to produce side effects on another call-by-name parameter is commonly known as Jensen’s device, particularly in the case where the call-by-name parameters are j and a[j]. ...">Jensensdevice</a>}
+For example:</p>
+<div class="line-block">    <strong>begin</strong><br />
+        <strong>real</strong> <em>dx</em>;<br />
+        <strong>real</strong> <strong>procedure</strong>
+<em>integral</em>(<em>lower</em>, <em>upper</em>, <em>exp</em>,
+<em>var</em>)<br />
+            <strong>value</strong> <em>lower</em>, <em>upper</em>;<br />
+            <strong>real</strong> <em>lower</em>, <em>upper</em>,
+<em>exp</em>, <em>var</em>;<br />
+            <strong>begin</strong><br />
+                <strong>real</strong> <em>sum</em>;<br />
+                <em>sum</em> := 0;<br />
+                <strong>for</strong> <em>var</em> := <em>lower</em> +
+(<em>dx</em>/2) <strong>step</strong> <em>dx</em> <strong>until</strong>
+<em>upper</em> <strong>do</strong><br />
+                        <em>sum</em> := <em>sum</em> +
+<em>exp</em>;<br />
+                <em>integral</em> := <em>sum</em>;<br />
+            <strong>end</strong>;<br />
+        <em>dx</em> := .001;<br />
+        <em>print</em>(4 * <em>integral</em>(0, 1,
+<em>dx</em>/(<em>x</em>^2 + 1), <em>x</em>));<br />
+    <strong>end</strong></div>
+<p>prints an approximation to <em>pi</em> by calculating</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><msubsup><mo>∫</mo><mn>0</mn><mn>1</mn></msubsup><mfrac><mrow><mi>d</mi><mi>x</mi></mrow><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mn>1</mn></mrow></mfrac></mrow><annotation encoding="application/x-tex"> 4 \int_{0}^{1} \frac{dx}{x^2 + 1} </annotation></semantics></math></p>
+<p>which is four times the arctangent of 1. It depends on the
+call-by-name parameter <em>exp</em> changing value when the variable
+<em>var</em> is changed. This example in fact brings out <em>two</em>
+problems. First, call-by-need does not allow the value of a parameter to
+change when a variable used in the argument expression is modified.
+Second, the example presses the issue of assignment to call-by-name
+parameters.</p>
+</section>
+<p>The first problem can be fixed by modifying the call-by-need
+mechanism to notice side effects and re-evaluate the parameter if its
+value might have changed. Instead of <code>NEED-THUNK</code>, we use the
+following function:</p>
+<pre><code>  (DEFINE MEMO-THUNK
+          (LAMBDA (THUNK)
+              ((LAMBDA (VALUE SAVED-COUNT)
+                   (LAMBDA ()
+                       (IF (= SAVED-COUNT (GLOBAL-SIDE-EFFECT-COUNT))
+                           VALUE
+                           (BLOCK (ASET &#39;SAVED-COUNT
+                                        (GLOBAL-SIDE-EFFECT-COUNT))
+                                  (ASET &#39;VALUE (THUNK))
+                                  VALUE)))
+              NIL
+              -1))))</code></pre>
+<p>The variable <code>VALUE</code> is used as a <em>cache</em> for the
+value of the parameter; the counts are used to determine whether the
+cache data is valid. {Note <a href="#muddlevcells" id="xmuddlevcells" title="The MDL language (formerly known as MUDDLE) [Galley 75] uses cached value cells, but uses a process number rather than a side effect count to determine the validity of the cache data, the purpose being to share a cache among several processes.">Muddlevcells</a>}
+The function <code>GLOBAL-SIDE-EFFECT-COUNT</code> returns a count of
+all the side effects that have ever occurred which might affect the
+value of a thunk.</p>
+<p>The function <code>ASET</code> is <em>not</em> intended to model the
+user’s assignment statement. It is a <span class="sc">SCHEME</span>
+function we use to model side effects. It is important that the
+<code>ASET</code>s in <code>MEMO-THUNK</code> do <em>not</em> modify the
+global side effect count. The user level assignment statement may be
+modelled by the <code>ASSIGN</code> functions:</p>
+<pre><code>  (DEFINE ASSIGN-CALL-BY-VALUE
+          (LAMBDA (VAR VAL)
+                  (BLOCK (INCREMENT-GLOBAL-SIDE-EFFECT-COUNT)
+                         (ASET VAR VAL))))</code></pre>
+<p>{Note <a href="#envproblem" id="xenvproblem" title="If the variable to be set is VAR or VAL, then this does not work because of the so-called environment problem. However, a compiler can choose the variables VAR and VAL to be different from all other variable names.">Envproblem</a>}
+<code>ASSIGN-CALL-BY-VALUE</code> is used for assignment to
+call-by-value parameters and locally declared variables. Assignment to
+call-by-name variables is discussed below.</p>
+<section id="assignment-by-reference" class="level3 npb">
+<h3>4.4. <a href="#contents" title="Go to Contents">Assignment by
+Reference</a></h3>
+<p>The second problem, assignment to call-by-name parameters, may be
+seen in this example:</p>
+<div class="line-block">    <strong>begin</strong><br />
+        <strong>procedure</strong> <em>set3</em>(<em>var</em>);
+<strong>integer</strong> <em>var</em>;<br />
+                <em>var</em> := 3;<br />
+        <strong>integer</strong> <em>quux</em>;<br />
+        <em>set3</em>(<em>quux</em>);<br />
+        <em>print</em>(<em>quux</em>);<br />
+    <strong>end</strong></div>
+</section>
+<p><span class="sc">ALGOL</span> defines assignment to a call-by-name
+variable to mean assignment to the object supplied as the argument, in
+this case <em>quux</em>. We would expect the example to print the value
+3. The problem is how to cause the assignment to <em>var</em> to become
+an assignment to <em>quux</em>; somehow “assignment access” to
+<em>quux</em> must be made available to the procedure <em>set3</em>.</p>
+<p>This is solved by some <span class="sc">ALGOL</span> compilers
+through the use of two thunks, one for access and one for assignment. We
+can model this in <span class="sc">SCHEME</span>. In order to access a
+parameter, we write <code>((CDR X))</code> instead of <code>(X)</code>.
+In order to set the parameter to a new value <code>A</code>, we write
+<code>((CAR X) A)</code>. Thus we may define:</p>
+<pre><code>  (DEFINE ASSIGN-CALL-BY-NAME
+          (LAMBDA (VAR VAL) ((CAR VAR) VAL)))</code></pre>
+<p>For arguments which are not variables (i.e. they cannot be assigned
+to), the argument (say <em>sqrt</em>(5)) is modelled as follows:</p>
+<pre><code>  (CONS (LAMBDA (NEWVAL) (ERROR))
+        (LAMBDA () (SQRT 5)))</code></pre>
+<p>If an argument is a variable, say <code>QUUX</code>, which is not
+itself a call-by-name parameter, we write:</p>
+<pre><code>  (CONS (LAMBDA (NEWVAL) (ASSIGN-CALL-BY-VALUE &#39;QUUX NEWVAL))
+        (LAMBDA () QUUX))</code></pre>
+<p>If <code>QUUX</code> <em>is</em> a call-by-name parameter, we could
+write:</p>
+<pre><code>  (CONS (LAMBDA (NEWVAL) ((CAR QUUX) NEWVAL))
+        (LAMBDA () ((CDR QUUX))))</code></pre>
+<p>thereby passing the buck to <code>QUUX</code>’s thunks. However, it
+also works simply to write:</p>
+<pre><code>  QUUX</code></pre>
+<p>which will also pass the buck correctly! (This was pointed out to the
+authors by Richard M. Stallman.) Of course, the access thunk for each of
+these may have a call to <code>MEMO-THUNK</code> wrapped around it to
+increase its efficiency.</p>
+<div class="npb">
+<p>As an example of this call-by-name transformation, consider this
+<span class="sc">ALGOL</span> program:</p>
+<div class="line-block">    <strong>begin</strong><br />
+        <strong>integer</strong> <strong>procedure</strong>
+<em>foo</em>(<em>x</em>, <em>y</em>); <strong>integer</strong>
+<em>x</em>, <em>y</em>;<br />
+                <strong>begin</strong><br />
+                        <em>x</em> := <em>y</em> + 1;<br />
+                        <em>foo</em> := <em>x</em> + <em>y</em>;<br />
+                <strong>end</strong>;<br />
+        <strong>integer</strong> <em>z</em>;<br />
+        <em>z</em> := 4;<br />
+        <em>print</em>(<em>foo</em>(<em>z</em>, <em>z</em> + 2));<br />
+    <strong>end</strong></div>
+</div>
+<p>The value printed will be 16. When <em>foo</em> is called, it first
+references <em>y</em>, which is call-by-name bound to <em>z</em>+2;
+since <em>z</em> is 4, this yields 6. This is added to 1, and the
+resulting 7 is assigned to <em>x</em>, which is call-by-name bound to
+<em>z</em>, and so 7 is assigned to <em>z</em>. Then both <em>x</em> and
+<em>y</em> are referenced, which are <em>z</em> and <em>z</em>+2
+respectively, yielding 7 and 9. The sum, 16, becomes the value of
+<em>foo</em> and this is printed.</p>
+<p>Now consider this same program written in <span class="sc">SCHEME</span> using the call-by-name transformations we have
+developed:</p>
+<pre><code>  (LABELS ((FOO (LAMBDA (X Y)
+                        (BLOCK ((CAR X) (+ ((CDR Y)) 1))
+                               (+ ((CDR X)) ((CDR Y)))))))
+          ((LAMBDA (Z)
+                   (BLOCK (ASET &#39;Z 4)
+                          (PRINT (FOO (CONS (LAMBDA (NEWVAL)
+                                                    (ASET &#39;Z NEWVAL))
+                                            (LAMBDA () Z))
+                                      (CONS (LAMBDA (NEWVAL) (ERROR))
+                                            (LAMBDA () (+ Z 2)))))))
+            NIL))</code></pre>
+<p>In executing this, after <code>Z</code> is set to <code>4</code>,
+<code>FOO</code> is called with the two sets of thunks as arguments.
+First <code>(CDR Y)</code>, i.e. <code>(LAMBDA () (+ Z 2))</code>, is
+called as a function, yielding <code>6</code>. This is added to
+<code>1</code>, and <code>(CAR X)</code>, i.e.
+<code>(LAMBDA (NEWVAL) (ASET &#39;Z NEWVAL))</code>, is called on the
+result, thereby setting <code>Z</code> to <code>7</code>. Next both
+<code>(CDR X)</code> and <code>(CDR Y)</code> are called, yielding
+<code>7</code> and <code>9</code> respectively; <code>FOO</code> returns
+the sum <code>16</code>, which is then printed. Thus the <span class="sc">SCHEME</span> version reflects directly the semantics of the
+ALGOL version, but using only call-by-value parameters.</p>
+<p>The use of two kinds of thunks is similar to the notion of having two
+kinds of values, called L-values and R-values. The distinction is that
+an L-value may be assigned to, while an R-value is a pure value. <span class="sc">LISP</span> has only R-values. One cannot write
+<code>(SETQ (CAR X) &#39;B)</code> to get the effect of
+<code>(RPLACA X &#39;B)</code>. By the time the <code>CAR</code> operation
+has happened, the information about where it came from is lost. CPL and
+related languages {Note <a href="#cplstuff" id="xcplstuff" title="CPL is described in [Barron 63] and [Buxton 66]. BCPL is a simplified version of CPL intended for systems programming. [Richards 69] [Richards 74] Also related to CPL is the language C, in which UNIX is written.">Cplstuff</a>}
+have evaluation modes: most operators evaluate their arguments in
+R-mode, but assignment evaluates its left argument in L-mode and its
+right argument in R-mode. The L-mode result is a pointer to the place to
+store the new value. In <span class="sc">ECL</span> [<a href="#wegbreit-74a" id="xwegbreit-74a" title="[1] Wegbreit 1974, The Treatment of Data Types in EL1">Wegbreit
+74a</a>] [<a href="#wegbreit-74b-1-2" id="xwegbreit-74b1" title="[1] Wegbreit et al 1974, ECL Programmer’s Manual">Wegbreit
+74b</a>], one may write <code>X.CAR&lt;-3</code>; <code>X.CAR</code>
+returns an assignable value, because <em>all</em> expressions are
+evaluated in L-mode. [<a href="#wegbreit-70-1-2" id="xwegbreit-701" title="[1] Wegbreit 1970, Studies in Extensible Programming Languages">Wegbreit
+70</a>] This is implemented by always returning a <em>pointer</em> to
+where the car of <code>X</code> may be found. If this pointer is used
+for value, the pointer is implicitly followed to get the value; if used
+in an assignment context, the new value is placed in the location
+pointed to. <span class="sc">BLISS</span> always treats an occurrence of
+a variable name as an L-value; a special “<code>.</code>” operator is
+used to convert an L-value to an R-value. Thus “<code>X&lt;-Y</code>”
+does not give the variable <code>X</code> the same value as
+<code>Y</code>, but a value which points to <code>Y</code>; to get the
+effect of <code>(SETQ X Y)</code> one must write
+“<code>X&lt;-.Y</code>”. [<a href="#bliss-70-1-2" id="xbliss-701" title="[1] BLISS 1970, BLISS Reference Manual"><span class="sc">BLISS</span> 70</a>] [<a href="#wulf-71-1-2" id="xwulf-711" title="[1] Wulf et al 1971, BLISS: A Language for Systems Programing">Wulf
+71</a>]</p>
+<div class="npb">
+<p>We can easily modify our thunk strategy so that we could write, for
+example:</p>
+<div class="line-block">    <strong>begin</strong><br />
+        <strong>procedure</strong> <em>clobber3</em>(<em>y</em>);
+<strong>list</strong> <em>y</em>;<br />
+                <em>y</em> := 3;<br />
+        <em>clobber3</em>(<em>car</em>(<em>x</em>));<br />
+    <strong>end</strong></div>
+<p>and expect the car of <em>x</em> to be altered to 3. All we need do
+is supply appropriate value and assignment thunks:</p>
+<pre><code>  (LABELS ((CLOBBER3
+            (LAMBDA (Y) ((CAR Y) 3))))
+          (CLOBBER3 (CONS (LAMBDA (NEWCAR) (RPLACA X NEWCAR))
+                          (LAMBDA () (CAR X)))))</code></pre>
+<p>The first thunk handles assignment to the car of <code>X</code>, and
+the second handles references to it for value.</p>
+</div>
+<div class="npb">
+<p>This works when the function <code>CAR</code> appears explicitly in
+the actual argument to a called procedure. But suppose we write:</p>
+<div class="line-block">    <strong>begin</strong><br />
+        <strong>procedure</strong> <em>clobber3</em>(<em>y</em>);
+<strong>list</strong> <em>y</em>;<br />
+                <em>y</em> := 3;<br />
+        <strong>list</strong> <strong>procedure</strong>
+<em>fourth</em>(<em>z</em>); <strong>list</strong> <em>z</em>;<br />
+                <em>fourth</em> :=
+<em>car</em>(<em>cdr</em>(<em>cdr</em>(<em>cdr</em>(<em>z</em>))));<br />
+        <em>clobber3</em>(<em>fourth</em>(<em>x</em>));<br />
+    <strong>end</strong></div>
+</div>
+<p>If we consider only the body of the procedure <em>clobber3</em> and
+the call on it, it is not clear how to write the thunks in <span class="sc">SCHEME</span>, since we cannot tell that the last thing
+<em>fourth</em> does is a <code>CAR</code>. The general solution would
+involve having <em>all</em> values really be two thunks. If
+<em>fourth</em> returned two thunks, then they would be passed to
+<em>clobber3</em>. But this is the same as always passing around a
+pointer to the value as <span class="sc">ECL</span> does; the assignment
+thunk knows where a datum came from, so that it may assign to it.</p>
+<p><hr></p>
+</section>
+<section id="conclusions" class="level2">
+<h2><a href="#contents" title="Go to Contents">Conclusions</a></h2>
+<p>We have expressed a number of programming constructs in terms of a
+simple applicative language, <span class="sc">SCHEME</span>, based on
+lambda calculus. It is not surprising that this is possible, since <span class="sc">SCHEME</span> is universal. What is surprising is that the
+translation is so <strong><em>natural</em></strong>. Most of the
+translations are syntactically local. The translated program is
+recognizably equivalent to the original, because the global structure is
+preserved. The translation process does not increase the size of the
+program very much.</p>
+<p>Landin [<a href="#landin-65-1-2-3-4-5-6-7" id="xlan3" title="[3] Landin 1965, A Correspondence between ALGOL 60 and Church’s Lambda-Notation">Landin
+65</a>] and Reynolds [<a href="#reynolds-72-1-2-3-4-5-6" id="xrey4" title="[4] Reynolds 1972, Definitional Interpreters for Higher Order Programming Languages">Reynolds
+72</a>] have used similar techniques to model programming constructs.
+However, their modelling languages contained much more machinery than
+what we have used in <span class="sc">SCHEME</span>. for example, Landin
+introduces a special J-operator to model <span class="sc">GO TO</span>,
+and L-values to model assignment. We show that <span class="sc">GO
+TO</span> and most assignments can be modelled using only the
+lambda-binding mechanism.</p>
+<p>The transformations we provide for escape expressions and general
+L-values (i.e. L-values for all data structures, not just variables) are
+<strong><em>not</em></strong> as syntactically local as the others. The
+complexity of these transformations may indicate that escape expressions
+and L-values are not subsumed by the mechanism of lambda-binding (except
+in the trivial sense that lambda-binding is Turing-universal). If they
+turn out to be desirable constructs, they should be implemented as
+primitives.</p>
+<p>It has been suggested that certain programming language constructs,
+in particular the <span class="sc">GO TO</span>, lend themselves to
+obscure coding practices. Some language designers have even gone so far
+as to design languages which purposely omit such familiar constructs as
+<span class="sc">GO TO</span> in an attempt to constrain the programmer
+to refrain from particular styles of programming thought by the language
+designer to be “bad” in some sense. {Note <a href="#gotophobia" id="xgotophobia" title="The great GO TO controversy was started by Dijkstra in 1968 [Dijkstra 68]. This issue was argued heatedly and came to a head at ACM 72. One of the proponents of GO TO-less programming was Wulf, whose language BLISS was purposely designed without GO TO statements. ...">Gotophobia</a>}
+But any language with function calls, functional values, conditionals,
+correct handling of tail-recursions, and lexical scoping can simulate
+such “non-structured” constructs as <span class="sc">GO TO</span>
+statements, call-by-name, and fluid variables in a
+<strong><em>straightforward</em></strong> manner. If the language also
+has a macro processor or preprocessor, these simulations will even be
+convenient to use. {Note <a href="#features" id="xfeatures" title="What if a programming language does not have all these features? Function calls and conditionals are clearly desirable features. Functional values are also valuable. It may be argued that dynamic scoping is just as good as lexical ...">Features</a>}</p>
+<p>No amount of language design can <strong><em>force</em></strong> a
+programmer to write clear programs. If the programmer’s conception of
+the problem is badly organized, then his program will also be badly
+organized. The extent to which a programming language can help a
+programmer to organize his problem is precisely the extent to which it
+provides features appropriate to his problem domain. The emphasis should
+not be on eliminating “bad” language constructs, but on discovering or
+inventing helpful ones.</p>
+<p><hr></p>
+</section>
+<section id="notes" class="level2">
+<h2><a href="#contents" title="Go to Contents">Notes</a></h2>
+<section id="section" class="level3">
+<h3></h3>
+<section id="alonzowins" class="level4">
+<h4>{Alonzowins} <span class="fr"><a href="#xalonzowins">^</a></span><br />
+</h4>
+<p>The lambda calculus was originally developed by Alonzo Church as a
+formal axiomatic system of logic. [<a href="#church-41-1-2" id="xchurch-411" title="[1] Church 1941, The Calculi of Lambda Conversion">Church 41</a>]
+Happily, it may be re-interpreted in several interesting ways as a model
+for computation.</p>
+</section>
+<section id="callbyneed" class="level4">
+<h4>{Callbyneed} <span class="fr"><a href="#xcallbyneed">^</a></span><br />
+</h4>
+<p>The term “call-by-need” is due to Wadsworth. [<a href="#wadsworth-71" id="xwadsworth-71" title="[1] Wadsworth 1971, Semantics and Pragmatics of the Lambda-calculus">Wadsworth
+71</a>] This technique is similar to the “delay rule” of Vuillemin. [<a href="#vuillemin-74" id="xvuillemin-74" title="[1] Vuillemin 1974, Correct and Optimal Implementations of Recursion in a Simple Programming Language">Vuillemin
+74</a>]</p>
+</section>
+<section id="churchwins" class="level4">
+<h4>{Churchwins} <span class="fr"><a href="#xchurchwins">^</a></span><br />
+</h4>
+<p>Reynolds uses the term “continuation” in [<a href="#reynolds-72-1-2-3-4-5-6" id="xrey5" title="[5] Reynolds 1972, Definitional Interpreters for Higher Order Programming Languages">Reynolds
+72</a>]. Church clearly understood the use of continuations; it is the
+only way to get anything accomplished at all in pure lambda calculus!
+For example, examine his definition of ordered pairs and triads on <a href="https://archive.org/details/AnnalsOfMathematicalStudies6ChurchAlonzoTheCalculiOfLambdaConversionPrincetonUniversityPress1941/page/n37/mode/1up" title="archive.org page where [Church 41] defines &#39;[M,N], 2/1, 2/2&#39;">page
+30</a> of [<a href="#church-41-1-2" id="xchurch-412" title="[2] Church 1941, The Calculi of Lambda Conversion">Church
+41</a>]. In <span class="sc">SCHEME</span> notation, this is:</p>
+<div class="line-block">     <code>[M, N]</code> means
+<code>(LAMBDA (A) (A M N))</code><br />
+      <code>2</code><sub><code>1</code></sub>         means
+<code>(LAMBDA (A) (A (LAMBDA (B C) B)))</code><br />
+      <code>2</code><sub><code>2</code></sub>         means
+<code>(LAMBDA (A) (A (LAMBDA (B C) C)))</code></div>
+<p>where <code>2</code><sub><code>1</code></sub> e.g. selects the first
+element of a pair. (Note that these functions are isomorphic to
+<code>CONS</code>, <code>CAR</code>, and <code>CDR</code>!)</p>
+</section>
+<section id="closures" class="level4">
+<h4>{Closures} <span class="fr"><a href="#xclosures">^</a></span><br />
+</h4>
+<p>Most modern <span class="sc">LISP</span> systems, such as <span class="sc">MacLISP</span> [<a href="#moon-74-1-2-3-4" id="xmoon2" title="[2] Moon 1974, MACLISP Reference Manual, Revision 0">Moon 74</a>]
+and <span class="sc">InterLISP</span> [<a href="#teitelman-74-1-2" id="xteitelman-741" title="[1] Teitelman 1974, InterLISP Reference Manual">Teitelman
+74</a>], scope variables dynamically. They often provide a special
+feature (the <code>FUNARG</code> device) for lexical scoping, but in
+most implementations this feature is not completely general.</p>
+</section>
+<section id="consgenerators" class="level4">
+<h4>{Consgenerators} <span class="fr"><a href="#xconsgenerators">^</a></span><br />
+</h4>
+<p>This example is from [<a href="#friedman-75" id="xfriedman-75" title="[1] Friedman and Wise 1975, CONS Should Not Evaluate Its Arguments">Friedman
+75</a>]. Landin uses a similar technique to describe streams in [<a href="#landin-65-1-2-3-4-5-6-7" id="xlan4" title="[4] Landin 1965, A Correspondence between ALGOL 60 and Church’s Lambda-Notation">Landin
+65</a>]. Henderson and Morris [<a href="#henderson-75" id="xhenderson-75" title="[1] Henderson and Morris 1975, A Lazy Evaluator">Henderson
+75</a>] present several examples in this vein, including an elegant
+solution to the <em>samefringe</em> problem of Hewitt [<a href="#hewitt-74" id="xhewitt-74" title="[1] Hewitt et al 1974, Behavioral Semantics of Non-recursive Control Structures">Hewitt
+74</a>] [<a href="#smith-75-1-2-3" id="xsmith1" title="[1] Smith 1975, A PLASMA Primer (draft)">Smith 75</a>].</p>
+</section>
+<section id="cplstuff" class="level4">
+<h4>{Cplstuff} <span class="fr"><a href="#xcplstuff">^</a></span><br />
+</h4>
+<p><span class="sc">CPL</span> is described in [<a href="#barron-63" id="xbarron-63" title="[1] Barron et al 1963, The Main Features of CPL">Barron 63</a>]
+and [<a href="#buxton-66" id="xbuxton-66" title="[1] Buxton et al 1966, CPL Working Papers">Buxton 66</a>]. <span class="sc">BCPL</span> is a simplified version of <span class="sc">CPL</span> intended for systems programming. [<a href="#richards-69" id="xrichards-69" title="[1] Richards 1969, BCPL: A Tool for Compiler Writing and Systems Programming">Richards
+69</a>] [<a href="#richards-74" id="xrichards-74" title="[1] Richards et al 1974, The BCPL Reference Manual">Richards
+74</a>] Also related to <span class="sc">CPL</span> is the language
+<span class="sc">C</span>, in which <span class="sc">UNIX</span> is
+written.</p>
+</section>
+<section id="envproblem" class="level4">
+<h4>{Envproblem} <span class="fr"><a href="#xenvproblem">^</a></span><br />
+</h4>
+<p>If the variable to be set is <code>VAR</code> or <code>VAL</code>,
+then this does not work because of the so-called environment problem.
+However, a compiler can choose the variables <code>VAR</code> and
+<code>VAL</code> to be different from all other variable names.</p>
+</section>
+<section id="evalorder" class="level4">
+<h4>{Evalorder} <span class="fr"><a href="#xevalorder">^</a></span><br />
+</h4>
+<p>We can see that continuation-passing removes the need for the
+left-to-right rule if we consider the form of <span class="sc">SCHEME</span> expressions in continuation-passing style. In
+the style of Church, we can describe a <span class="sc">SCHEME</span>
+expression recursively: (1) A variable, which evaluates to its bound
+value in the current environment. (2) A constant, which evaluates to
+itself. Primitive operators such as <code>+</code> are constants. (3) A
+lambda expression, which evaluates to a closure. (4) A label expression,
+which evaluates its body in the new environment. The body may be any
+<span class="sc">SCHEME</span> expression. Only closures of lambda
+expressions may be bound to labelled variables. (5) A conditional
+expression, which must evaluate its predicate recursively before
+choosing which consequent to evaluate. The predicate and the two
+consequents may be any <span class="sc">SCHEME</span> expressions. (6) A
+combination, which must evaluate all its elements recursively before
+performing the application of function to arguments. The elements may be
+any <span class="sc">SCHEME</span> expressions.</p>
+<p>We say that an expression <em>evaluates trivially</em> if it is in
+category (1), (2), or (3); or in category (4) if the label body
+evaluates trivially; or in category (5) if the predicate and both
+consequents of the conditional evaluate trivially.</p>
+<p>Lemma: expressions which evaluate trivially have no side effects.</p>
+<p>We say that an expression is in <em>continuation-passing form</em> if
+it is in category (1), (2), (3); or in category (4) if the label body is
+in continuation-passing form; or in category (5) if the predicate
+evaluates trivially and the consequents are in continuation-passing
+form; or in category (6) if all the elements of the combination evaluate
+trivially, including the function.</p>
+<p>Theorem: expressions in continuation-passing form cannot depend on
+left-to-right argument evaluation.<br />
+Proof: all arguments to functions evaluate trivially, and so their
+evaluations have no side effects. Hence they may be evaluated in any
+order. <span class="sc">QED</span></p>
+<p>It is not too difficult to prove from this that an evaluator for
+expressions in continuation-passing form can be iterative; it need not
+be recursive or use a control stack. Another way to look at it is that
+continuation-passing style forces the programmer to represent recursive
+evaluations explicitly. What would be the control stack during
+evaluation of an ordinary expression is represented in environment
+structures in continuation-passing style.</p>
+</section>
+<section id="features" class="level4">
+<h4>{Features} <span class="fr"><a href="#xfeatures">^</a></span><br />
+</h4>
+<p>What if a programming language does not have all these features?
+Function calls and conditionals are clearly desirable features.
+Functional values are also valuable. It may be argued that dynamic
+scoping is just as good as lexical; our view is that both are desirable,
+and we have shown how to get dynamic scoping given lexical scoping. As
+for correct handling of tail-recursions, it is not difficult to see that
+a lexically scoped language which does <em>not</em> handle
+tail-recursions correctly is holding onto more information than is
+strictly necessary to execute the program.</p>
+</section>
+<section id="flowgraph" class="level4 npb">
+<h4>{Flowgraph} <span class="fr"><a href="#xflowgraph">^</a></span><br />
+</h4>
+<p>The reader may have noticed that the variable <code>PARITY</code> is
+uselessly passed around between <code>L1</code> and <code>L3</code>.
+This could easily be optimized out by a compiler using analysis of data
+flow graphs. For example, the graph for the parity example would be:</p>
+<p><img role="img" src="data:image/png;base64,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" style="width:50.0%" /></p>
+<p>From this it can be deduced that the <code>L1-L3</code> loop does not
+alter <em>parity</em>, and that after this loop exits to <code>L2</code>
+control cannot pass back to the loop, and so that <code>PARITY</code>
+need not be an argument to <code>L1</code> or <code>L3</code> in the
+<span class="sc">SCHEME</span> version.</p>
+</section>
+<section id="funargcons" class="level4">
+<h4>{Funargcons} <span class="fr"><a href="#xfunargcons">^</a></span><br />
+</h4>
+<p>Church understood the problem of divergent arguments; this is evident
+in his distinction between lambda calculus and lambda-K calculus.
+Fischer [<a href="#fischer-72" id="xfischer-72" title="[1] Fischer 1972, Lambda Calculus Schemata">Fischer 72</a>]
+specifically discusses the use of functional values to simulate
+<code>CONS</code>.</p>
+</section>
+<section id="funoffun" class="level4">
+<h4>{Funoffun} <span class="fr"><a href="#xfunoffun">^</a></span><br />
+</h4>
+<p>Moses gives a good description of this dichotomy in [<a href="#moses-70" id="xmoses-70" title="[1] Moses 1970, The Function of FUNCTION in LISP">Moses
+70</a>].</p>
+</section>
+<section id="gotophobia" class="level4">
+<h4>{Gotophobia} <span class="fr"><a href="#xgotophobia">^</a></span><br />
+</h4>
+<p>The great <span class="sc">GO TO</span> controversy was started by
+Dijkstra in 1968 [<a href="#dijkstra-68" id="xdijkstra-68" title="[1] Dijkstra 1968, GOTO statement considered harmful">Dijkstra
+68</a>]. This issue was argued heatedly and came to a head at ACM 72.
+One of the proponents of <span class="sc">GO TO</span>-less programming
+was Wulf, whose language <span class="sc">BLISS</span> was purposely
+designed without <span class="sc">GO TO</span> statements. [<a href="#bliss-70-1-2" id="xbliss-702" title="[2] BLISS 1970, BLISS Reference Manual"><span class="sc">BLISS</span> 70</a>] He soon discovered that some
+compensation for the omission was needed, and so <strong>exit</strong>
+expressions were introduced, followed by <strong>leave</strong>
+expressions. [<a href="#wulf-71-1-2" id="xwulf-712" title="[2] Wulf et al 1971, BLISS: A Language for Systems Programing">Wulf
+71</a>] [<a href="#wulf-72" id="xwulf-72" title="[1] Wulf 1972, Systems for Systems Implementors -- Some Experiences from BLISS">Wulf
+72</a>]</p>
+<p>The extensible language <span class="sc">EL1</span> was designed
+before 1970, just before the <span class="sc">GO TO</span> statement
+became a real issue. It had no <span class="sc">GO TO</span> statement,
+but this was more because Wegbreit was more interested in studying
+extensible data types in his thesis than control structures, and he
+preferred to omit many control structures from <span class="sc">EL1</span> rather than install a dozen features not well
+thought out. [<a href="#wegbreit-70-1-2" id="xwegbreit-702" title="[2] Wegbreit 1970, Studies in Extensible Programming Languages">Wegbreit
+70</a>], p. 417] The <span class="sc">EL1</span> language definition
+became the basis for the <span class="sc">ECL</span> programming system
+at Harvard. [<a href="#wegbreit-71" id="xwegbreit-71" title="[1] Wegbreit 1971, The ECL Programming System">Wegbreit 71</a>]
+This implementation was embellished with the <span class="sc">GO
+TO</span> statement. [<a href="#wegbreit-72" id="xwegbreit-72" title="[1] Wegbreit et al 1972, ECL Programmer’s Manual">Wegbreit
+72</a>] Partly because of <span class="sc">GO TO</span> politics and
+partly for implementational expediency, the <span class="sc">GO
+TO</span> was later removed from the <span class="sc">ECL</span> system.
+[<a href="#wegbreit-74b-1-2" id="xwegbreit-74b2" title="[2] Wegbreit et al 1974, ECL Programmer’s Manual">Wegbreit
+74b</a>]</p>
+<p>Nowadays it is common for a language designer to omit the <span class="sc">GO TO</span> statement as a matter of course. [<a href="#liskov-73" id="xliskov-73" title="[1] Liskov et al 1973, CLU Design Notes">Liskov 73</a>] [<a href="#liskov-74" id="xliskov-74" title="[1] Liskov 1974, Programming with Abstract Data Types">Liskov
+74</a>] [<a href="#smith-75-1-2-3" id="xsmith2" title="[2] Smith 1975, A PLASMA Primer (draft)">Smith 75</a>]
+Unfortunately, not all new languages which omit the <span class="sc">GO
+TO</span> provide reasonable compensation for the omission.</p>
+<p>Knuth presents an extensive history of the <span class="sc">GO
+TO</span> controversy [<a href="#knuth-74-1-2" id="xknuth2" title="[2] Knuth 1974, Structured Programming with go to Statements">Knuth
+74</a>] and asks, “Will <span class="sc">UTOPIA 84</span>, or perhaps we
+should call it <span class="sc">NEWSPEAK</span>, contain <span class="sc">GO TO</span> statements?” (p. 264) But perhaps we should ask
+instead, “Will UTOPIA 84 offer alternatives convenient enough that we
+won’t need the <span class="sc">GO TO</span> very often?”</p>
+</section>
+<section id="hewitthack" class="level4">
+<h4>{Hewitthack} <span class="fr"><a href="#xhewitthack">^</a></span><br />
+</h4>
+<p>Not only does an unconditional transfer to <code>F</code> occur, but
+values may be passed. One may think of these values as “messages” to be
+sent to the lambda expression <code>F</code>. This is precisely what
+Hewitt is flaming about (except for cells and serializers). [<a href="#smith-75-1-2-3" id="xsmith3" title="[3] Smith 1975, A PLASMA Primer (draft)">Smith 75</a>]</p>
+</section>
+<section id="jensensdevice" class="level4">
+<h4>{Jensensdevice} <span class="fr"><a href="#xjensensdevice">^</a></span><br />
+</h4>
+<p>The technique of repeatedly modifying a variable passed call-by-name
+in order to produce side effects on another call-by-name parameter is
+commonly known as Jensen’s device, particularly in the case where the
+call-by-name parameters are <em>j</em> and <em>a</em>[<em>j</em>]. We
+cannot find any reference to Jensen or who he was, and offer a reward
+for any information leading to the identification, arrest, and
+conviction of said Jensen.<br />
+{{See [<a href="#naur-60" id="xnaur-60" title="[1] Naur 1960, An example of a function designator changing the value of a formal variable">Naur
+60</a>] :-}}</p>
+</section>
+<section id="j-operator" class="level4">
+<h4>{J-operator} <span class="fr"><a href="#xj-operator">^</a></span><br />
+</h4>
+<p>The escape function is analogous to the “program point” returned by
+Landin’s J-operator. [<a href="#landin-65-1-2-3-4-5-6-7" id="xlan5" title="[5] Landin 1965, A Correspondence between ALGOL 60 and Church’s Lambda-Notation">Landin
+65</a>] This program point contains the <span class="sc">SECD</span>
+“dump” in exactly the way a <span class="sc">SCHEME</span>
+<code>DELTA</code> expression contains the <code>clink</code> [<a href="#sussman-75-1-2-3-4" id="xsussman1" title="[1] Sussman and Steele 1975, SCHEME: An Interpreter for Extended Lambda Calculus">Sussman
+75</a>]</p>
+</section>
+<section id="jrsthack" class="level4">
+<h4>{Jrsthack} <span class="fr"><a href="#xjrsthack">^</a></span><br />
+</h4>
+<p>This statement is equivalent to the well-known “<code>JRST</code>
+hack” , which states that the sequence of PDP-10 instructions</p>
+<div class="line-block">    <code>PUSHJ P,FOO</code>     is equivalent
+to   <code>JRST FOO</code><br />
+    <code>POPJ  P,</code></div>
+<p>except no stack slot is used.</p>
+</section>
+<section id="labelsdef" class="level4">
+<h4>{Labelsdef} <span class="fr"><a href="#xlabelsdef">^</a></span><br />
+</h4>
+<p>The <code>LABELS</code> construct of <span class="sc">SCHEME</span>
+is isomorphic to Landin’s <strong>let rec</strong> construct [<a href="#landin-65-1-2-3-4-5-6-7" id="xlan6" title="[6] Landin 1965, A Correspondence between ALGOL 60 and Church’s Lambda-Notation">Landin
+65</a>] and Reynold’s <strong>letrec</strong> construct [<a href="#reynolds-72-1-2-3-4-5-6" id="xrey6" title="[6] Reynolds 1972, Definitional Interpreters for Higher Order Programming Languages">Reynolds
+72</a>]. Its purpose is to allow a function to refer to itself. It is
+more convenient than the more familiar <code>LABEL</code> construct of
+<span class="sc">LISP 1.5</span> because it allows definition of several
+mutually referent functions. The general form of a <code>LABELS</code>
+construct is:</p>
+<pre><code>  (LABELS ((&lt;name1&gt; &lt;lambda-exp1&gt;)
+           (&lt;name2&gt; &lt;lambda-exp2&gt;)
+           . . .
+           (&lt;namen&gt; &lt;lambda-expn&gt;))
+          &lt;body&gt;)</code></pre>
+<p>A new environment is created in which the names
+<code>&lt;name</code><em>i</em><code>&gt;</code> are bound to closures
+of the lambda expressions
+<code>&lt;lambda-exp</code><em>i</em><code>&gt;</code>; the lambda
+expressions are closed <em>in this new environment</em>, and so may
+refer to each other. The <code>&lt;body&gt;</code> is then evaluated in
+this new environment.</p>
+<div class="npb">
+<p>The <code>LABEL</code> construct of <span class="sc">LISP
+1.5</span>:</p>
+<pre><code>  ((LABEL &lt;name&gt; &lt;lambda-exp&gt;) &lt;arg1&gt; &lt;arg2&gt; ... &lt;argn&gt;)</code></pre>
+<p>may be written as a <code>LABELS</code> in <span class="sc">SCHEME</span>:</p>
+<pre><code>  (LABELS ((&lt;name&gt; &lt;lambda-exp&gt;))
+          (&lt;name&gt; &lt;arg1&gt; &lt;arg2&gt; ... &lt;argn&gt;))</code></pre>
+</div>
+</section>
+<section id="landinknewthis" class="level4">
+<h4>{Landinknewthis} <span class="fr"><a href="#xlandinknewthis">^</a></span><br />
+</h4>
+<p>In [<a href="#landin-65-1-2-3-4-5-6-7" id="xlan7" title="[7] Landin1965, A Correspondence between ALGOL 60 and Church’s Lambda-Notation">Landin
+65</a>] Landin uses this same technique to model call-by-name. However,
+he modelled assignment to call-by-name parameters in a way much
+different from the one we use later: he uses L-values rather than an
+extra assignment thunk.</p>
+</section>
+<section id="mccarthywins" class="level4">
+<h4>{Mccarthywins} <span class="fr"><a href="#xmccarthywins">^</a></span><br />
+</h4>
+<p>This was realized as early as 1960 by John McCarthy. In section 6 of
+[<a href="#mccarthy-60-1-2" id="xmccarthy2" title="[2] McCarthy 1960, Recursive functions of symbolic expressions and their computation by machine - I">McCarthy
+60</a>] he describes a technique for transforming a flowchart into a
+purely recursive procedure.</p>
+</section>
+<section id="muddlevcells" class="level4">
+<h4>{Muddlevcells} <span class="fr"><a href="#xmuddlevcells">^</a></span><br />
+</h4>
+<p>The <span class="sc">MDL</span> language (formerly known as <span class="sc">MUDDLE</span>) [<a href="#galley-75" id="xgalley-75" title="[1] Galley and Pfister 1975, The MDL Language">Galley 75</a>]
+uses cached value cells, but uses a process number rather than a side
+effect count to determine the validity of the cache data, the purpose
+being to share a cache among several processes.</p>
+</section>
+<section id="plasmafluids" class="level4">
+<h4>{Plasmafluids} <span class="fr"><a href="#xplasmafluids">^</a></span><br />
+</h4>
+<p>This indicates an obvious method for implementing fluid variables in
+<span class="sc">PLASMA</span> in a natural way. All that would be
+required is a slight change to the implicitly supplied
+continuations.</p>
+</section>
+<section id="schemenote" class="level4">
+<h4>{Schemenote} <span class="fr"><a href="#xschemenote">^</a></span><br />
+</h4>
+<p>This is discussed in detail in [<a href="#sussman-75-1-2-3-4" id="xsussman2" title="[2] Sussman and Steele 1975, SCHEME: An Interpreter for Extended Lambda Calculus">Sussman
+75</a>], where an actual implementation is described. The theoretical
+justification is described there, and later in this paper also.</p>
+</section>
+<section id="schemepaper" class="level4">
+<h4>{Schemepaper} <span class="fr"><a href="#xschemepaper">^</a></span><br />
+</h4>
+<p><span class="sc">SCHEME</span> is fully described in [<a href="#sussman-75-1-2-3-4" id="xsussman3" title="[3] Sussman and Steele 1975, SCHEME: An Interpreter for Extended Lambda Calculus">Sussman
+75</a>], which contains a complete reference manual as well as a fully
+documented implementation of the language in <span class="sc">MacLISP</span> [<a href="#moon-74-1-2-3-4" id="xmoon3" title="[3] Moon 1974, MACLISP Reference Manual, Revision 0">Moon
+74</a>].</p>
+</section>
+<section id="stackfluids" class="level4">
+<h4>{Stackfluids} <span class="fr"><a href="#xstackfluids">^</a></span><br />
+</h4>
+<p>Real stack-oriented <span class="sc">LISP</span> implementations ([<a href="#moon-74-1-2-3-4" id="xmoon4" title="[4] Moon 1974, MACLISP Reference Manual, Revision 0">Moon 74</a>]
+[<a href="#teitelman-74-1-2" id="xteitelman-742" title="[2] Teitelman 1974, InterLISP Reference Manual">Teitelman 74</a>]
+cf. <a href="#sussman-75-1-2-3-4" id="xsussman4" title="[4] Sussman and Steele 1975, SCHEME: An Interpreter for Extended Lambda Calculus">[Sussman
+75]</a>) in fact either keep fluid bindings on the control stack, or use
+a separate stack which more or less pushes and pops in parallel with the
+control stack.</p>
+<p><hr></p>
+</section>
+</section>
+</section>
+<section id="bibliography" class="level2">
+<h2><a href="#contents" title="Go to Contents">Bibliography</a></h2>
+<section id="section-1" class="level3">
+<h3></h3>
+<section id="bliss-70-1-2" class="level4">
+<h4>[<span class="sc">BLISS</span> 70] <span class="fr"><a href="#xbliss-701">1</a>, <a href="#xbliss-702">2</a></span><br />
+</h4>
+<p><a href="http://www.bitsavers.org/pdf/dec/decus/pdp10/DECUS-10-118_BlissRefMan_Apr71.pdf" title="www.bitsavers.org/pdf/dec/decus/pdp10/DECUS-10-118_BlissRefMan_Apr71.pdf"><em>BLISS
+Reference Manual</em></a>. Computer Science Dept. Report.
+Carnegie-Mellon U. (Pittsburgh, January 1970).</p>
+</section>
+<section id="barron-63" class="level4">
+<h4>[Barron 63] <span class="fr"><a href="#xbarron-63">^</a></span><br />
+</h4>
+<p>Barron, D.W., et al. <a href="https://academic.oup.com/comjnl/article/6/2/134/364746" title="academic.oup.com/comjnl/article/6/2/134/364746"><em>The Main
+Features of CPL</em></a>. The Computer Journal, Vol. 6, 1963,
+p. 134.</p>
+</section>
+<section id="buxton-66" class="level4">
+<h4>[Buxton 66] <span class="fr"><a href="#xbuxton-66">^</a></span><br />
+</h4>
+<p>Buxton, Gray, Park. and Strachey. <a href="http://homepages.cs.ncl.ac.uk/cliff.jones/publications/MSs/CPL-papers.pdf" title="homepages.cs.ncl.ac.uk/cliff.jones/publications/MSs/CPL-papers.pdf"><em>CPL
+Working Papers</em></a>. U. of London Institute of Computer Science
+(1966).</p>
+</section>
+<section id="church-41-1-2" class="level4">
+<h4>[Church 41] <span class="fr"><a href="#xchurch-411">1</a>, <a href="#xchurch-411">2</a></span><br />
+</h4>
+<p>Church, Alonzo. <a href="https://archive.org/details/AnnalsOfMathematicalStudies6ChurchAlonzoTheCalculiOfLambdaConversionPrincetonUniversityPress1941" title="archive.org/details/AnnalsOfMathematicalStudies6ChurchAlonzoTheCalculiOfLambdaConversionPrincetonUniversityPress1941"><em>The
+Calculi of Lambda Conversion</em></a>. Annals of Mathematics Studies
+Number 6. Princeton University Press (Princeton, 1941). Reprinted by
+Klaus Reprint Corp. (New York, 1965).</p>
+</section>
+<section id="dijkstra-68" class="level4">
+<h4>[Dijkstra 68] <span class="fr"><a href="#xdijkstra-68">^</a></span><br />
+</h4>
+<p>Dijkstra, Edsger W. <a href="https://dl.acm.org/doi/10.1145/3544585.3544604" title="dl.acm.org/doi/10.1145/3544585.3544604"><em>GOTO statement
+considered harmful</em></a>. Letter to the Editor. Comm. ACM 11, 3
+(March 1968).</p>
+</section>
+<section id="fischer-72" class="level4">
+<h4>[Fischer 72] <span class="fr"><a href="#xfischer-72">^</a></span><br />
+</h4>
+<p>Fischer, Michael J. <a href="https://dl.acm.org/doi/10.1145/942578.807077" title="dl.acm.org/doi/10.1145/942578.807077"><em>Lambda Calculus
+Schemata</em></a>. Proceedings of ACM Conference on Proving Assertions
+about Programs. SIGPLAN Notices (January 1972).</p>
+</section>
+<section id="friedman-75" class="level4">
+<h4>[Friedman 75] <span class="fr"><a href="#xfriedman-75">^</a></span><br />
+</h4>
+<p>Friedman, Daniel P., and Wise, David S. <a href="https://legacy.cs.indiana.edu/ftp/techreports/TR44.pdf" title="legacy.cs.indiana.edu/ftp/techreports/TR44.pdf"><em>CONS Should
+Not Evaluate Its Arguments</em></a>. Technical Report 44. Indiana U.
+Computer Science Dept. (Bloomington, November 1975).</p>
+</section>
+<section id="galley-75" class="level4">
+<h4>[Galley 75] <span class="fr"><a href="#xgalley-75">^</a></span><br />
+</h4>
+<p>Galley, S.W. and Pfister, Greg. <a href="https://apps.dtic.mil/sti/pdfs/ADA070930.pdf" title="apps.dtic.mil/sti/pdfs/ADA070930.pdf"><em>The MDL
+Language</em></a>. Programming Technology Division Document SYS.11.01.
+Project MAC, MIT (Cambridge, November 1975).<br />
+{{See also <a href="https://mdl-language.readthedocs.io/en/latest" title="mdl-language.readthedocs.io/en/latest"><em>The MDL Programming
+Language</em></a> (transcription at ReadtheDocs.io) }}</p>
+</section>
+<section id="henderson-75" class="level4">
+<h4>[Henderson 75] <span class="fr"><a href="#xhenderson-75">^</a></span><br />
+</h4>
+<p>Henderson, Peter, and Morris, James H. Jr. <a href="https://dl.acm.org/doi/10.1145/800168.811543" title="dl.acm.org/doi/10.1145/800168.811543"><em>A Lazy
+Evaluator</em></a>. SIGPLAN-SIGACT Symposium on Principles of
+Programming Languages (January 1976).</p>
+</section>
+<section id="hewitt-74" class="level4">
+<h4>[Hewitt 74] <span class="fr"><a href="#xhewitt-74">^</a></span><br />
+</h4>
+<p>Hewitt, Carl, et al. <a href="https://dl.acm.org/doi/10.5555/647323.721498" title="dl.acm.org/doi/10.5555/647323.721498"><em>Behavioral Semantics of
+Non-recursive Control Structures</em></a>. Proc. Colloque sur la
+Programmation. Lecture Notes in Computer Science No. 19. Springer-Verlag
+(1974).</p>
+</section>
+<section id="ingerman-61" class="level4">
+<h4>[Ingerman 61] <span class="fr"><a href="#xingerman-61">^</a></span><br />
+</h4>
+<p>Ingerman, P. Z. <a href="https://dl.acm.org/doi/10.1145/366062.366084" title="dl.acm.org/doi/10.1145/366062.366084"><em>Thunks – A Way of
+Compiling Procedure Statements with Some Comments on Procedure
+Declarations</em></a>. CACM 4, 1 (January 1961) pp. 55-58.</p>
+</section>
+<section id="knuth-74-1-2" class="level4">
+<h4>{{[Knuth 74] <span class="fr"><a href="#xknuth1">1</a>, <a href="#xknuth2">2</a></span><br />
+</h4>
+<div class="in">
+<p>Knuth, Donald E. <a href="https://dl.acm.org/doi/10.1145/356635.356640" title="dl.acm.org/doi/10.1145/356635.356640"><em>Structured Programming
+with go to Statements</em></a>. ACM Computing Surveys 6, 4 (December
+1974) pp. 261–301. }}</p>
+</div>
+</section>
+<section id="landin-65-1-2-3-4-5-6-7" class="level4">
+<h4>[Landin 65] <span class="fr"><a href="#xlan1">1</a>, <a href="#xlan2">2</a>, <a href="#xlan3">3</a>, <a href="#xlan4">4</a>, <a href="#xlan5">5</a>, <a href="#xlan6">6</a>, <a href="#xlan7">7</a></span><br />
+</h4>
+<p>Landin, Peter J. <a href="https://dl.acm.org/doi/10.1145/363744.363749" title="dl.acm.org/doi/10.1145/363744.363749"><em>A Correspondence
+between ALGOL 60 and Church’s Lambda-Notation</em></a>. CACM 8, 2-3 (<a href="https://dl.acm.org/doi/10.1145/363744.363749" title="dl.acm.org/doi/10.1145/363744.363749">February</a> and <a href="https://dl.acm.org/doi/10.1145/363791.363804" title="dl.acm.org/doi/10.1145/363791.363804">March</a> 1965).</p>
+</section>
+<section id="liskov-73" class="level4">
+<h4>[Liskov 73] <span class="fr"><a href="#xliskov-73">^</a></span><br />
+</h4>
+<p>Liskov, Barbara, et al. <a href="https://.invalid/_no_online_copy_found_/" title="No online copy found"><em>CLU Design Notes</em></a>. MIT Lab. for
+Computer Science (Cambridge, 1973-1976).</p>
+<div class="ti">
+<p>{{See Liskov 1996 <a href="https://dl.acm.org/doi/10.1145/234286.1057826" title="dl.acm.org/doi/10.1145/234286.1057826"><em>A History of
+CLU</em></a> §10.3.2, or Liskov 1992 <a href="https://scispace.com/pdf/a-history-of-clu-5dhcaec3th.pdf" title="scispace.com/pdf/a-history-of-clu-5dhcaec3th.pdf"><em>A History
+of CLU</em></a> §3.2, for comments on CLU Design Notes. }}</p>
+</div>
+</section>
+<section id="liskov-74" class="level4">
+<h4>[Liskov 74] <span class="fr"><a href="#xliskov-74">^</a></span><br />
+</h4>
+<p>Liskov, Barbara, and Zilles, Stephen. <a href="https://dl.acm.org/doi/10.1145/942572.807045" title="dl.acm.org/doi/10.1145/942572.807045"><em>Programming with
+Abstract Data Types</em></a>. Proc. Symp. on Very High Level Languages.
+1974.</p>
+</section>
+<section id="mccarthy-60-1-2" class="level4">
+<h4>[McCarthy 60] <span class="fr"><a href="#xmccarthy1">1</a>, <a href="#xmccarthy2">2</a></span><br />
+</h4>
+<p>McCarthy, John. <a href="https://dl.acm.org/doi/10.1145/367177.367199" title="dl.acm.org/doi/10.1145/367177.367199"><em>Recursive functions of
+symbolic expressions and their computation by machine - I</em></a>.
+Comm. ACM 3, 4 (April 1960), 184-195.</p>
+</section>
+<section id="mccarthy-62" class="level4">
+<h4>[McCarthy 62] <span class="fr"><a href="#xmccarthy-62">^</a></span><br />
+</h4>
+<p>McCarthy, John, et al. <a href="https://apps.dtic.mil/sti/tr/pdf/AD0406138.pdf" title="apps.dtic.mil/sti/tr/pdf/AD0406138.pdf"><em>LISP 1.5 Programmer’s
+Manual</em></a>. The MIT Press (Cambridge, 1962).</p>
+<div class="ti">
+<p>{{See also McCarthy et al <a href="https://www.softwarepreservation.org/projects/LISP/book/LISP%201.5%20Programmers%20Manual.pdf" title="www.softwarepreservation.org/projects/LISP/book/LISP%201.5%20Programmers%20Manual.pdf"><em>LISP
+1.5 Programmer’s Manual</em></a> [Second edition] The MIT Press
+(Cambridge, 1965). }}</p>
+</div>
+</section>
+<section id="moon-74-1-2-3-4" class="level4">
+<h4>[Moon 74] <span class="fr"><a href="#xmoon1">1</a>, <a href="#xmoon2">2</a>, <a href="#xmoon3">3</a>, <a href="#xmoon4">4</a></span><br />
+</h4>
+<p>Moon, David A. <a href="https://www.softwarepreservation.org/projects/LISP/MIT/Moon-MACLISP_Reference_Manual-Apr_08_1974.pdf" title="www.softwarepreservation.org/projects/LISP/MIT/Moon-MACLISP_Reference_Manual-Apr_08_1974.pdf"><em>MACLISP
+Reference Manual, Revision 0</em></a>. Project MAC, MIT (Cambridge,
+April 1974).</p>
+</section>
+<section id="moses-70" class="level4">
+<h4>[Moses 70] <span class="fr"><a href="#xmoses-70">^</a></span><br />
+</h4>
+<p>Moses, Joel. <a href="https://dspace.mit.edu/handle/1721.1/5854" title="dspace.mit.edu/handle/1721.1/5854"><em>The Function of FUNCTION
+in LISP</em></a>. AI Memo 199, MIT AI Lab (Cambridge, June 1970).</p>
+</section>
+<section id="naur-60" class="level4">
+<h4>{{[Naur 60] <span class="fr"><a href="#xnaur-60">^</a></span><br />
+</h4>
+<div class="in">
+<p>Naur, Peter <a href="https://dl.acm.org/doi/10.5555/1060892.1060898" title="dl.acm.org/doi/10.5555/1060892.1060898"><em>An example of a
+function designator changing the value of a formal variable</em></a>.
+ALGOL Bulletin, Issue 10, pp. 12–13. }}</p>
+</div>
+</section>
+<section id="naur-63-1-2" class="level4">
+<h4>[Naur 63] <span class="fr"><a href="#xnaur-631">1</a>, <a href="#xnaur-632">2</a></span><br />
+</h4>
+<p>Naur, Peter (ed.), et al. <a href="https://dl.acm.org/doi/10.1145/366193.366201" title="dl.acm.org/doi/10.1145/366193.366201"><em>Revised Report on the
+Algorithmic Language ALGOL 60</em></a>. Comm. ACM 6, 1 (January 1963),
+1-20.</p>
+</section>
+<section id="reynolds-72-1-2-3-4-5-6" class="level4">
+<h4>[Reynolds 72] <span class="fr"><a href="#xrey1">1</a>, <a href="#xrey2">2</a>, <a href="#xrey3">3</a>, <a href="#xrey4">4</a>, <a href="#xrey5">5</a>, <a href="#xrey6">6</a></span><br />
+</h4>
+<p>Reynolds, John C. <a href="https://dl.acm.org/doi/10.1145/800194.805852" title="dl.acm.org/doi/10.1145/800194.805852"><em>Definitional
+Interpreters for Higher Order Programming Languages</em></a>. ACM
+Conference Proceedings 1972.</p>
+</section>
+<section id="richards-69" class="level4">
+<h4>[Richards 69] <span class="fr"><a href="#xrichards-69">^</a></span><br />
+</h4>
+<p>Richards, Martin. <a href="http://portal.acm.org/citation.cfm?doid=1476793.1476880" title="portal.acm.org/citation.cfm?doid=1476793.1476880"><em>BCPL: A
+Tool for Compiler Writing and Systems Programming</em></a>. Proc. AFIPS
+1969 SJCC, Vol. 34. AFIPS Press (Montvale, N.J.) pp. 557-566.</p>
+</section>
+<section id="richards-74" class="level4">
+<h4>[Richards 74] <span class="fr"><a href="#xrichards-74">^</a></span><br />
+</h4>
+<p>Richards, Martin, Evans, Arthur Jr., and Mabee, Robert F. <a href="http://www.dtic.mil/docs/citations/ADA003599" title="dtic.mil/docs/citations/ADA003599"><em>The BCPL Reference
+Manual</em></a>. TR-141, Project MAC, MIT (Cambridge, December
+1974).</p>
+</section>
+<section id="smith-75-1-2-3" class="level4">
+<h4>[Smith 75] <span class="fr"><a href="#xsmith1">1</a>, <a href="#xsmith2">2</a>, <a href="#xsmith3">3</a></span><br />
+</h4>
+<p>Smith, Brian C. and Hewitt, Carl. <a href="https://www.scribd.com/document/185900689/A-Plasma-Primer" title="www.scribd.com/document/185900689/A-Plasma-Primer"><em>A PLASMA
+Primer (draft)</em></a>. MIT AI Lab (Cambridge, October 1975).</p>
+</section>
+<section id="sussman-75-1-2-3-4" class="level4">
+<h4>[Sussman 75] <span class="fr"><a href="#xsussman1">1</a>, <a href="#xsussman2">2</a>, <a href="#xsussman3">3</a>, <a href="#xsussman4">4</a></span><br />
+</h4>
+<p>Sussman, Gerald Jay, and Steele, Guy L. Jr. <a href="https://dspace.mit.edu/handle/1721.1/5794" title="dspace.mit.edu/handle/1721.1/5794"><em>SCHEME: An Interpreter for
+Extended Lambda Calculus</em></a>. AI Lab Memo 349. MIT (Cambridge,
+December 1975).</p>
+<div class="ti">
+<p>{{HTML transcription: <a href="https://research.scheme.org/lambda-papers/" title="research.scheme.org/lambda-papers/">research.scheme.org/lambda-papers/</a>.<br />
+Republished with notes as<br />
+Sussman, G.J., Steele, G.L. <a href="https://www.researchgate.net/publication/227098423_Scheme_A_Interpreter_for_Extended_Lambda_Calculus" title="www.researchgate.net/publication/227098423_Scheme_A_Interpreter_for_Extended_Lambda_Calculus"><em>Scheme:
+A Interpreter for Extended Lambda Calculus</em></a>. Higher-Order and
+Symbolic Computation 11, 405–439 (1998).
+https://doi.org/10.1023/A:1010035624696<br />
+See also: Sussman, G.J., Steele, G.L. <a href="https://doi.org/10.1023/A:1010079421970" title="doi.org/10.1023/A:1010079421970"><em>The First Report on Scheme
+Revisited</em></a>. Higher-Order and Symbolic Computation 11, 399–404
+(1998). https://doi.org/10.1023/A:1010079421970 }}</p>
+</div>
+</section>
+<section id="teitelman-74-1-2" class="level4">
+<h4>[Teitelman 74] <span class="fr"><a href="#xteitelman-741">1</a>, <a href="#xteitelman-742">2</a></span><br />
+</h4>
+<p>Teitelman, Warren. <a href="https://www.bitsavers.org/pdf/xerox/interlisp/Interlisp_Reference_Manual_Oct_1974.pdf" title="www.bitsavers.org/pdf/xerox/interlisp/Interlisp_Reference_Manual_Oct_1974.pdf"><em>InterLISP
+Reference Manual</em></a>. Xerox Palo Alto Research Center (Palo Alto,
+1974).</p>
+</section>
+<section id="vuillemin-74" class="level4">
+<h4>[Vuillemin 74] <span class="fr"><a href="#xvuillemin-74">^</a></span><br />
+</h4>
+<p>Vuillemin, Jean. <a href="https://dl.acm.org/doi/10.1145/800125.804054" title="dl.acm.org/doi/10.1145/800125.804054"><em>Correct and Optimal
+Implementations of Recursion in a Simple Programming Language</em></a>.
+Journal of Computer and System Sciences 9, 3 (December 1974).</p>
+</section>
+<section id="wadsworth-71" class="level4">
+<h4>[Wadsworth 71] <span class="fr"><a href="#xwadsworth-71">^</a></span><br />
+</h4>
+<p>Wadsworth, Christopher. <a href="https://www.computerhistory.org/collections/catalog/102720343" title="www.computerhistory.org/collections/catalog/102720343"><em>Semantics
+and Pragmatics of the Lambda-calculus</em></a>. Ph.D. Thesis. Oxford
+(1971).</p>
+</section>
+<section id="wegbreit-70-1-2" class="level4">
+<h4>[Wegbreit 70] <span class="fr"><a href="#xwegbreit-701">1</a>, <a href="#xwegbreit-702">2</a></span><br />
+</h4>
+<p>Wegbreit, Ben. <a href="https://apps.dtic.mil/sti/tr/pdf/AD0715332.pdf" title="apps.dtic.mil/sti/tr/pdf/AD0715332.pdf"><em>Studies in Extensible
+Programming Languages</em></a>. Ph.D. Thesis. Harvard U. (Cambridge,
+1970).</p>
+</section>
+<section id="wegbreit-71" class="level4">
+<h4>[Wegbreit 71] <span class="fr"><a href="#xwegbreit-71">^</a></span><br />
+</h4>
+<p>Wegbreit, Ben. <a href="https://dl.acm.org/doi/10.1145/1479064.1479113" title="dl.acm.org/doi/10.1145/1479064.1479113"><em>The ECL Programming
+System</em></a>. Proc. AFIPS 1971 FJCC, Vol. 39. AFIPS Press, Montvale,
+N.J. pp. 253-262.</p>
+</section>
+<section id="wegbreit-72" class="level4">
+<h4>[Wegbreit 72] <span class="fr"><a href="#xwegbreit-72">^</a></span><br />
+</h4>
+<p>Wegbreit, Ben, et al. <a href="https://.invalid/_no_online_copy_found_/" title="No online copy found"><em>ECL Programmer’s Manual</em></a>.
+Technical Report 21-72. Center for Research in Computing Technology,
+Harvard U. (Cambridge, September 1972).<br />
+{{See [<a href="#wegbreit-74b-1-2">Wegbreit 74b</a>]. }}</p>
+</section>
+<section id="wegbreit-74a" class="level4">
+<h4>[Wegbreit 74a] <span class="fr"><a href="#xwegbreit-74a">^</a></span><br />
+</h4>
+<p>Wegbreit, Ben. <a href="https://dl.acm.org/doi/10.1145/360980.360992" title="dl.acm.org/doi/10.1145/360980.360992"><em>The Treatment of Data
+Types in EL1</em></a>. Comm. ACM 17, 5 (May 1974), 251-264.</p>
+</section>
+<section id="wegbreit-74b-1-2" class="level4">
+<h4>[Wegbreit 74b] <span class="fr"><a href="#xwegbreit-74b1">1</a>, <a href="#xwegbreit-74b2">2</a></span><br />
+</h4>
+<p>Wegbreit, Ben, et al. <a href="https://github.com/PDP-10/harvard-ecl/blob/master/Holloway_et_al-ECL_Programmers_Manual-Dec_1974.pdf" title="github.com/PDP-10/harvard-ecl/blob/master/Holloway_et_al-ECL_Programmers_Manual-Dec_1974.pdf"><em>ECL
+Programmer’s Manual</em></a>. Technical Report 23-74. Center for
+Research in Computing Technology, Harvard U. (Cambridge, December
+1974).</p>
+</section>
+<section id="wegner-68" class="level4">
+<h4>[Wegner 68] <span class="fr">*</span><br />
+</h4>
+<p>Wegner, Peter. <a href="https://archive.org/details/programminglangu0000wegn" title="archive.org/details/programminglangu0000wegn"><em>Programming
+Languages, Information Structures, and Machine Organization</em></a>.
+McGraw-Hill (New York, 1968).</p>
+</section>
+<section id="wulf-71-1-2" class="level4 npb">
+<h4>[Wulf 71] <span class="fr"><a href="#xwulf-711">1</a>, <a href="#xwulf-712">2</a></span><br />
+</h4>
+<p>Wulf, W.A., Russell, D.B., and Habermann, A.N. <a href="https://dl.acm.org/doi/10.1145/362919.362936" title="dl.acm.org/doi/10.1145/362919.362936"><em>BLISS: A Language for
+Systems Programing</em></a>. Comm. ACM 14, 12 (December 1971),
+780-790.</p>
+</section>
+<section id="wulf-72" class="level4">
+<h4>[Wulf 72] <span class="fr"><a href="#xwulf-72">^</a></span><br />
+</h4>
+<p>Wulf, William A. <a href="https://dl.acm.org/doi/abs/10.1145/1480083.1480121" title="dl.acm.org/doi/abs/10.1145/1480083.1480121"><em>Systems for
+Systems Implementors – Some Experiences from BLISS</em></a>. Proc. AFIPS
+1972 FJCC. AFIPS Press (Montvale, N.J., 1972).</p>
+</section>
+</section>
+</section>
+</body>
+</html>
