@@ -43,6 +43,13 @@
   show raw: set text(font: "Source Code Pro", size: 8.3pt)
   show link: set text(fill: accent)
 
+  // Oversized, washed-out logo watermark centered on the title page so it
+  // bleeds off every edge. A translucent white overlay fades it back.
+  set page(background: place(center + horizon, box(width: 340mm, height: 340mm)[
+    #image("assets/sybilant-logo.svg", width: 100%, height: 100%)
+    #place(top + left, rect(width: 100%, height: 100%, fill: white.transparentize(8%)))
+  ]))
+
   block(height: 245mm, width: 100%)[
     #v(27mm)
     #line(length: 16mm, stroke: (paint: accent, thickness: 2.2pt))
@@ -64,7 +71,7 @@
 
   pagebreak()
   counter(page).update(1)
-  set page(numbering: "1", number-align: center)
+  set page(numbering: "1", number-align: center, background: none)
 
   body
 }
