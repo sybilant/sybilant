@@ -57,6 +57,8 @@ implementation-independent standard.
 3. Make the smallest coherent design and implementation change.
 4. Run `devenv shell bin/build-design` from the repository root.
 5. Confirm that `DESIGN.pdf` exists and inspect build diagnostics.
+6. Do not co-author commits.
+7. Do not co-author pull requests.
 
 Run `devenv test` after changes to the build environment or build script.
 
