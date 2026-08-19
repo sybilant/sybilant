@@ -1,0 +1,9 @@
+# Sybilant terminology and document placeholders.
+DDR(?:s|-NNNN)?
+Graphviz
+NNNN
+Option [AB]
+Proposed
+Sybilant
+Typst
+YYYY

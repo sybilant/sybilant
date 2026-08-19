@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+root_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+design_dir="$root_dir/design"
+diagram_dir="$design_dir/diagrams"
+generated_dir="$design_dir/generated"
+output="$root_dir/DESIGN.pdf"
+
+missing=0
+for tool in dot typst; do
+  if ! command -v "$tool" >/dev/null 2>&1; then
+    printf 'error: required tool not found: %s\n' "$tool" >&2
+    missing=1
+  fi
+done
+
+if ((missing != 0)); then
+  printf 'Enter the project environment with devenv shell.\n' >&2
+  exit 127
+fi
+
+mkdir -p "$generated_dir"
+
+shopt -s nullglob
+for generated in "$generated_dir"/*.svg; do
+  rm -f -- "$generated"
+done
+
+for source in "$diagram_dir"/*.dot; do
+  name="$(basename -- "${source%.dot}")"
+  dot -Tsvg "$source" -o "$generated_dir/$name.svg"
+done
+
+typst compile --root "$root_dir" "$design_dir/main.typ" "$output"
+printf 'Wrote %s\n' "$output"

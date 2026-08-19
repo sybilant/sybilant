@@ -1,0 +1,12 @@
+extends: existence
+message: "State the point directly; '%s' weakens it."
+level: warning
+ignorecase: true
+tokens:
+  - arguably
+  - 'in (?:my|our) opinion'
+  - 'it (?:appears|seems)(?: that| to be)?'
+  - '(?:I|we) (?:believe|think)'
+  - maybe
+  - perhaps
+  - probably

@@ -1,0 +1,7 @@
+.devenv*
+.pre-commit-config.yaml
+devenv.local.nix
+
+# Generated documentation artifacts
+DESIGN.pdf
+design/generated/
