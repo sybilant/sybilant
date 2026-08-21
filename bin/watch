@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+root_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+design_dir="$root_dir/design"
+output="$root_dir/DESIGN.pdf"
+
+if ! command -v entr >/dev/null 2>&1; then
+  printf 'error: required tool not found: entr\n' >&2
+  printf 'Enter the project environment with devenv shell.\n' >&2
+  exit 127
+fi
+
+# Close the viewer when the script exits, however it exits. A background
+# process started with & ignores SIGINT, so Ctrl-C alone leaves evince open;
+# the EXIT trap kills it instead. The INT and TERM traps turn a signal into a
+# normal exit so the EXIT trap still runs. Loop control relies on entr's exit
+# code, not on these traps.
+viewer_pid=""
+cleanup() {
+  if [[ -n "$viewer_pid" ]]; then
+    kill "$viewer_pid" 2>/dev/null || true
+  fi
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+# Open the document in evince, which reloads it automatically after each
+# rebuild. Build once up front only when the PDF is missing so evince has a
+# file to open; otherwise entr's own initial build refreshes it in a moment.
+if command -v evince >/dev/null 2>&1; then
+  if [[ ! -f "$output" ]]; then
+    "$root_dir/bin/build-design" || true
+  fi
+  if [[ -f "$output" ]]; then
+    evince "$output" >/dev/null 2>&1 &
+    viewer_pid=$!
+  fi
+else
+  printf 'warning: evince not found; watching without a viewer\n' >&2
+fi
+
+# entr watches a fixed file list captured at startup, so re-list on every
+# iteration. The -d flag makes entr exit 2 when a file is added to or removed
+# from a watched directory; the loop then re-runs find to pick it up. entr
+# runs the build once immediately, then again on each change. Any other exit
+# status ends the loop: 0 for a clean quit, a signal such as Ctrl-C, or an
+# error. Capture the status with || so set -e does not exit before the check.
+printf 'Watching %s for changes. Press Ctrl-C to stop.\n' "$design_dir" >&2
+while true; do
+  status=0
+  find "$design_dir" -type f | entr -cd "$root_dir/bin/build-design" || status=$?
+  ((status == 2)) || exit "$status"
+done

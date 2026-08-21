@@ -14,6 +14,7 @@ in
   };
 
   packages = [
+    pkgs.entr
     pkgs.graphviz
     vale
   ];
@@ -23,6 +24,13 @@ in
       exec "$DEVENV_ROOT/bin/build-design" "$@"
     '';
     description = "Build the Sybilant design document";
+  };
+
+  scripts.watch = {
+    exec = ''
+      exec "$DEVENV_ROOT/bin/watch" "$@"
+    '';
+    description = "Rebuild the design document when design sources change";
   };
 
   scripts.lint-prose = {
