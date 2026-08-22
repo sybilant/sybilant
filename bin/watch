@@ -48,9 +48,13 @@ fi
 # runs the build once immediately, then again on each change. Any other exit
 # status ends the loop: 0 for a clean quit, a signal such as Ctrl-C, or an
 # error. Capture the status with || so set -e does not exit before the check.
+#
+# Exclude paths containing '#'. Emacs names autosave files '#main.typ#' and
+# lock files '.#main.typ'; both are transient, so entr fails to open them the
+# moment they vanish. The -name test prunes both forms.
 printf 'Watching %s for changes. Press Ctrl-C to stop.\n' "$design_dir" >&2
 while true; do
   status=0
-  find "$design_dir" -type f | entr -cd "$root_dir/bin/build-design" || status=$?
+  find "$design_dir" -type f ! -name '*#*' | entr -cd "$root_dir/bin/build-design" || status=$?
   ((status == 2)) || exit "$status"
 done
