@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Builds the Sybilant manual from docs/sybilant-manual.typ (which #includes the
+# DDRs -- see the comments there). Run via `build-manual` inside `devenv
+# shell`, or directly as ./bin/build-manual.
+set -euo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+out_file="$root/docs/sybilant-manual.pdf"
+
+# Typst ships no bundled fonts, so under Nix it only finds a font if we
+# point it at one explicitly. devenv.nix sets TYPST_FONT_PATHS to the
+# Nix-packaged font directory so this doesn't depend on system fontconfig.
+if [ -z "${TYPST_FONT_PATHS:-}" ]; then
+  echo "TYPST_FONT_PATHS is not set; run this inside 'devenv shell'." >&2
+  exit 1
+fi
+
+typst compile \
+  --root "$root" \
+  --input "build_date=$(date +%Y-%m-%d)" \
+  "$root/docs/sybilant-manual.typ" \
+  "$out_file"
+
+echo "Wrote $out_file"

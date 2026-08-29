@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Rebuilds the Sybilant manual whenever its Typst sources change, and
+# keeps it open in evince. Ctrl-C stops the watch loop and closes evince.
+# Run via `watch-manual` inside `devenv shell`, or directly as
+# ./bin/watch-manual.
+set -euo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+pdf="$root/docs/sybilant-manual.pdf"
+
+"$root/bin/build-manual"
+
+evince "$pdf" &
+evince_pid=$!
+
+cleanup() {
+  kill "$evince_pid" 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
+
+echo "Watching docs/ for *.typ changes; Ctrl-C to stop."
+while inotifywait -qq -r -e modify,create,delete,move \
+  --include '\.typ$' "$root/docs"; do
+  "$root/bin/build-manual" || true
+done
