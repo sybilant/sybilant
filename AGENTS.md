@@ -35,6 +35,8 @@ genuinely torn on and want a record of, so you don't keep revisiting it.
 Most decisions don't need a DDR. See `STATUS.md` for the format its
 entries follow.
 
+Don't offer to create a DDR without first checking.
+
 ## Design decision records
 
 Each DDR follows the structure in `docs/ddrs/0000-template.md`. See
