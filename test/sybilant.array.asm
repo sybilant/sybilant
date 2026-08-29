@@ -1,0 +1,147 @@
+bits 64
+default rel
+
+extern sybilant_array_empty
+extern sybilant_array_concat
+extern sybilant_array_insert
+extern sybilant_array_delete
+extern sybilant_array_slice
+extern sybilant_array_get
+extern sybilant_array_set
+extern sybilant_array_length
+extern sybilant_exit
+
+section .text
+global _start
+
+_start:
+    lea rax, [sybilant_array_empty]
+    lea rcx, [sybilant_array_empty]
+    cmp rax, rcx
+    jne .empty_failed
+    cmp qword [rax], 0
+    jne .header_failed
+    cmp qword [rax + 8], 0
+    jne .header_failed
+
+    lea rdi, [sybilant_array_empty]
+    xor esi, esi
+    mov edx, 10
+    call sybilant_array_insert
+    mov rdi, rax
+    mov esi, 1
+    mov edx, 20
+    call sybilant_array_insert
+    mov rdi, rax
+    mov esi, 2
+    mov edx, 30
+    call sybilant_array_insert
+    mov r12, rax
+    mov rdi, r12
+    call sybilant_array_length
+    cmp rax, 3
+    jne .length_failed
+
+    mov rdi, r12
+    mov rsi, r12
+    call sybilant_array_concat
+    cmp qword [rax + 8], 6
+    jne .concat_failed
+    cmp qword [rax + 16], 10
+    jne .concat_failed
+    cmp qword [rax + 32], 30
+    jne .concat_failed
+    cmp qword [rax + 40], 10
+    jne .concat_failed
+    cmp qword [rax + 56], 30
+    jne .concat_failed
+
+    mov rdi, r12
+    mov rsi, -2
+    call sybilant_array_get
+    cmp rax, 20
+    jne .negative_get_failed
+
+    mov rdi, r12
+    mov rsi, -2
+    mov edx, 15
+    call sybilant_array_insert
+    mov r13, rax
+    cmp qword [r13 + 16], 10
+    jne .insert_failed
+    cmp qword [r13 + 24], 15
+    jne .insert_failed
+    cmp qword [r13 + 32], 20
+    jne .insert_failed
+
+    mov rdi, r12
+    mov rsi, -2
+    call sybilant_array_delete
+    mov r13, rax
+    cmp qword [r13 + 8], 2
+    jne .delete_failed
+    cmp qword [r13 + 16], 10
+    jne .delete_failed
+    cmp qword [r13 + 24], 30
+    jne .delete_failed
+
+    mov rdi, r12
+    mov rsi, -3
+    mov rdx, -1
+    call sybilant_array_slice
+    cmp qword [rax + 8], 2
+    jne .slice_failed
+    cmp qword [rax + 16], 10
+    jne .slice_failed
+    cmp qword [rax + 24], 20
+    jne .slice_failed
+
+    mov rdi, r12
+    mov rsi, -2
+    mov rdx, -2
+    call sybilant_array_slice
+    lea rcx, [sybilant_array_empty]
+    cmp rax, rcx
+    jne .slice_empty_failed
+
+    mov rdi, r12
+    mov rsi, -2
+    mov edx, 99
+    call sybilant_array_set
+    mov r13, rax
+    mov rdi, r13
+    mov esi, 1
+    call sybilant_array_get
+    cmp rax, 99
+    jne .set_failed
+    mov rdi, r12
+    mov esi, 1
+    call sybilant_array_get
+    cmp rax, 20
+    jne .original_changed
+
+    xor edi, edi
+    jmp sybilant_exit
+
+.empty_failed: mov edi, 64
+    jmp sybilant_exit
+.header_failed: mov edi, 65
+    jmp sybilant_exit
+.length_failed: mov edi, 66
+    jmp sybilant_exit
+.insert_failed: mov edi, 71
+    jmp sybilant_exit
+.set_failed: mov edi, 72
+    jmp sybilant_exit
+.original_changed: mov edi, 73
+    jmp sybilant_exit
+.delete_failed: mov edi, 75
+    jmp sybilant_exit
+.slice_failed: mov edi, 76
+    jmp sybilant_exit
+.slice_empty_failed: mov edi, 77
+    jmp sybilant_exit
+.negative_get_failed: mov edi, 80
+    jmp sybilant_exit
+.concat_failed: mov edi, 81
+    jmp sybilant_exit

@@ -55,7 +55,18 @@ let
 in
 {
   # https://devenv.sh/packages/
-  packages = [ vale typst2vast pkgs.typst pkgs.evince pkgs.inotify-tools pkgs.poppler-utils pkgs.ripgrep ];
+  packages = [
+    vale
+    typst2vast
+    pkgs.typst
+    pkgs.evince
+    pkgs.inotify-tools
+    pkgs.poppler-utils
+    pkgs.ripgrep
+    pkgs.nasm
+    pkgs.binutils
+    pkgs.gnumake
+  ];
 
   # Typst (the PDF pipeline's render engine, see scripts.build-manual
   # below) ships no bundled fonts. Point it at a Nix-packaged font, via
