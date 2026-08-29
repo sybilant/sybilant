@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Builds the Sybilant manual from docs/sybilant-manual.typ (which #includes the
-# DDRs -- see the comments there). Run via `build-manual` inside `devenv
-# shell`, or directly as ./bin/build-manual.
+# Builds the Sybilant manual from docs/sybilant-manual.typ. Run via
+# `build-manual` inside `devenv shell`, or directly as
+# ./bin/build-manual.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
