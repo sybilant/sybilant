@@ -6,7 +6,8 @@ BUILD_DIR := build
 CONSTANTS := lib/sybilant.constants.asm
 LIB_OBJECTS := $(BUILD_DIR)/sybilant.start.o $(BUILD_DIR)/sybilant.o $(BUILD_DIR)/sybilant.array.o \
 	$(BUILD_DIR)/sybilant.atom.o $(BUILD_DIR)/sybilant.thread.o \
-	$(BUILD_DIR)/sybilant.mutable.array.o $(BUILD_DIR)/sybilant.rrbt.o
+	$(BUILD_DIR)/sybilant.mutable.array.o $(BUILD_DIR)/sybilant.rrbt.o \
+	$(BUILD_DIR)/sybilant.mutable.rrbt.o
 TEST_SOURCES := $(wildcard test/*.asm)
 TEST_OBJECTS := $(patsubst test/%.asm,$(BUILD_DIR)/test/%.o,$(TEST_SOURCES))
 TEST_BINS := $(patsubst test/%.asm,$(BUILD_DIR)/test/%,$(TEST_SOURCES))
