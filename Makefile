@@ -3,7 +3,8 @@ LD ?= ld
 NASMFLAGS := -f elf64 -Wall -w-reloc-abs-qword -w-reloc-rel-dword
 
 BUILD_DIR := build
-LIB_OBJECTS := $(BUILD_DIR)/sybilant.o $(BUILD_DIR)/sybilant.array.o
+CONSTANTS := lib/sybilant.constants.asm
+LIB_OBJECTS := $(BUILD_DIR)/sybilant.o $(BUILD_DIR)/sybilant.array.o $(BUILD_DIR)/sybilant.atom.o
 TEST_SOURCES := $(wildcard test/*.asm)
 TEST_OBJECTS := $(patsubst test/%.asm,$(BUILD_DIR)/test/%.o,$(TEST_SOURCES))
 TEST_BINS := $(patsubst test/%.asm,$(BUILD_DIR)/test/%,$(TEST_SOURCES))
@@ -18,11 +19,11 @@ test: $(TEST_BINS)
 		"$$test_bin"; \
 	done
 
-$(BUILD_DIR)/%.o: lib/%.asm
+$(BUILD_DIR)/%.o: lib/%.asm $(CONSTANTS)
 	@mkdir -p $(@D)
 	$(NASM) $(NASMFLAGS) -o $@ $<
 
-$(BUILD_DIR)/test/%.o: test/%.asm
+$(BUILD_DIR)/test/%.o: test/%.asm $(CONSTANTS)
 	@mkdir -p $(@D)
 	$(NASM) $(NASMFLAGS) -o $@ $<
 

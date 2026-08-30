@@ -1,28 +1,46 @@
 bits 64
 default rel
 
-extern sybilant_array_empty
 extern sybilant_array_concat
-extern sybilant_array_insert
 extern sybilant_array_delete
-extern sybilant_array_slice
+extern sybilant_array_empty
 extern sybilant_array_get
-extern sybilant_array_set
+extern sybilant_array_insert
 extern sybilant_array_length
+extern sybilant_array_p
+extern sybilant_array_set
+extern sybilant_array_slice
+extern sybilant_atom_new
 extern sybilant_exit
+
+%include "lib/sybilant.constants.asm"
 
 section .text
 global _start
-
 _start:
     lea rax, [sybilant_array_empty]
     lea rcx, [sybilant_array_empty]
     cmp rax, rcx
     jne .empty_failed
-    cmp qword [rax], 0
+    cmp qword [rax], SYBILANT_ARRAY_TYPE
     jne .header_failed
     cmp qword [rax + 8], 0
     jne .header_failed
+
+    mov rdi, rax
+    call sybilant_array_p
+    cmp rax, SYBILANT_TRUE
+    jne .array_predicate_failed
+    mov edi, SYBILANT_NIL
+    call sybilant_array_p
+    cmp rax, SYBILANT_FALSE
+    jne .immediate_predicate_failed
+    mov edi, SYBILANT_NIL
+    call sybilant_atom_new
+    mov rdi, rax
+    call sybilant_array_p
+    cmp rax, SYBILANT_FALSE
+    jne .atom_predicate_failed
 
     lea rdi, [sybilant_array_empty]
     xor esi, esi
@@ -145,3 +163,13 @@ _start:
     jmp sybilant_exit
 .concat_failed: mov edi, 81
     jmp sybilant_exit
+.array_predicate_failed: mov edi, 82
+    jmp sybilant_exit
+.immediate_predicate_failed: mov edi, 83
+    jmp sybilant_exit
+.atom_predicate_failed: mov edi, 84
+    jmp sybilant_exit
+
+;; Local Variables:
+;; mode: nasm
+;; End:

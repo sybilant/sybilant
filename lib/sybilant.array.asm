@@ -3,38 +3,35 @@ default rel
 
 extern sybilant_alloc
 extern sybilant_exit
+extern sybilant_type_p
 
-SYBILANT_EXIT_INVALID_ARGUMENT equ 2
-SYBILANT_EXIT_BOUNDS equ 3
+%include "lib/sybilant.constants.asm"
 
-ARRAY_TYPE equ 0
-ARRAY_TYPE_OFFSET equ 0
-ARRAY_COUNT_OFFSET equ 8
-ARRAY_ITEMS_OFFSET equ 16
+    ; Array layout.
+    COUNT_OFFSET equ 8
+    ITEMS_OFFSET equ 16
 
 section .rodata
 align 16
 global sybilant_array_empty
-sybilant_array_empty: dq ARRAY_TYPE, 0
+sybilant_array_empty:
+    dq SYBILANT_ARRAY_TYPE, 0
 
 section .text
-global sybilant_array_concat
-global sybilant_array_insert
-global sybilant_array_delete
-global sybilant_array_slice
-global sybilant_array_get
-global sybilant_array_set
-global sybilant_array_length
+;; Return whether rdi is an array. rax = SYBILANT_TRUE or SYBILANT_FALSE.
+global sybilant_array_p
+sybilant_array_p:
+    mov esi, SYBILANT_ARRAY_TYPE
+    jmp sybilant_type_p
 
-; Concatenate two immutable arrays.
-; rdi = left array, rsi = right array; rax = new array
+;; Concatenate two immutable arrays.
+;; rdi = left array, rsi = right array; rax = new array
+global sybilant_array_concat
 sybilant_array_concat:
-    call sybilant_array_validate
     mov r8, rdi
     mov rdi, rsi
-    call sybilant_array_validate
-    mov r9, [r8 + ARRAY_COUNT_OFFSET]
-    mov r10, [rdi + ARRAY_COUNT_OFFSET]
+    mov r9, [r8 + COUNT_OFFSET]
+    mov r10, [rdi + COUNT_OFFSET]
     mov r11, r9
     add r11, r10
     jc sybilant_array_invalid_argument
@@ -50,11 +47,11 @@ sybilant_array_concat:
     mov rdi, r11
     call sybilant_array_allocate
     mov rbx, rax
-    lea rdi, [rbx + ARRAY_ITEMS_OFFSET]
-    lea rsi, [r12 + ARRAY_ITEMS_OFFSET]
+    lea rdi, [rbx + ITEMS_OFFSET]
+    lea rsi, [r12 + ITEMS_OFFSET]
     mov rcx, r14
     rep movsq
-    lea rsi, [r13 + ARRAY_ITEMS_OFFSET]
+    lea rsi, [r13 + ITEMS_OFFSET]
     mov rcx, r15
     rep movsq
     mov rax, rbx
@@ -65,11 +62,11 @@ sybilant_array_concat:
     pop rbx
     ret
 
-; Insert before an index. Positions 0 through length are valid.
-; rdi = array, rsi = index, rdx = item; rax = new array.
+;; Insert before an index. Positions 0 through length are valid.
+;; rdi = array, rsi = index, rdx = item; rax = new array.
+global sybilant_array_insert
 sybilant_array_insert:
-    call sybilant_array_validate
-    mov r8, [rdi + ARRAY_COUNT_OFFSET]
+    mov r8, [rdi + COUNT_OFFSET]
     cmp rsi, r8
     je .position_valid
     call sybilant_array_normalize_index
@@ -89,13 +86,13 @@ sybilant_array_insert:
     lea rdi, [r15 + 1]
     call sybilant_array_allocate
     mov rbx, rax
-    lea rdi, [rbx + ARRAY_ITEMS_OFFSET]
-    lea rsi, [r12 + ARRAY_ITEMS_OFFSET]
+    lea rdi, [rbx + ITEMS_OFFSET]
+    lea rsi, [r12 + ITEMS_OFFSET]
     mov rcx, r13
     rep movsq
-    mov [rbx + ARRAY_ITEMS_OFFSET + r13 * 8], r14
-    lea rdi, [rbx + ARRAY_ITEMS_OFFSET + r13 * 8 + 8]
-    lea rsi, [r12 + ARRAY_ITEMS_OFFSET + r13 * 8]
+    mov [rbx + ITEMS_OFFSET + r13 * 8], r14
+    lea rdi, [rbx + ITEMS_OFFSET + r13 * 8 + 8]
+    lea rsi, [r12 + ITEMS_OFFSET + r13 * 8]
     mov rcx, r15
     sub rcx, r13
     rep movsq
@@ -107,11 +104,11 @@ sybilant_array_insert:
     pop rbx
     ret
 
-; Delete one item at an index.
-; rdi = array, rsi = index; rax = new array.
+;; Delete one item at an index.
+;; rdi = array, rsi = index; rax = new array.
+global sybilant_array_delete
 sybilant_array_delete:
-    call sybilant_array_validate
-    mov r8, [rdi + ARRAY_COUNT_OFFSET]
+    mov r8, [rdi + COUNT_OFFSET]
     call sybilant_array_normalize_index
     mov rsi, rax
     cmp r8, 1
@@ -127,12 +124,12 @@ sybilant_array_delete:
     lea rdi, [r14 - 1]
     call sybilant_array_allocate
     mov rbx, rax
-    lea rdi, [rbx + ARRAY_ITEMS_OFFSET]
-    lea rsi, [r12 + ARRAY_ITEMS_OFFSET]
+    lea rdi, [rbx + ITEMS_OFFSET]
+    lea rsi, [r12 + ITEMS_OFFSET]
     mov rcx, r13
     rep movsq
-    lea rdi, [rbx + ARRAY_ITEMS_OFFSET + r13 * 8]
-    lea rsi, [r12 + ARRAY_ITEMS_OFFSET + r13 * 8 + 8]
+    lea rdi, [rbx + ITEMS_OFFSET + r13 * 8]
+    lea rsi, [r12 + ITEMS_OFFSET + r13 * 8 + 8]
     mov rcx, r14
     sub rcx, r13
     dec rcx
@@ -148,11 +145,11 @@ sybilant_array_delete:
     lea rax, [sybilant_array_empty]
     ret
 
-; Copy the half-open range [start, end).
-; rdi = array, rsi = start, rdx = end; rax = new array.
-; Requires 0 <= start <= end and end <= length - 1.
+;; Copy the half-open range [start, end).
+;; rdi = array, rsi = start, rdx = end; rax = new array.
+;; Requires 0 <= start <= end and end <= length - 1.
+global sybilant_array_slice
 sybilant_array_slice:
-    call sybilant_array_validate
     mov r8, rdx
     call sybilant_array_normalize_index
     mov r9, rax
@@ -175,8 +172,8 @@ sybilant_array_slice:
     mov rdi, r14
     call sybilant_array_allocate
     mov rbx, rax
-    lea rdi, [rbx + ARRAY_ITEMS_OFFSET]
-    lea rsi, [r12 + ARRAY_ITEMS_OFFSET + r13 * 8]
+    lea rdi, [rbx + ITEMS_OFFSET]
+    lea rsi, [r12 + ITEMS_OFFSET + r13 * 8]
     mov rcx, r14
     rep movsq
     mov rax, rbx
@@ -190,17 +187,17 @@ sybilant_array_slice:
     lea rax, [sybilant_array_empty]
     ret
 
-; Read one qword. rdi = array, rsi = zero-based index; rax = item.
+;; Read one qword. rdi = array, rsi = zero-based index; rax = item.
+global sybilant_array_get
 sybilant_array_get:
-    call sybilant_array_validate
     call sybilant_array_normalize_index
-    mov rax, [rdi + ARRAY_ITEMS_OFFSET + rax * 8]
+    mov rax, [rdi + ITEMS_OFFSET + rax * 8]
     ret
 
-; Replace one qword. rdi = array, rsi = index, rdx = item; rax = new array.
+;; Replace one qword. rdi = array, rsi = index, rdx = item; rax = new array.
+global sybilant_array_set
 sybilant_array_set:
-    call sybilant_array_validate
-    mov r8, [rdi + ARRAY_COUNT_OFFSET]
+    mov r8, [rdi + COUNT_OFFSET]
     call sybilant_array_normalize_index
     mov rsi, rax
     push rbx
@@ -214,12 +211,12 @@ sybilant_array_set:
     mov rdi, r8
     call sybilant_array_allocate
     mov rbx, rax
-    mov rcx, [r12 + ARRAY_COUNT_OFFSET]
+    mov rcx, [r12 + COUNT_OFFSET]
     add rcx, 2
     mov rdi, rbx
     mov rsi, r12
     rep movsq
-    mov [rbx + ARRAY_ITEMS_OFFSET + r13 * 8], r14
+    mov [rbx + ITEMS_OFFSET + r13 * 8], r14
     mov rax, rbx
     add rsp, 8
     pop r14
@@ -228,33 +225,25 @@ sybilant_array_set:
     pop rbx
     ret
 
-; Return the number of items. rdi = array; rax = length.
+;; Return the number of items. rdi = array; rax = length.
+global sybilant_array_length
 sybilant_array_length:
-    call sybilant_array_validate
-    mov rax, [rdi + ARRAY_COUNT_OFFSET]
+    mov rax, [rdi + COUNT_OFFSET]
     ret
 
-; Internal: validate that rdi points to an array. Preserves argument registers.
-sybilant_array_validate:
-    test rdi, rdi
-    jz sybilant_array_invalid_argument
-    cmp qword [rdi + ARRAY_TYPE_OFFSET], ARRAY_TYPE
-    jne sybilant_array_invalid_argument
-    ret
-
-; Internal: normalize a signed element index in rsi. rax = front index.
+;; Internal: normalize a signed element index in rsi. rax = front index.
 sybilant_array_normalize_index:
     mov rax, rsi
     test rax, rax
     jns .check
-    add rax, [rdi + ARRAY_COUNT_OFFSET]
+    add rax, [rdi + COUNT_OFFSET]
     js sybilant_array_bounds
 .check:
-    cmp rax, [rdi + ARRAY_COUNT_OFFSET]
+    cmp rax, [rdi + COUNT_OFFSET]
     jae sybilant_array_bounds
     ret
 
-; Internal: allocate and initialize an array containing rdi uninitialized items.
+;; Internal: allocate and initialize an array containing rdi uninitialized items.
 sybilant_array_allocate:
     test rdi, rdi
     jz .empty
@@ -263,14 +252,14 @@ sybilant_array_allocate:
     mul r8
     test rdx, rdx
     jnz sybilant_array_invalid_argument
-    add rax, ARRAY_ITEMS_OFFSET
+    add rax, ITEMS_OFFSET
     jc sybilant_array_invalid_argument
     push r12
     mov r12, rdi
     mov rdi, rax
     call sybilant_alloc
-    mov qword [rax + ARRAY_TYPE_OFFSET], ARRAY_TYPE
-    mov [rax + ARRAY_COUNT_OFFSET], r12
+    mov qword [rax], SYBILANT_ARRAY_TYPE
+    mov [rax + COUNT_OFFSET], r12
     pop r12
     ret
 .empty:
@@ -283,3 +272,7 @@ sybilant_array_invalid_argument:
 sybilant_array_bounds:
     mov edi, SYBILANT_EXIT_BOUNDS
     jmp sybilant_exit
+
+;; Local Variables:
+;; mode: nasm
+;; End:

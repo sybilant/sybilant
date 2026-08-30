@@ -1,24 +1,23 @@
 bits 64
 default rel
 
+extern sybilant_array_delete
 extern sybilant_array_empty
 extern sybilant_array_get
-extern sybilant_array_set
 extern sybilant_array_insert
-extern sybilant_array_delete
+extern sybilant_array_set
 extern sybilant_array_slice
 extern sybilant_exit
 
-SYS_FORK equ 57
-SYS_WAIT4 equ 61
-BOUNDS_STATUS equ 3 << 8
+%include "lib/sybilant.constants.asm"
+
+    BOUNDS_STATUS equ SYBILANT_EXIT_BOUNDS << 8
 
 section .bss
 wait_status: resd 1
 
 section .text
 global _start
-
 _start:
     lea rsi, [sybilant_array_empty]
     lea rdi, [sybilant_array_get]
@@ -48,8 +47,8 @@ _start:
     xor edi, edi
     jmp sybilant_exit
 
-; Run an array operation in a child and require bounds-error exit status 3.
-; rdi = operation address, rsi = array, rdx = index
+    ; Run an array operation in a child and require bounds-error exit status 3.
+    ; rdi = operation address, rsi = array, rdx = index
 expect_bounds:
     mov r8, rdi
     mov r9, rsi
@@ -86,3 +85,7 @@ expect_bounds:
 .wrong_status:
     mov edi, 65
     jmp sybilant_exit
+
+;; Local Variables:
+;; mode: nasm
+;; End:
