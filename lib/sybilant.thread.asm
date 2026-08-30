@@ -4,6 +4,7 @@ default rel
 extern sybilant_alloc
 extern sybilant_exit
 extern sybilant_type_p
+extern sybilant_tls_base
 
 %include "lib/sybilant.constants.asm"
 
@@ -20,6 +21,20 @@ sybilant_current_thread:
     dq sybilant_main_thread
 
 section .text
+;; Install the initial thread's TLS base. Returns only on success.
+global sybilant_thread_initialize
+sybilant_thread_initialize:
+    mov eax, SYS_ARCH_PRCTL
+    mov edi, ARCH_SET_FS
+    lea rsi, [sybilant_tls_base]
+    syscall
+    test rax, rax
+    js .failed
+    ret
+.failed:
+    mov edi, SYBILANT_EXIT_CORRUPT_DATA
+    jmp sybilant_exit
+
 ;; Return the current thread in rax.
 global sybilant_thread_current
 sybilant_thread_current:

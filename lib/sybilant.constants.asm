@@ -3,9 +3,12 @@
 
     ; Linux x86-64 system calls.
     SYS_BRK   equ 12
+    SYS_ARCH_PRCTL equ 158
     SYS_EXIT  equ 60
     SYS_FORK  equ 57
     SYS_WAIT4 equ 61
+
+    ARCH_SET_FS equ 0x1002
 
     ; Process exit codes used by the runtime.
     SYBILANT_EXIT_OUT_OF_MEMORY equ 1

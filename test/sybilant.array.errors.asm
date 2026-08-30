@@ -17,8 +17,8 @@ section .bss
 wait_status: resd 1
 
 section .text
-global _start
-_start:
+global main
+main:
     lea rsi, [sybilant_array_empty]
     lea rdi, [sybilant_array_get]
     xor edx, edx

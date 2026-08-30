@@ -3,6 +3,7 @@ default rel
 
 extern sybilant_array_set
 extern sybilant_exit
+extern sybilant_main_thread
 extern sybilant_mutable_array_capacity
 extern sybilant_mutable_array_get
 extern sybilant_mutable_array_insert
@@ -10,22 +11,18 @@ extern sybilant_mutable_array_new
 extern sybilant_mutable_array_persistent
 extern sybilant_mutable_array_reserve
 extern sybilant_mutable_array_set
+extern sybilant_thread_current
 
 %include "lib/sybilant.constants.asm"
 
-section .rodata
-align 16
-sybilant_test_thread:
-    dq SYBILANT_THREAD_TYPE, 0
-
 section .text
-global sybilant_thread_current
-sybilant_thread_current:
-    lea rax, [sybilant_test_thread]
-    ret
+global main
+main:
+    call sybilant_thread_current
+    lea rcx, [sybilant_main_thread]
+    cmp rax, rcx
+    jne .tls_failed
 
-global _start
-_start:
     mov edi, 2
     mov esi, SYBILANT_NIL
     call sybilant_mutable_array_new
@@ -94,6 +91,8 @@ _start:
 .persistent_failed: mov edi, 68
     jmp sybilant_exit
 .trim_failed: mov edi, 69
+    jmp sybilant_exit
+.tls_failed: mov edi, 70
     jmp sybilant_exit
 
 ;; Local Variables:

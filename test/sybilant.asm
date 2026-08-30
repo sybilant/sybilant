@@ -11,8 +11,8 @@ extern sybilant_type_p
 %include "lib/sybilant.constants.asm"
 
 section .text
-global _start
-_start:
+global main
+main:
     mov edi, 1
     call sybilant_alloc
     mov r12, rax

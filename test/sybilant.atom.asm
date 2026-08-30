@@ -11,8 +11,8 @@ extern sybilant_exit
 %include "lib/sybilant.constants.asm"
 
 section .text
-global _start
-_start:
+global main
+main:
     mov edi, 10
     call sybilant_atom_new
     mov r12, rax

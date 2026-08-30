@@ -16,8 +16,8 @@ extern sybilant_exit
 %include "lib/sybilant.constants.asm"
 
 section .text
-global _start
-_start:
+global main
+main:
     lea rax, [sybilant_array_empty]
     lea rcx, [sybilant_array_empty]
     cmp rax, rcx
