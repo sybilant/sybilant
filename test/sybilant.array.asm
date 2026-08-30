@@ -24,7 +24,7 @@ _start:
     jne .empty_failed
     cmp qword [rax], SYBILANT_ARRAY_TYPE
     jne .header_failed
-    cmp qword [rax + 8], 0
+    cmp qword [rax + SYBILANT_ARRAY_LENGTH_OFFSET], 0
     jne .header_failed
 
     mov rdi, rax
@@ -63,15 +63,15 @@ _start:
     mov rdi, r12
     mov rsi, r12
     call sybilant_array_concat
-    cmp qword [rax + 8], 6
+    cmp qword [rax + SYBILANT_ARRAY_LENGTH_OFFSET], 6
     jne .concat_failed
-    cmp qword [rax + 16], 10
+    cmp qword [rax + SYBILANT_ARRAY_VALUES_OFFSET], 10
     jne .concat_failed
-    cmp qword [rax + 32], 30
+    cmp qword [rax + SYBILANT_ARRAY_VALUES_OFFSET + 16], 30
     jne .concat_failed
-    cmp qword [rax + 40], 10
+    cmp qword [rax + SYBILANT_ARRAY_VALUES_OFFSET + 24], 10
     jne .concat_failed
-    cmp qword [rax + 56], 30
+    cmp qword [rax + SYBILANT_ARRAY_VALUES_OFFSET + 40], 30
     jne .concat_failed
 
     mov rdi, r12
@@ -85,33 +85,33 @@ _start:
     mov edx, 15
     call sybilant_array_insert
     mov r13, rax
-    cmp qword [r13 + 16], 10
+    cmp qword [r13 + SYBILANT_ARRAY_VALUES_OFFSET], 10
     jne .insert_failed
-    cmp qword [r13 + 24], 15
+    cmp qword [r13 + SYBILANT_ARRAY_VALUES_OFFSET + 8], 15
     jne .insert_failed
-    cmp qword [r13 + 32], 20
+    cmp qword [r13 + SYBILANT_ARRAY_VALUES_OFFSET + 16], 20
     jne .insert_failed
 
     mov rdi, r12
     mov rsi, -2
     call sybilant_array_delete
     mov r13, rax
-    cmp qword [r13 + 8], 2
+    cmp qword [r13 + SYBILANT_ARRAY_LENGTH_OFFSET], 2
     jne .delete_failed
-    cmp qword [r13 + 16], 10
+    cmp qword [r13 + SYBILANT_ARRAY_VALUES_OFFSET], 10
     jne .delete_failed
-    cmp qword [r13 + 24], 30
+    cmp qword [r13 + SYBILANT_ARRAY_VALUES_OFFSET + 8], 30
     jne .delete_failed
 
     mov rdi, r12
     mov rsi, -3
     mov rdx, -1
     call sybilant_array_slice
-    cmp qword [rax + 8], 2
+    cmp qword [rax + SYBILANT_ARRAY_LENGTH_OFFSET], 2
     jne .slice_failed
-    cmp qword [rax + 16], 10
+    cmp qword [rax + SYBILANT_ARRAY_VALUES_OFFSET], 10
     jne .slice_failed
-    cmp qword [rax + 24], 20
+    cmp qword [rax + SYBILANT_ARRAY_VALUES_OFFSET + 8], 20
     jne .slice_failed
 
     mov rdi, r12

@@ -7,15 +7,11 @@ extern sybilant_type_p
 
 %include "lib/sybilant.constants.asm"
 
-    ; Array layout.
-    COUNT_OFFSET equ 8
-    ITEMS_OFFSET equ 16
-
 section .rodata
 align 16
 global sybilant_array_empty
 sybilant_array_empty:
-    dq SYBILANT_ARRAY_TYPE, 0
+    dq SYBILANT_ARRAY_TYPE, 0, 0, 0
 
 section .text
 ;; Return whether rdi is an array. rax = SYBILANT_TRUE or SYBILANT_FALSE.
@@ -30,8 +26,8 @@ global sybilant_array_concat
 sybilant_array_concat:
     mov r8, rdi
     mov rdi, rsi
-    mov r9, [r8 + COUNT_OFFSET]
-    mov r10, [rdi + COUNT_OFFSET]
+    mov r9, [r8 + SYBILANT_ARRAY_LENGTH_OFFSET]
+    mov r10, [rdi + SYBILANT_ARRAY_LENGTH_OFFSET]
     mov r11, r9
     add r11, r10
     jc sybilant_array_invalid_argument
@@ -47,11 +43,11 @@ sybilant_array_concat:
     mov rdi, r11
     call sybilant_array_allocate
     mov rbx, rax
-    lea rdi, [rbx + ITEMS_OFFSET]
-    lea rsi, [r12 + ITEMS_OFFSET]
+    lea rdi, [rbx + SYBILANT_ARRAY_VALUES_OFFSET]
+    lea rsi, [r12 + SYBILANT_ARRAY_VALUES_OFFSET]
     mov rcx, r14
     rep movsq
-    lea rsi, [r13 + ITEMS_OFFSET]
+    lea rsi, [r13 + SYBILANT_ARRAY_VALUES_OFFSET]
     mov rcx, r15
     rep movsq
     mov rax, rbx
@@ -66,7 +62,7 @@ sybilant_array_concat:
 ;; rdi = array, rsi = index, rdx = item; rax = new array.
 global sybilant_array_insert
 sybilant_array_insert:
-    mov r8, [rdi + COUNT_OFFSET]
+    mov r8, [rdi + SYBILANT_ARRAY_LENGTH_OFFSET]
     cmp rsi, r8
     je .position_valid
     call sybilant_array_normalize_index
@@ -86,13 +82,13 @@ sybilant_array_insert:
     lea rdi, [r15 + 1]
     call sybilant_array_allocate
     mov rbx, rax
-    lea rdi, [rbx + ITEMS_OFFSET]
-    lea rsi, [r12 + ITEMS_OFFSET]
+    lea rdi, [rbx + SYBILANT_ARRAY_VALUES_OFFSET]
+    lea rsi, [r12 + SYBILANT_ARRAY_VALUES_OFFSET]
     mov rcx, r13
     rep movsq
-    mov [rbx + ITEMS_OFFSET + r13 * 8], r14
-    lea rdi, [rbx + ITEMS_OFFSET + r13 * 8 + 8]
-    lea rsi, [r12 + ITEMS_OFFSET + r13 * 8]
+    mov [rbx + SYBILANT_ARRAY_VALUES_OFFSET + r13 * 8], r14
+    lea rdi, [rbx + SYBILANT_ARRAY_VALUES_OFFSET + r13 * 8 + 8]
+    lea rsi, [r12 + SYBILANT_ARRAY_VALUES_OFFSET + r13 * 8]
     mov rcx, r15
     sub rcx, r13
     rep movsq
@@ -108,7 +104,7 @@ sybilant_array_insert:
 ;; rdi = array, rsi = index; rax = new array.
 global sybilant_array_delete
 sybilant_array_delete:
-    mov r8, [rdi + COUNT_OFFSET]
+    mov r8, [rdi + SYBILANT_ARRAY_LENGTH_OFFSET]
     call sybilant_array_normalize_index
     mov rsi, rax
     cmp r8, 1
@@ -124,12 +120,12 @@ sybilant_array_delete:
     lea rdi, [r14 - 1]
     call sybilant_array_allocate
     mov rbx, rax
-    lea rdi, [rbx + ITEMS_OFFSET]
-    lea rsi, [r12 + ITEMS_OFFSET]
+    lea rdi, [rbx + SYBILANT_ARRAY_VALUES_OFFSET]
+    lea rsi, [r12 + SYBILANT_ARRAY_VALUES_OFFSET]
     mov rcx, r13
     rep movsq
-    lea rdi, [rbx + ITEMS_OFFSET + r13 * 8]
-    lea rsi, [r12 + ITEMS_OFFSET + r13 * 8 + 8]
+    lea rdi, [rbx + SYBILANT_ARRAY_VALUES_OFFSET + r13 * 8]
+    lea rsi, [r12 + SYBILANT_ARRAY_VALUES_OFFSET + r13 * 8 + 8]
     mov rcx, r14
     sub rcx, r13
     dec rcx
@@ -172,8 +168,8 @@ sybilant_array_slice:
     mov rdi, r14
     call sybilant_array_allocate
     mov rbx, rax
-    lea rdi, [rbx + ITEMS_OFFSET]
-    lea rsi, [r12 + ITEMS_OFFSET + r13 * 8]
+    lea rdi, [rbx + SYBILANT_ARRAY_VALUES_OFFSET]
+    lea rsi, [r12 + SYBILANT_ARRAY_VALUES_OFFSET + r13 * 8]
     mov rcx, r14
     rep movsq
     mov rax, rbx
@@ -191,13 +187,13 @@ sybilant_array_slice:
 global sybilant_array_get
 sybilant_array_get:
     call sybilant_array_normalize_index
-    mov rax, [rdi + ITEMS_OFFSET + rax * 8]
+    mov rax, [rdi + SYBILANT_ARRAY_VALUES_OFFSET + rax * 8]
     ret
 
 ;; Replace one qword. rdi = array, rsi = index, rdx = item; rax = new array.
 global sybilant_array_set
 sybilant_array_set:
-    mov r8, [rdi + COUNT_OFFSET]
+    mov r8, [rdi + SYBILANT_ARRAY_LENGTH_OFFSET]
     call sybilant_array_normalize_index
     mov rsi, rax
     push rbx
@@ -211,12 +207,11 @@ sybilant_array_set:
     mov rdi, r8
     call sybilant_array_allocate
     mov rbx, rax
-    mov rcx, [r12 + COUNT_OFFSET]
-    add rcx, 2
-    mov rdi, rbx
-    mov rsi, r12
+    mov rcx, [r12 + SYBILANT_ARRAY_LENGTH_OFFSET]
+    lea rdi, [rbx + SYBILANT_ARRAY_VALUES_OFFSET]
+    lea rsi, [r12 + SYBILANT_ARRAY_VALUES_OFFSET]
     rep movsq
-    mov [rbx + ITEMS_OFFSET + r13 * 8], r14
+    mov [rbx + SYBILANT_ARRAY_VALUES_OFFSET + r13 * 8], r14
     mov rax, rbx
     add rsp, 8
     pop r14
@@ -228,7 +223,13 @@ sybilant_array_set:
 ;; Return the number of items. rdi = array; rax = length.
 global sybilant_array_length
 sybilant_array_length:
-    mov rax, [rdi + COUNT_OFFSET]
+    mov rax, [rdi + SYBILANT_ARRAY_LENGTH_OFFSET]
+    ret
+
+;; Return the allocated item capacity. rdi = array; rax = capacity.
+global sybilant_array_capacity
+sybilant_array_capacity:
+    mov rax, [rdi + SYBILANT_ARRAY_CAPACITY_OFFSET]
     ret
 
 ;; Internal: normalize a signed element index in rsi. rax = front index.
@@ -236,10 +237,10 @@ sybilant_array_normalize_index:
     mov rax, rsi
     test rax, rax
     jns .check
-    add rax, [rdi + COUNT_OFFSET]
+    add rax, [rdi + SYBILANT_ARRAY_LENGTH_OFFSET]
     js sybilant_array_bounds
 .check:
-    cmp rax, [rdi + COUNT_OFFSET]
+    cmp rax, [rdi + SYBILANT_ARRAY_LENGTH_OFFSET]
     jae sybilant_array_bounds
     ret
 
@@ -252,14 +253,16 @@ sybilant_array_allocate:
     mul r8
     test rdx, rdx
     jnz sybilant_array_invalid_argument
-    add rax, ITEMS_OFFSET
+    add rax, SYBILANT_ARRAY_VALUES_OFFSET
     jc sybilant_array_invalid_argument
     push r12
     mov r12, rdi
     mov rdi, rax
     call sybilant_alloc
     mov qword [rax], SYBILANT_ARRAY_TYPE
-    mov [rax + COUNT_OFFSET], r12
+    mov qword [rax + SYBILANT_ARRAY_EDITOR_OFFSET], 0
+    mov [rax + SYBILANT_ARRAY_LENGTH_OFFSET], r12
+    mov [rax + SYBILANT_ARRAY_CAPACITY_OFFSET], r12
     pop r12
     ret
 .empty:

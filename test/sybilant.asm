@@ -39,7 +39,7 @@ _start:
 
     mov edi, SYBILANT_NIL
     call sybilant_type
-    cmp rax, SYBILANT_MAYBE_TYPE
+    cmp rax, SYBILANT_NIL
     jne .nil_type_failed
     mov edi, SYBILANT_FALSE
     call sybilant_type

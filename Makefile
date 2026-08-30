@@ -4,7 +4,9 @@ NASMFLAGS := -f elf64 -Wall -w-reloc-abs-qword -w-reloc-rel-dword
 
 BUILD_DIR := build
 CONSTANTS := lib/sybilant.constants.asm
-LIB_OBJECTS := $(BUILD_DIR)/sybilant.o $(BUILD_DIR)/sybilant.array.o $(BUILD_DIR)/sybilant.atom.o
+LIB_OBJECTS := $(BUILD_DIR)/sybilant.o $(BUILD_DIR)/sybilant.array.o \
+	$(BUILD_DIR)/sybilant.atom.o $(BUILD_DIR)/sybilant.thread.o \
+	$(BUILD_DIR)/sybilant.mutable.array.o
 TEST_SOURCES := $(wildcard test/*.asm)
 TEST_OBJECTS := $(patsubst test/%.asm,$(BUILD_DIR)/test/%.o,$(TEST_SOURCES))
 TEST_BINS := $(patsubst test/%.asm,$(BUILD_DIR)/test/%,$(TEST_SOURCES))
@@ -26,6 +28,10 @@ $(BUILD_DIR)/%.o: lib/%.asm $(CONSTANTS)
 $(BUILD_DIR)/test/%.o: test/%.asm $(CONSTANTS)
 	@mkdir -p $(@D)
 	$(NASM) $(NASMFLAGS) -o $@ $<
+
+$(BUILD_DIR)/test/sybilant.mutable.array: $(BUILD_DIR)/test/sybilant.mutable.array.o \
+	$(filter-out $(BUILD_DIR)/sybilant.thread.o,$(LIB_OBJECTS))
+	$(LD) -z noexecstack -o $@ $^
 
 $(BUILD_DIR)/test/%: $(BUILD_DIR)/test/%.o $(LIB_OBJECTS)
 	$(LD) -z noexecstack -o $@ $^

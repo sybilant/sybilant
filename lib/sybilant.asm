@@ -169,6 +169,8 @@ section .text
 global sybilant_type
 sybilant_type:
     mov rax, rdi
+    cmp rax, SYBILANT_NIL
+    je .nil
     and eax, 111b
     cmp eax, SYBILANT_DYNAMIC
     je .dynamic
@@ -181,6 +183,9 @@ sybilant_type:
     ret
 .dynamic:
     mov rax, [rdi]
+    ret
+.nil:
+    mov eax, SYBILANT_NIL
     ret
 
 ;; Return whether rdi has type rsi. rax = SYBILANT_TRUE or SYBILANT_FALSE.
