@@ -47,8 +47,8 @@ main:
     xor edi, edi
     jmp sybilant_exit
 
-    ; Run an array operation in a child and require bounds-error exit status 3.
-    ; rdi = operation address, rsi = array, rdx = index
+    ;; Run an array operation in a child and require bounds-error exit status 3.
+    ;; rdi = operation address, rsi = array, rdx = index
 expect_bounds:
     mov r8, rdi
     mov r9, rsi

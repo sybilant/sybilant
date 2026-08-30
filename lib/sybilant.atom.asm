@@ -6,7 +6,7 @@ extern sybilant_type_p
 
 %include "lib/sybilant.constants.asm"
 
-    ; Atom cell layout.
+    ;; Atom cell layout.
     VALUE_OFFSET equ 8
     SIZE equ 16
 

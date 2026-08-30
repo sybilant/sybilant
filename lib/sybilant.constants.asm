@@ -1,7 +1,7 @@
 %ifndef SYBILANT_CONSTANTS_INC
 %define SYBILANT_CONSTANTS_INC
 
-    ; Linux x86-64 system calls.
+    ;; Linux x86-64 system calls.
     SYS_BRK   equ 12
     SYS_ARCH_PRCTL equ 158
     SYS_EXIT  equ 60
@@ -10,13 +10,13 @@
 
     ARCH_SET_FS equ 0x1002
 
-    ; Process exit codes used by the runtime.
+    ;; Process exit codes used by the runtime.
     SYBILANT_EXIT_OUT_OF_MEMORY equ 1
     SYBILANT_EXIT_INVALID_ARGUMENT equ 2
     SYBILANT_EXIT_BOUNDS equ 3
     SYBILANT_EXIT_CORRUPT_DATA equ 4
 
-    ; immediate values
+    ;; immediate values
     SYBILANT_DYNAMIC      equ 000b
     SYBILANT_NIL          equ 000b
     SYBILANT_FALSE        equ 010b
@@ -26,7 +26,7 @@
     SYBILANT_TRUE         equ 110b
     SYBILANT_EXTENDED_TAG equ 111b
 
-    ; extended immediate tags
+    ;; extended immediate tags
     SYBILANT_TYPE_TAG       equ 00000_111b
     SYBILANT_EXTENDED_TAG01 equ 00001_111b
     SYBILANT_EXTENDED_TAG02 equ 00010_111b
@@ -60,7 +60,7 @@
     SYBILANT_EXTENDED_TAG30 equ 11110_111b
     SYBILANT_EXTENDED_TAG31 equ 11111_111b
 
-    ; type immediates
+    ;; type immediates
     SYBILANT_DYNAMIC_TYPE          equ 000000_00000111b
     SYBILANT_MAYBE_TYPE            equ 000001_00000111b
     SYBILANT_BOOLEAN_TYPE          equ 000010_00000111b
@@ -126,7 +126,7 @@
     SYBILANT_TYPE62                equ 111110_00000111b
     SYBILANT_TYPE63                equ 111111_00000111b
 
-    ; Array/MutableArray layout.
+    ;; Array/MutableArray layout.
     SYBILANT_ARRAY_EDITOR_OFFSET equ 8
     SYBILANT_ARRAY_LENGTH_OFFSET equ 16
     SYBILANT_ARRAY_CAPACITY_OFFSET equ 24
