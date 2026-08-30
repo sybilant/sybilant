@@ -18,19 +18,22 @@ extern sybilant_array_set
     RRBT_LENGTH_OFFSET equ 16
     RRBT_HEIGHT_OFFSET equ 24
     RRBT_ROOT_OFFSET   equ 32
-    RRBT_TAIL_OFFSET   equ 40
-    RRBT_SIZE          equ 48
+    RRBT_HEAD_OFFSET   equ 40
+    RRBT_TAIL_OFFSET   equ 48
+    RRBT_SIZE          equ 56
     RRBT_BRANCH_FACTOR equ 32
 
 section .rodata
 align 16
 global sybilant_list_empty
 sybilant_list_empty:
-    dq SYBILANT_LIST_TYPE, 0, 0, 0, sybilant_array_empty, sybilant_array_empty
+    dq SYBILANT_LIST_TYPE, 0, 0, 0
+    dq sybilant_array_empty, sybilant_array_empty, sybilant_array_empty
 
 global sybilant_vector_empty
 sybilant_vector_empty:
-    dq SYBILANT_VECTOR_TYPE, 0, 0, 0, sybilant_array_empty, sybilant_array_empty
+    dq SYBILANT_VECTOR_TYPE, 0, 0, 0
+    dq sybilant_array_empty, sybilant_array_empty, sybilant_array_empty
 
 section .text
 ;; Return the number of elements. rdi = tree; rax = length.
@@ -44,9 +47,19 @@ sybilant_rrbt_length:
 global sybilant_rrbt_get
 sybilant_rrbt_get:
     call sybilant_rrbt_normalize_index
+    mov r8, [rdi + RRBT_HEAD_OFFSET]
+    mov r9, [r8 + SYBILANT_ARRAY_LENGTH_OFFSET]
+    cmp rax, r9
+    jae .after_head
+    mov rax, [r8 + SYBILANT_ARRAY_VALUES_OFFSET + rax * 8]
+    ret
+.after_head:
+    sub rax, r9
     mov r8, [rdi + RRBT_TAIL_OFFSET]
     mov r9, [r8 + SYBILANT_ARRAY_LENGTH_OFFSET]
     mov r10, [rdi + RRBT_LENGTH_OFFSET]
+    mov r11, [rdi + RRBT_HEAD_OFFSET]
+    sub r10, [r11 + SYBILANT_ARRAY_LENGTH_OFFSET]
     sub r10, r9
     cmp rax, r10
     jb .root
@@ -92,10 +105,12 @@ sybilant_rrbt_insert:
     je sybilant_rrbt_invalid_argument
     cmp rsi, r8
     je sybilant_rrbt_append
+    test rsi, rsi
+    jz sybilant_rrbt_prepend
     push rsi
     push rdx
     sub rsp, 8
-    call sybilant_rrbt_materialize_tail
+    call sybilant_rrbt_promote_tail
     add rsp, 8
     pop rdx
     pop rsi
@@ -160,6 +175,7 @@ sybilant_rrbt_insert:
     mov [rax + RRBT_HEIGHT_OFFSET], r14
     mov [rax + RRBT_ROOT_OFFSET], rbx
     lea rdx, [sybilant_array_empty]
+    mov [rax + RRBT_HEAD_OFFSET], rdx
     mov [rax + RRBT_TAIL_OFFSET], rdx
     pop r14
     pop r13
@@ -171,7 +187,7 @@ sybilant_rrbt_insert:
 global sybilant_rrbt_delete
 sybilant_rrbt_delete:
     push rsi
-    call sybilant_rrbt_materialize_tail
+    call sybilant_rrbt_promote_tail
     pop rsi
     mov rdi, rax
     call sybilant_rrbt_normalize_index
@@ -213,6 +229,7 @@ sybilant_rrbt_delete:
     mov [rax + RRBT_HEIGHT_OFFSET], r14
     mov [rax + RRBT_ROOT_OFFSET], rbx
     lea rdx, [sybilant_array_empty]
+    mov [rax + RRBT_HEAD_OFFSET], rdx
     mov [rax + RRBT_TAIL_OFFSET], rdx
     add rsp, 8
     pop r14
@@ -228,7 +245,7 @@ sybilant_rrbt_slice:
     push rsi
     push rdx
     sub rsp, 8
-    call sybilant_rrbt_materialize_tail
+    call sybilant_rrbt_promote_tail
     add rsp, 8
     pop rdx
     pop rsi
@@ -280,6 +297,7 @@ sybilant_rrbt_slice:
     mov [rax + RRBT_HEIGHT_OFFSET], r13
     mov [rax + RRBT_ROOT_OFFSET], rbx
     lea rdx, [sybilant_array_empty]
+    mov [rax + RRBT_HEAD_OFFSET], rdx
     mov [rax + RRBT_TAIL_OFFSET], rdx
     add rsp, 8
     pop r14
@@ -294,7 +312,7 @@ sybilant_rrbt_set:
     push rsi
     push rdx
     sub rsp, 8
-    call sybilant_rrbt_materialize_tail
+    call sybilant_rrbt_promote_tail
     add rsp, 8
     pop rdx
     pop rsi
@@ -325,6 +343,7 @@ sybilant_rrbt_set:
     mov [rax + RRBT_HEIGHT_OFFSET], rdx
     mov [rax + RRBT_ROOT_OFFSET], rbx
     lea rdx, [sybilant_array_empty]
+    mov [rax + RRBT_HEAD_OFFSET], rdx
     mov [rax + RRBT_TAIL_OFFSET], rdx
     add rsp, 8
     pop r14
@@ -337,11 +356,11 @@ sybilant_rrbt_set:
 global sybilant_rrbt_concat
 sybilant_rrbt_concat:
     push rsi
-    call sybilant_rrbt_materialize_tail
+    call sybilant_rrbt_promote_tail
     pop rsi
     push rax
     mov rdi, rsi
-    call sybilant_rrbt_materialize_tail
+    call sybilant_rrbt_promote_tail
     mov rdi, rax
     pop r8
     cmp qword [r8 + RRBT_LENGTH_OFFSET], 0
@@ -413,6 +432,7 @@ sybilant_rrbt_concat:
     mov [rax + RRBT_HEIGHT_OFFSET], r15
     mov [rax + RRBT_ROOT_OFFSET], rbx
     lea rdx, [sybilant_array_empty]
+    mov [rax + RRBT_HEAD_OFFSET], rdx
     mov [rax + RRBT_TAIL_OFFSET], rdx
     add rsp, 16
     pop r15
@@ -422,8 +442,53 @@ sybilant_rrbt_concat:
     pop rbx
     ret
 
-;; Append to the insertion tail, promoting a full tail into the root.
+;; Prepend to the insertion head, promoting a full head into the root.
 ;; rdi = tree, rdx = value; rax = new tree.
+sybilant_rrbt_prepend:
+    push rbx
+    push r12
+    push r13
+    push r14
+    sub rsp, 8
+    mov r12, rdi
+    mov r13, rdx
+    mov r14, [r12 + RRBT_HEAD_OFFSET]
+    mov rbx, [r14 + SYBILANT_ARRAY_LENGTH_OFFSET]
+    cmp rbx, RRBT_BRANCH_FACTOR
+    jb .have_space
+    mov rdi, r12
+    call sybilant_rrbt_promote_head
+    mov r12, rax
+    mov r14, [r12 + RRBT_HEAD_OFFSET]
+.have_space:
+    mov rdi, r14
+    xor esi, esi
+    mov rdx, r13
+    call sybilant_array_insert
+    mov rbx, rax
+    mov edi, RRBT_SIZE
+    call sybilant_alloc
+    mov rdx, [r12]
+    mov [rax], rdx
+    mov qword [rax + RRBT_EDITOR_OFFSET], 0
+    mov rdx, [r12 + RRBT_LENGTH_OFFSET]
+    inc rdx
+    mov [rax + RRBT_LENGTH_OFFSET], rdx
+    mov rdx, [r12 + RRBT_HEIGHT_OFFSET]
+    mov [rax + RRBT_HEIGHT_OFFSET], rdx
+    mov rdx, [r12 + RRBT_ROOT_OFFSET]
+    mov [rax + RRBT_ROOT_OFFSET], rdx
+    mov [rax + RRBT_HEAD_OFFSET], rbx
+    mov rdx, [r12 + RRBT_TAIL_OFFSET]
+    mov [rax + RRBT_TAIL_OFFSET], rdx
+    add rsp, 8
+    pop r14
+    pop r13
+    pop r12
+    pop rbx
+    ret
+
+;; Move every head value into the tree, leaving an empty head.
 sybilant_rrbt_append:
     push rbx
     push r12
@@ -437,7 +502,7 @@ sybilant_rrbt_append:
     cmp rbx, RRBT_BRANCH_FACTOR
     jb .have_space
     mov rdi, r12
-    call sybilant_rrbt_materialize_tail
+    call sybilant_rrbt_promote_tail
     mov r12, rax
     mov r14, [r12 + RRBT_TAIL_OFFSET]
     xor ebx, ebx
@@ -459,6 +524,8 @@ sybilant_rrbt_append:
     mov [rax + RRBT_HEIGHT_OFFSET], rdx
     mov rdx, [r12 + RRBT_ROOT_OFFSET]
     mov [rax + RRBT_ROOT_OFFSET], rdx
+    mov rdx, [r12 + RRBT_HEAD_OFFSET]
+    mov [rax + RRBT_HEAD_OFFSET], rdx
     mov [rax + RRBT_TAIL_OFFSET], rbx
     add rsp, 8
     pop r14
@@ -467,101 +534,122 @@ sybilant_rrbt_append:
     pop rbx
     ret
 
-;; Move every tail value into the tree, leaving an empty tail.
-sybilant_rrbt_materialize_tail:
+;; Promote the head as one leaf into the left side of the root.
+sybilant_rrbt_promote_head:
+    mov rsi, [rdi + RRBT_HEAD_OFFSET]
+    cmp qword [rsi + SYBILANT_ARRAY_LENGTH_OFFSET], 0
+    je .unchanged
+    xor edx, edx
+    jmp sybilant_rrbt_promote_edge
+.unchanged:
+    mov rax, rdi
+    ret
+
+;; Promote the tail as one leaf into the right side of the root.
+sybilant_rrbt_promote_tail:
+    mov rsi, [rdi + RRBT_TAIL_OFFSET]
+    cmp qword [rsi + SYBILANT_ARRAY_LENGTH_OFFSET], 0
+    je .unchanged
+    mov edx, 1
+    jmp sybilant_rrbt_promote_edge
+.unchanged:
+    mov rax, rdi
+    ret
+
+;; Promote edge leaf rsi. rdx = 0 for head or 1 for tail.
+sybilant_rrbt_promote_edge:
+    push rbp
+    mov rbp, rsp
     push rbx
     push r12
     push r13
     push r14
     push r15
+    sub rsp, 8
     mov r12, rdi
-    mov r13, [r12 + RRBT_ROOT_OFFSET]
-    mov r14, [r12 + RRBT_HEIGHT_OFFSET]
-    mov r15, [r12 + RRBT_LENGTH_OFFSET]
-    mov rax, [r12 + RRBT_TAIL_OFFSET]
-    mov rdx, [rax + SYBILANT_ARRAY_LENGTH_OFFSET]
-    sub r15, rdx
-    test rdx, rdx
-    jz .unchanged
-    test r15, r15
-    jnz .start_loop
-    mov r13, rax
-    mov r15, [r12 + RRBT_LENGTH_OFFSET]
+    mov r13, rsi
+    mov rbx, rdx
+    mov r14, [r12 + RRBT_ROOT_OFFSET]
+    mov r15, [r12 + RRBT_HEIGHT_OFFSET]
+    mov rax, [r12 + RRBT_LENGTH_OFFSET]
+    mov rcx, [r12 + RRBT_HEAD_OFFSET]
+    sub rax, [rcx + SYBILANT_ARRAY_LENGTH_OFFSET]
+    mov rcx, [r12 + RRBT_TAIL_OFFSET]
+    sub rax, [rcx + SYBILANT_ARRAY_LENGTH_OFFSET]
+    test rax, rax
+    jnz .merge
+    mov r14, r13
+    xor r15d, r15d
     jmp .make_tree
-.start_loop:
-    xor ebx, ebx
-.loop:
-    mov rax, [r12 + RRBT_TAIL_OFFSET]
-    cmp rbx, [rax + SYBILANT_ARRAY_LENGTH_OFFSET]
-    je .make_tree
-    mov rcx, [rax + SYBILANT_ARRAY_VALUES_OFFSET + rbx * 8]
-    test r15, r15
-    jnz .insert
-    lea rdi, [sybilant_array_empty]
-    xor esi, esi
-    mov rdx, rcx
-    call sybilant_array_insert
-    mov r13, rax
-    xor r14d, r14d
-    jmp .next
-.insert:
+.merge:
     mov rdi, r13
-    mov rsi, r14
+    xor esi, esi
     mov rdx, r15
-    call sybilant_rrbt_insert_node
-    mov r13, rax
+    call sybilant_rrbt_lift_node
+    test rbx, rbx
+    jz .head
+    mov rdi, r14
+    mov rsi, rax
+    jmp .merge_nodes
+.head:
+    mov rdi, rax
+    mov rsi, r14
+.merge_nodes:
+    mov rdx, r15
+    call sybilant_rrbt_merge_nodes
+    mov r14, rax
     test rdx, rdx
-    jz .next
-    push rdx
-    sub rsp, 8
-    lea rdi, [sybilant_array_empty]
-    mov rsi, r13
-    mov rdx, r15
-    call sybilant_rrbt_branch_append
-    mov r13, rax
-    add rsp, 8
-    pop rsi
-    push rsi
-    sub rsp, 8
-    mov rdi, rsi
-    mov rsi, r14
+    jz .make_tree
+    mov [rsp], rdx
+    mov rdi, r14
+    mov rsi, r15
     call sybilant_rrbt_node_size
     mov rdx, rax
-    add rsp, 8
-    pop rsi
-    mov rdi, r13
+    lea rdi, [sybilant_array_empty]
+    mov rsi, r14
     call sybilant_rrbt_branch_append
-    mov r13, rax
-    inc r14
-.next:
+    mov r14, rax
+    mov rdi, [rsp]
+    mov rsi, r15
+    call sybilant_rrbt_node_size
+    mov rdx, rax
+    mov rdi, r14
+    mov rsi, [rsp]
+    call sybilant_rrbt_branch_append
+    mov r14, rax
     inc r15
-    inc rbx
-    jmp .loop
 .make_tree:
     mov edi, RRBT_SIZE
     call sybilant_alloc
-    mov rdx, [r12]
-    mov [rax], rdx
+    mov rcx, [r12]
+    mov [rax], rcx
     mov qword [rax + RRBT_EDITOR_OFFSET], 0
-    mov rdx, [r12 + RRBT_LENGTH_OFFSET]
-    mov [rax + RRBT_LENGTH_OFFSET], rdx
-    mov [rax + RRBT_HEIGHT_OFFSET], r14
-    mov [rax + RRBT_ROOT_OFFSET], r13
-    lea rdx, [sybilant_array_empty]
-    mov [rax + RRBT_TAIL_OFFSET], rdx
+    mov rcx, [r12 + RRBT_LENGTH_OFFSET]
+    mov [rax + RRBT_LENGTH_OFFSET], rcx
+    mov [rax + RRBT_HEIGHT_OFFSET], r15
+    mov [rax + RRBT_ROOT_OFFSET], r14
+    mov rcx, [r12 + RRBT_HEAD_OFFSET]
+    mov [rax + RRBT_HEAD_OFFSET], rcx
+    mov rcx, [r12 + RRBT_TAIL_OFFSET]
+    mov [rax + RRBT_TAIL_OFFSET], rcx
+    lea rcx, [sybilant_array_empty]
+    test rbx, rbx
+    jnz .clear_tail
+    mov [rax + RRBT_HEAD_OFFSET], rcx
     jmp .done
-.unchanged:
-    mov rax, r12
+.clear_tail:
+    mov [rax + RRBT_TAIL_OFFSET], rcx
 .done:
+    add rsp, 8
     pop r15
     pop r14
     pop r13
     pop r12
     pop rbx
+    pop rbp
     ret
 
 ;; Internal: path-copy a node for an associative update.
-;; rdi = node, rsi = height, rdx = local index, rcx = value; rax = new node.
 sybilant_rrbt_assoc_node:
     test rsi, rsi
     jnz .branch

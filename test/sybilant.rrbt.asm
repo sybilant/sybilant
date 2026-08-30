@@ -19,7 +19,8 @@ extern sybilant_vector_empty
     RRBT_LENGTH_OFFSET equ 16
     RRBT_HEIGHT_OFFSET equ 24
     RRBT_ROOT_OFFSET equ 32
-    RRBT_TAIL_OFFSET equ 40
+    RRBT_HEAD_OFFSET equ 40
+    RRBT_TAIL_OFFSET equ 48
 
 section .text
 global main
@@ -51,6 +52,9 @@ main:
     mov rax, [r12 + RRBT_TAIL_OFFSET]
     cmp qword [rax + SYBILANT_ARRAY_LENGTH_OFFSET], 8
     jne .tail_failed
+    mov rax, [r12 + RRBT_HEAD_OFFSET]
+    cmp qword [rax + SYBILANT_ARRAY_LENGTH_OFFSET], 0
+    jne .head_failed
 
     mov rdi, r12
     mov esi, 32
@@ -75,7 +79,33 @@ main:
     cmp r15, [rax + RRBT_TAIL_OFFSET]
     je .append_tail_replaced_failed
 
-    ;; An arbitrary edit materializes the tail and remains persistent.
+    ;; Prepending with head capacity shares both the root and tail.
+    mov r14, [r12 + RRBT_ROOT_OFFSET]
+    mov r15, [r12 + RRBT_TAIL_OFFSET]
+    mov rdi, r12
+    xor esi, esi
+    mov edx, 99
+    call sybilant_rrbt_insert
+    mov r13, rax
+    cmp r14, [rax + RRBT_ROOT_OFFSET]
+    jne .prepend_root_shared_failed
+    cmp r15, [rax + RRBT_TAIL_OFFSET]
+    jne .prepend_tail_shared_failed
+    mov rax, [rax + RRBT_HEAD_OFFSET]
+    cmp qword [rax + SYBILANT_ARRAY_LENGTH_OFFSET], 1
+    jne .prepend_head_failed
+    mov rdi, r13
+    xor esi, esi
+    call sybilant_rrbt_get
+    cmp rax, 99
+    jne .prepend_value_failed
+    mov rdi, r13
+    mov esi, 1
+    call sybilant_rrbt_get
+    cmp rax, 100
+    jne .prepend_value_failed
+
+    ;; An arbitrary edit remains persistent across the edge/root boundary.
     mov rdi, r12
     mov esi, 35
     mov edx, 777
@@ -129,6 +159,40 @@ main:
     call sybilant_rrbt_length
     cmp rax, 20
     jne .concat_failed
+
+    ;; The 33rd prepend promotes a full head into the left side of the root.
+    lea rdi, [sybilant_vector_empty]
+    xor esi, esi
+    mov edx, 1000
+    call sybilant_rrbt_insert
+    mov r12, rax
+    xor r13d, r13d
+.prepend_many:
+    cmp r13, 33
+    je .prepended_many
+    mov rdi, r12
+    xor esi, esi
+    mov rdx, r13
+    call sybilant_rrbt_insert
+    mov r12, rax
+    inc r13
+    jmp .prepend_many
+.prepended_many:
+    cmp qword [r12 + RRBT_LENGTH_OFFSET], 34
+    jne .head_promotion_failed
+    mov rax, [r12 + RRBT_HEAD_OFFSET]
+    cmp qword [rax + SYBILANT_ARRAY_LENGTH_OFFSET], 1
+    jne .head_promotion_failed
+    mov rdi, r12
+    xor esi, esi
+    call sybilant_rrbt_get
+    cmp rax, 32
+    jne .head_promotion_failed
+    mov rdi, r12
+    mov esi, 33
+    call sybilant_rrbt_get
+    cmp rax, 1000
+    jne .head_promotion_failed
 
     ;; Repeated promotion builds a deeper root while preserving indexing.
     lea r12, [sybilant_vector_empty]
@@ -185,6 +249,8 @@ main:
     jmp sybilant_exit
 .tail_failed: mov edi, 67
     jmp sybilant_exit
+.head_failed: mov edi, 83
+    jmp sybilant_exit
 .get_failed: mov edi, 68
     jmp sybilant_exit
 .negative_failed: mov edi, 69
@@ -192,6 +258,14 @@ main:
 .append_root_shared_failed: mov edi, 70
     jmp sybilant_exit
 .append_tail_replaced_failed: mov edi, 71
+    jmp sybilant_exit
+.prepend_root_shared_failed: mov edi, 84
+    jmp sybilant_exit
+.prepend_tail_shared_failed: mov edi, 85
+    jmp sybilant_exit
+.prepend_head_failed: mov edi, 86
+    jmp sybilant_exit
+.prepend_value_failed: mov edi, 87
     jmp sybilant_exit
 .insert_failed: mov edi, 72
     jmp sybilant_exit
@@ -206,6 +280,8 @@ main:
 .concat_failed: mov edi, 77
     jmp sybilant_exit
 .deep_failed: mov edi, 78
+    jmp sybilant_exit
+.head_promotion_failed: mov edi, 88
     jmp sybilant_exit
 .list_type_failed: mov edi, 79
     jmp sybilant_exit
