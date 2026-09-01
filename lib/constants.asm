@@ -23,8 +23,28 @@
 ;; Sybilant memory layout.
     SYBILANT_MALLOC_START equ 0x100000000
 
+;; Sybilant tagged value representation.
+    SYBILANT_TAG_MASK     equ 0b111
+    SYBILANT_TAG_FALSE    equ 0b100
+    SYBILANT_TAG_TRUE     equ 0b101
+    SYBILANT_TAG_EXTENDED equ 0b111
+
+;; Sybilant extended immediate tags.
+    SYBILANT_EXTENDED_TAG_MASK equ 0b11111_111
+    SYBILANT_EXTENDED_TAG_TYPE equ 0b00001_111
+
+;; Sybilant built-in type tags.
+    SYBILANT_TYPE_TYPE    equ 0b00001111_00001111
+    SYBILANT_BOOLEAN_TYPE equ 0b00000100_00001111
+
+;; Sybilant immediate values.
+    SYBILANT_FALSE equ 0b100
+    SYBILANT_TRUE  equ 0b101
+    SYBILANT_NIL   equ 0
+
 ;; Sybilant process exit statuses.
     SYBILANT_ERROR_INVALID_ARGUMENT equ 1
     SYBILANT_ERROR_OUT_OF_MEMORY    equ 2
+    SYBILANT_ERROR_INVALID_STATE    equ 3
 
 %endif

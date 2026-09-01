@@ -5,8 +5,11 @@ default rel
 
 section .text
 global _start
+global sybilant_Dboolean_q
 global sybilant_Dexit
+global sybilant_Dinstance_q
 global sybilant_Dmalloc
+global sybilant_Dtype
 extern sybilant_Dmain
 
 _start:
@@ -24,6 +27,66 @@ sybilant_Dexit:
     mov eax, SYS_EXIT
     syscall
     ud2
+
+sybilant_Dtype:
+    cmp rdi, SYBILANT_NIL
+    je .nil
+
+    cmp rdi, SYBILANT_FALSE
+    je .boolean
+
+    cmp rdi, SYBILANT_TRUE
+    je .boolean
+
+    test rdi, SYBILANT_TAG_MASK
+    jnz .invalid_state
+
+    mov rax, [rdi]
+    mov rdx, rax
+    and edx, SYBILANT_EXTENDED_TAG_MASK
+    cmp edx, SYBILANT_EXTENDED_TAG_TYPE
+    jne .invalid_state
+    ret
+
+.nil:
+    mov eax, SYBILANT_NIL
+    ret
+
+.boolean:
+    mov eax, SYBILANT_BOOLEAN_TYPE
+    ret
+
+.invalid_state:
+    mov edi, SYBILANT_ERROR_INVALID_STATE
+    jmp sybilant_Dexit
+
+sybilant_Dinstance_q:
+    mov rax, rsi
+    and eax, SYBILANT_EXTENDED_TAG_MASK
+    cmp eax, SYBILANT_EXTENDED_TAG_TYPE
+    jne .invalid_argument
+
+    push rsi
+    call sybilant_Dtype
+    pop rsi
+
+    cmp rax, rsi
+    je .true
+
+    mov eax, SYBILANT_FALSE
+    ret
+
+.true:
+    mov eax, SYBILANT_TRUE
+    ret
+
+.invalid_argument:
+    mov edi, SYBILANT_ERROR_INVALID_ARGUMENT
+    jmp sybilant_Dexit
+
+sybilant_Dboolean_q:
+    mov esi, SYBILANT_BOOLEAN_TYPE
+    jmp sybilant_Dinstance_q
 
 sybilant_Dmalloc:
     test rdi, rdi

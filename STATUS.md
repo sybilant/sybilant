@@ -18,6 +18,19 @@ None.
 
 ## Completed
 
+### Tagged immediate value introspection
+
+The low three bits distinguish aligned pointers, false, true, and
+extended immediates. Type values use the type extended tag.
+`sybilant-type` returns the type of booleans and aligned pointer values,
+with nil as a special case. `sybilant-instance?` compares a value's type
+with a validated type argument, and `sybilant-boolean?` specializes that
+predicate for booleans. Invalid object headers exit with
+`SYBILANT_ERROR_INVALID_STATE`, and invalid type arguments exit with
+`SYBILANT_ERROR_INVALID_ARGUMENT`.
+
+Integrate into: manual.
+
 ### Allocator state initialization
 
 Before calling `sybilant-main`, `_start` sets `sybilant-malloc-start`
