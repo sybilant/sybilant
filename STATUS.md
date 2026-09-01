@@ -1,28 +1,92 @@
 # Project status
 
-## Open questions
+## Current focus
 
-None yet. List them here, each numbered with a short descriptive title
-and its dependencies, ordered so the question most others depend on
-comes first:
+None.
+
+## Open tasks
+
+4. Reclaim allocation mappings -- depends on: 2, 3
+   Allow a future garbage collector to release physical memory and
+   virtual memory manager metadata without retreating the frontier or
+   making an allocation address reusable.
+
+5. Validate sparse allocation costs -- depends on: 2, 4
+   Measure address-space consumption and virtual memory manager metadata
+   for representative long-running workloads, then adjust the mapping
+   and reclamation policy if needed.
+
+## Completed
+
+### Allocator state initialization
+
+Before calling `sybilant-main`, `_start` sets `sybilant-malloc-start`
+and `sybilant-malloc-maximum` to `SYBILANT_MALLOC_START`.
+
+Integrate into: manual.
+
+### Root runtime entry and exit
+
+`_start` calls `sybilant-main`, then passes its return status to the
+Linux exit system call through `sybilant-exit`.
+
+Integrate into: manual.
+
+### Frontier allocation
+
+`sybilant-malloc` returns storage from a byte-granular frontier that
+only moves upward. It maps newly crossed pages at fixed addresses
+without replacing existing mappings. A zero byte count exits with
+`SYBILANT_ERROR_INVALID_ARGUMENT`, and allocation failure exits with
+`SYBILANT_ERROR_OUT_OF_MEMORY`.
+
+Integrate into: manual.
+
+### Runtime symbol munging
+
+Munged runtime names contain only the letters `A` through `Z` and `a`
+through `z`, digits, and underscores. Those letters and digits remain
+unchanged. The compiler uses these short, case-sensitive escapes for
+common punctuation:
+
+| Character | Escape | Mnemonic |
+| --- | --- | --- |
+| `!` | `_B` | bang |
+| `#` | `_h` | hash |
+| `$` | `_R` | dollar |
+| `%` | `_P` | percent |
+| `&` | `_a` | ampersand |
+| `*` | `_s` | star |
+| `'` | `_Q` | quote |
+| `<` | `_l` | less |
+| `.` | `_d` | dot |
+| `>` | `_g` | greater |
+| `/` | `_S` | slash |
+| `?` | `_q` | question |
+| `=` | `_e` | equals |
+| `+` | `_p` | plus |
+| `\|` | `_V` | vertical bar |
+| `:` | `_c` | colon |
+| `-` | `_D` | dash |
+| `_` | `__` | underscore |
+
+The compiler encodes every other Unicode scalar value in the Basic
+Multilingual Plane as `_uXXXX` and every other scalar value as
+`_UXXXXXX`. The hexadecimal digits are uppercase and zero-padded.
+Surrogate code points aren't valid scalar values. Symbol munging does
+not perform Unicode normalization.
+
+Integrate into: manual.
+
+<!--
+List completed-but-not-integrated design work here, with a one-line
+summary and where it belongs:
 
 ```
-1. Question title -- depends on: none
-   Detail, options considered, and any current lean.
-
-2. Question title -- depends on: 1
-   ...
+- Task title: the result. Integrate into: DDR | manual.
 ```
 
-## Settled
-
-None yet. List a settled-but-not-integrated question here, with a
-one-line answer and where the answer belongs:
-
-```
-- Question title: the answer. Integrate into: DDR | manual.
-```
-
-Move a settled question into a Design Decision Record (DDR) first if
-it's DDR-worthy, then into the manual. Remove it from here once both
-steps land.
+Move unusual or novel design decisions into a Design Decision Record
+first. Remove completed work from here after its design lands in the
+manual, and in a Design Decision Record when the decision warrants one.
+-->

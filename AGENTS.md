@@ -1,73 +1,103 @@
 # Agent guide
 
-## Repository layout
+## Repository map
 
-- `README.md` -- project overview.
-- `STATUS.md` -- current focus and open tasks, per the workflow below.
-- `docs/sybilant-manual.typ` -- source for the design and implementation
-  manual.
-- `docs/sybilant-manual.pdf` -- the built manual. `bin/build-manual`
-  regenerates it, and a pre-commit hook keeps it in sync automatically.
-- `docs/ddrs/` -- Design Decision Records, one per settled decision,
-  named `NNNN-title.md`.
-- `bin/` -- project scripts: `build-manual` and `watch-manual`.
-- `devenv.nix`, `devenv.yaml`, `devenv.lock` -- the development
-  environment: tooling, packages, and the pre-commit hooks.
-- `.config/vale/` -- prose linting configuration and vendored style
-  rules.
+- `README.md`: project overview.
+- `STATUS.md`: current focus, open tasks, and settled work awaiting
+  documentation.
+- `docs/sybilant-manual.typ`: design and implementation manual source.
+- `docs/sybilant-manual.pdf`: generated manual. A pre-commit hook keeps
+  it synchronized.
+- `docs/ddrs/`: design decision records, named `NNNN-title.md`.
+- `bin/`: project scripts.
+- `devenv.nix`, `devenv.yaml`, and `devenv.lock`: development tools,
+  packages, and pre-commit hooks.
+- `.config/vale/`: prose lint configuration and vendored rules.
 
 ## Workflow
 
-Sybilant's design and implementation grow together, starting from a
-minimum viable compiler and runtime and building up incrementally.
-Organize the work into tasks and present them in an order that solves
-the most important problems first.
+Develop Sybilant's design and implementation together, incrementally
+from a minimal compiler and runtime. Split work into tasks and order
+prerequisites first.
 
-Track the current focus and open tasks in STATUS.md. Give each task a
-short descriptive title and a number, and order tasks so the one most
-others depend on comes first. Insert newly discovered tasks at their
-appropriate priority.
+For every code change:
 
-Mark a task complete in STATUS.md when it's settled. Remove it from
-STATUS.md once its design work lands in the manual, or in a Design
-Decision Record (DDR) if the decision is unusual, novel, or one you were
-genuinely torn on and want a record of, so you don't keep revisiting it.
-Most decisions don't need a DDR. See `STATUS.md` for the format its
-entries follow.
+1. Add tests for the intended behavior. Add only the production stubs
+   required to assemble, link, and run them.
+2. Run the tests and confirm that the new tests fail for the expected
+   reason.
+3. Stop and ask the user to approve the test-suite changes. Don't
+   implement the behavior before approval.
+4. After approval, implement the behavior and rerun the tests.
 
-Don't offer to create a DDR without first checking.
+Prefer adding tests. Modify existing tests only for bug fixes or
+refactoring.
 
-## Design decision records
+Track work in `STATUS.md`. Give each open task a number, short title,
+dependencies, and intended outcome. Keep tasks in priority order, with
+prerequisites first.
 
-Each DDR follows the structure in `docs/ddrs/0000-template.md`. See
+Move settled tasks to the completed section. Remove them after their
+design enters the manual or, for an unusual, novel, or difficult
+decision worth preserving, a design decision record. Most decisions
+don't need one. Check before suggesting one. Follow `STATUS.md` for
+entry format.
+
+## Documentation
+
+Follow `docs/ddrs/0000-template.md` for record structure and
 `docs/ddrs/README.md` for naming and scope.
 
-## Prose style
-
-Vale lints prose in Markdown and Typst files against the Google
-developer style guide, configured in `.config/vale/vale.ini`. Most
-checks fail at error level, which blocks a commit. Check a file before
-you stage it:
+Vale checks Markdown and Typst against the configured Google developer
+style rules. Check prose before staging it:
 
 ```
 vale --config .config/vale/vale.ini <file>
 ```
 
-## Building the manual
+Inside `devenv shell`, run `bin/build-manual` to regenerate
+`docs/sybilant-manual.pdf`, or `bin/watch-manual` to rebuild it after
+changes and keep it open. The commands are also available as
+`build-manual` and `watch-manual`.
 
-Run `bin/build-manual` inside `devenv shell` to regenerate
-`docs/sybilant-manual.pdf`, or `bin/watch-manual` to rebuild it
-automatically on every change and keep it open. Both are also available
-as `devenv shell` commands, `build-manual` and `watch-manual`.
+## Runtime implementation
 
-## Implementation
+The bootstrap runtime uses Netwide Assembler (NASM) syntax and targets
+x86-64 Linux. It links without libc and makes Linux system calls
+directly.
 
-No implementation exists yet. Once it starts, this section should cover
-the language, project layout, and how to build and test it.
+- `lib/constants.asm`: constants shared by runtime modules.
+- `lib/sybilant.asm`: root runtime functions and the process entry
+  point.
+- `lib/**/*.asm`: runtime modules.
+- `test/<module>/*_test.asm`: independent test cases for
+  `lib/<module>.asm`.
+- `test/support.asm`: minimal test assertions and the shared
+  `sybilant-main` function.
+- `bin/format-assembly`: formats assembly with Emacs `nasm-mode`.
+- `bin/test`: assembles, links, and runs all tests.
+
+Each runtime test file defines one self-contained `testcase` function.
+The function can contain multiple assertions. The shared
+`sybilant-main` calls `testcase` and returns status 0 when the function
+returns normally. The test runner fails any test executable that runs
+for more than five seconds.
+
+The name of a runtime module is also its namespace. Functions in
+`lib/example.asm` use names such as `sybilant_Dexample_Dsomething`.
+Functions in the root `lib/sybilant.asm` module use names such as
+`sybilant_Dsomething`.
+
+Indent assembly with four spaces, never tabs. Use left-aligned `;;`
+for block comments. Use `;` for inline comments and align them with the
+surrounding instructions. Inside `devenv shell`, run
+`bin/format-assembly` to format assembly and `bin/test` to test the
+runtime. Pre-commit hooks format staged assembly automatically.
 
 ## Source control
 
-- Don't stage files without approval.
-- Don't commit without approval.
-- Don't push without approval.
-- Don't create a Github PR without approval.
+The user batches changes and iterates before committing. Leave changes
+unstaged and uncommitted until the user explicitly asks to stage or
+commit them. Approval of changes or completion of a task isn't source
+control authorization. Don't push or create a GitHub pull request
+without explicit approval.
