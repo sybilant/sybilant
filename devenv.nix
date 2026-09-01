@@ -52,10 +52,25 @@ let
       license = licenses.mit;
     };
   };
+
+  emacsWithNasm =
+    (pkgs.emacsPackagesFor pkgs.emacs-nox).emacsWithPackages
+      (epkgs: [ epkgs.nasm-mode ]);
 in
 {
   # https://devenv.sh/packages/
-  packages = [ vale typst2vast pkgs.typst pkgs.evince pkgs.inotify-tools pkgs.poppler-utils pkgs.ripgrep ];
+  packages = [
+    vale
+    typst2vast
+    pkgs.typst
+    pkgs.evince
+    pkgs.inotify-tools
+    pkgs.poppler-utils
+    pkgs.ripgrep
+    pkgs.nasm
+    pkgs.binutils
+    emacsWithNasm
+  ];
 
   # Typst (the PDF pipeline's render engine, see scripts.build-manual
   # below) ships no bundled fonts. Point it at a Nix-packaged font, via
@@ -78,6 +93,19 @@ in
 
   # https://devenv.sh/git-hooks/
   #
+  # Formats NASM sources with the same indentation used interactively by
+  # nasm-mode. The hook changes incorrectly formatted files, which makes
+  # pre-commit stop so the formatted result can be reviewed and staged.
+  git-hooks.hooks.format-assembly = {
+    enable = true;
+    name = "format-assembly";
+    files = "\\.asm$";
+    language = "system";
+    entry = ''
+      env EMACS="${emacsWithNasm}/bin/emacs" bin/format-assembly
+    '';
+  };
+
   # Lints prose in Markdown and Typst files with Vale, using the Google
   # developer documentation style guide. Installed as a git pre-commit
   # hook the first time you enter this devenv shell, and runs against

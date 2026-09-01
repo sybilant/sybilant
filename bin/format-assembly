@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Formats NASM sources using nasm-mode's indentation rules.
+set -euo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+emacs_bin="${EMACS:-emacs}"
+
+if (($# == 0)); then
+  shopt -s globstar nullglob
+  files=("$root"/lib/**/*.asm "$root"/test/**/*.asm)
+else
+  files=("$@")
+fi
+
+for file in "${files[@]}"; do
+  if [[ "$file" != /* ]]; then
+    file="$root/$file"
+  fi
+
+  "$emacs_bin" --batch --quick \
+    --eval '(setq make-backup-files nil create-lockfiles nil)' \
+    --eval '(require '\''nasm-mode)' \
+    "$file" \
+    --eval '(progn
+              (nasm-mode)
+              (setq-local indent-tabs-mode nil
+                          nasm-basic-offset 4
+                          nasm-after-mnemonic-whitespace :space)
+              (indent-region (point-min) (point-max))
+              (save-buffer))'
+done
