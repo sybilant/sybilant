@@ -18,6 +18,15 @@ None.
 
 ## Completed
 
+### Guarded runtime entry points
+
+Public runtime symbols guard values that arrive from dynamic code. Matching
+`-unchecked` symbols skip type guards when the compiler proves the argument
+and return types. Semantic precondition and operational failure checks remain
+in both paths.
+
+Integrate into: manual.
+
 ### Tagged immediate value introspection
 
 The low three bits distinguish aligned pointers, false, true, and

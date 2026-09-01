@@ -107,6 +107,8 @@ section .text
 section .text
 global sybilant_Dmain
 
+;; Run the test case and return a successful process status.
+;; Arguments: none. Return type: integer.
 sybilant_Dmain:
     sub rsp, 8
     call testcase
