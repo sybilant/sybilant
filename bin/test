@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+# Assembles, links, and runs each assembly test as a standalone program.
+set -uo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+build_dir="$(mktemp -d "${TMPDIR:-/tmp}/sybilant-tests.XXXXXX")"
+trap 'rm -rf "$build_dir"' EXIT
+
+green=$'\033[32m'
+red=$'\033[31m'
+bold=$'\033[1m'
+reset=$'\033[0m'
+test_timeout=5s
+
+shopt -s globstar nullglob
+tests=("$root"/test/**/*_test.asm)
+runtime_sources=("$root"/lib/**/*.asm)
+runtime_objects=()
+
+if ((${#tests[@]} == 0)); then
+  echo "No *_test.asm files found under test/." >&2
+  exit 1
+fi
+
+for source in "${runtime_sources[@]}"; do
+  relative="${source#"$root/"}"
+  object="$build_dir/${relative%.asm}.o"
+  runtime_objects+=("$object")
+
+  mkdir -p "$(dirname "$object")"
+
+  if ! nasm -f elf64 -w+error -I "$root/" \
+    -o "$object" "$source"; then
+    printf '%s✗%s %s (assembly failed)\n' \
+      "$red" "$reset" "$relative" >&2
+    exit 1
+  fi
+done
+
+passed=0
+failed=0
+
+for source in "${tests[@]}"; do
+  relative="${source#"$root/"}"
+  test_name="${relative#test/}"
+  test_name="${test_name%.asm}"
+  object="$build_dir/$test_name.o"
+  executable="$build_dir/$test_name"
+
+  mkdir -p "$(dirname "$object")"
+
+  if ! nasm -f elf64 -w+error -I "$root/" \
+    -o "$object" "$source"; then
+    printf '%s✗%s %s (assembly failed)\n' \
+      "$red" "$reset" "$relative"
+    ((failed += 1))
+    continue
+  fi
+
+  if ! ld --fatal-warnings --entry _start -o "$executable" \
+    "${runtime_objects[@]}" "$object"; then
+    printf '%s✗%s %s (linking failed)\n' \
+      "$red" "$reset" "$relative"
+    ((failed += 1))
+    continue
+  fi
+
+  timeout --kill-after=1s "$test_timeout" "$executable"
+  status=$?
+
+  if ((status == 0)); then
+    printf '%s✓%s %s\n' "$green" "$reset" "$relative"
+    ((passed += 1))
+  elif ((status == 124)); then
+    printf '%s✗%s %s %s(timed out after %s)%s\n' \
+      "$red" "$reset" "$relative" "$bold" "$test_timeout" "$reset"
+    ((failed += 1))
+  else
+    printf '%s✗%s %s %s(exit status %d)%s\n' \
+      "$red" "$reset" "$relative" "$bold" "$status" "$reset"
+    ((failed += 1))
+  fi
+done
+
+echo
+echo "$passed passed; $failed failed"
+
+((failed == 0))
