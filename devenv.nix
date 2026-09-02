@@ -64,6 +64,7 @@ in
     typst2vast
     pkgs.typst
     pkgs.evince
+    pkgs.gnumake
     pkgs.inotify-tools
     pkgs.poppler-utils
     pkgs.ripgrep

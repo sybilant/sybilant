@@ -9,6 +9,7 @@
 - `docs/sybilant-manual.pdf`: generated manual. A pre-commit hook keeps
   it synchronized.
 - `docs/ddrs/`: design decision records, named `NNNN-title.md`.
+- `Makefile`: incremental build rules for runtime tests.
 - `bin/`: project scripts.
 - `devenv.nix`, `devenv.yaml`, and `devenv.lock`: development tools,
   packages, and pre-commit hooks.
@@ -74,8 +75,9 @@ directly.
   `lib/<module>.asm`.
 - `test/support.asm`: minimal test assertions and the shared
   `sybilant-main` function.
+- `Makefile`: assembles and links test executables under `build/test/`.
 - `bin/format-assembly`: formats assembly with Emacs `nasm-mode`.
-- `bin/test`: assembles, links, and runs all tests.
+- `bin/test`: builds and runs all tests.
 
 Each runtime test file defines one self-contained `testcase` function.
 The function can contain multiple assertions. The shared
@@ -92,7 +94,8 @@ Indent assembly with four spaces, never tabs. Use left-aligned `;;`
 for block comments. Use `;` for inline comments and align them with the
 surrounding instructions. Inside `devenv shell`, run
 `bin/format-assembly` to format assembly and `bin/test` to test the
-runtime. Pre-commit hooks format staged assembly automatically.
+runtime. Run `make clean` to delete build artifacts. Pre-commit hooks
+format staged assembly automatically.
 
 ## Source control
 
