@@ -44,10 +44,8 @@ Integrate into: manual.
 `sybilant-=` compares immediate values directly. For two heap values, it
 validates their types and compares them recursively with `sybilant-=` before
 using a fixed type-specific equality dispatch. Heap types without equality
-support report
-`SYBILANT_ERROR_INVALID_STATE`. The unchecked entry skips heap-header
-validation. `sybilant-instance?` uses the unchecked entry to compare proven
-type values.
+support report `SYBILANT_ERROR_INVALID_STATE`. Value equality has one runtime
+entry and implementation. `sybilant-instance?` uses it to compare type values.
 
 Integrate into: manual.
 

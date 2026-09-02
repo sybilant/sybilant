@@ -20,7 +20,6 @@ global sybilant_Dbox_Dnat64
 global sybilant_Dboolean_q
 global sybilant_Dboolean_q_Dunchecked
 global sybilant_D_e
-global sybilant_D_e_Dunchecked
 global sybilant_Dexit
 global sybilant_Dexit_Dunchecked
 global sybilant_Dinstance_q
@@ -247,7 +246,7 @@ sybilant_Dinstance_q:
     call sybilant_Dtype
     pop rsi
     mov rdi, rax
-    jmp sybilant_D_e_Dunchecked
+    jmp sybilant_D_e
 
 .invalid_argument:
     mov edi, SYBILANT_ERROR_INVALID_ARGUMENT
@@ -260,7 +259,7 @@ sybilant_Dinstance_q_Dunchecked:
     call sybilant_Dtype_Dunchecked
     pop rsi
     mov rdi, rax
-    jmp sybilant_D_e_Dunchecked
+    jmp sybilant_D_e
 
 ;; Check a value and return whether it is a boolean.
 ;; Arguments: rdi = value (value). Return type: boolean.
@@ -303,71 +302,7 @@ sybilant_D_e:
 
     mov rdi, r14
     mov rsi, rax
-    call sybilant_D_e_Dunchecked
-
-    cmp rax, SYBILANT_TRUE
-    jne .different_heap_types
-
-    mov rdx, r14
-    mov rdi, r12
-    mov rsi, r13
-
-    pop r14
-    pop r13
-    pop r12
-    jmp sybilant_D_e_Dunchecked.dispatch
-
-.different_heap_types:
-    pop r14
-    pop r13
-    pop r12
-    jmp sybilant_D_e_Dunchecked.false
-
-.left_immediate:
-    cmp rsi, SYBILANT_NIL
-    je sybilant_D_e_Dunchecked
-
-    test rsi, SYBILANT_TAG_MASK
-    jnz sybilant_D_e_Dunchecked
-
-    sub rsp, 8
-    mov rdi, rsi
-    call sybilant_Dtype
-    add rsp, 8
-    jmp sybilant_D_e_Dunchecked.false
-
-.right_immediate:
-    sub rsp, 8
-    call sybilant_Dtype
-    add rsp, 8
-    jmp sybilant_D_e_Dunchecked.false
-
-;; Return whether two proven values are equal.
-;; Arguments: rdi = left (value); rsi = right (value). Return type: boolean.
-sybilant_D_e_Dunchecked:
-    cmp rdi, SYBILANT_NIL
-    je .compare_immediates
-
-    test rdi, SYBILANT_TAG_MASK
-    jnz .compare_immediates
-
-    cmp rsi, SYBILANT_NIL
-    je .false
-
-    test rsi, SYBILANT_TAG_MASK
-    jnz .false
-
-    push r12
-    push r13
-    push r14
-
-    mov r12, rdi
-    mov r13, rsi
-    mov r14, [rdi]
-
-    mov rdi, r14
-    mov rsi, [rsi]
-    call sybilant_D_e_Dunchecked
+    call sybilant_D_e
 
     cmp rax, SYBILANT_TRUE
     jne .different_heap_types
@@ -385,6 +320,25 @@ sybilant_D_e_Dunchecked:
     pop r14
     pop r13
     pop r12
+    jmp .false
+
+.left_immediate:
+    cmp rsi, SYBILANT_NIL
+    je .compare_immediates
+
+    test rsi, SYBILANT_TAG_MASK
+    jnz .compare_immediates
+
+    sub rsp, 8
+    mov rdi, rsi
+    call sybilant_Dtype
+    add rsp, 8
+    jmp .false
+
+.right_immediate:
+    sub rsp, 8
+    call sybilant_Dtype
+    add rsp, 8
     jmp .false
 
 .dispatch:
