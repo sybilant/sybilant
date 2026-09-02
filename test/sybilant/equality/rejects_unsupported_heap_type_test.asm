@@ -6,7 +6,7 @@ default rel
 section .rodata
 align 8
 object:
-    dq SYBILANT_TYPE_TYPE
+    dq SYBILANT_BOOLEAN_TYPE
 
 section .text
 extern sybilant_S_e

@@ -18,6 +18,17 @@ None.
 
 ## Completed
 
+### Typed atomic reference cells
+
+Atom values point to first-class `Atom<T>` heap type descriptors and contain
+only their current values. Atom types compare structurally, and an atom type
+can use another atom type as its element type. Guarded allocation and
+compare-and-set operations enforce the element type. Unchecked entries trust
+static proof. Compare-and-set uses identity and an atomic update. Dereference
+acquires values published through compare-and-set.
+
+Integrate into: manual.
+
 ### Slash-delimited runtime procedure names
 
 Every runtime procedure uses the `sybilant/` namespace. Munged symbols encode

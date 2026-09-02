@@ -5,6 +5,12 @@ default rel
 
 section .text
 global _start
+global sybilant_Satom_Dcompare_Dand_Dset
+global sybilant_Satom_Dcompare_Dand_Dset_Dunchecked
+global sybilant_Satom_Dderef
+global sybilant_Satom_Dderef_Dunchecked
+global sybilant_Satom_Dnew
+global sybilant_Satom_Dnew_Dunchecked
 global sybilant_Sbox_Duint8
 global sybilant_Sbox_Duint16
 global sybilant_Sbox_Duint32
@@ -90,9 +96,17 @@ sybilant_Stype:
     cmp rax, SYBILANT_NIL
     je .valid_return
 
+    test rax, SYBILANT_TAG_MASK
+    jz .pointer_type
+
     mov rdx, rax
     and edx, SYBILANT_EXTENDED_TAG_MASK
     cmp edx, SYBILANT_EXTENDED_TAG_TYPE
+    jne .invalid_state
+    jmp .valid_return
+
+.pointer_type:
+    cmp qword [rax], SYBILANT_TYPE_TYPE
     jne .invalid_state
 
 .valid_return:
@@ -201,11 +215,23 @@ sybilant_Stype_Dunchecked:
 ;; Check the arguments and return whether a value is an instance of a type.
 ;; Arguments: rdi = value (value); rsi = type (type). Return type: boolean.
 sybilant_Sinstance_q:
+    cmp rsi, SYBILANT_NIL
+    je .invalid_argument
+
+    test rsi, SYBILANT_TAG_MASK
+    jz .pointer_type
+
     mov rax, rsi
     and eax, SYBILANT_EXTENDED_TAG_MASK
     cmp eax, SYBILANT_EXTENDED_TAG_TYPE
     jne .invalid_argument
+    jmp .valid_type
 
+.pointer_type:
+    cmp qword [rsi], SYBILANT_TYPE_TYPE
+    jne .invalid_argument
+
+.valid_type:
     push rsi
     call sybilant_Stype
     pop rsi
@@ -236,6 +262,141 @@ sybilant_Sboolean_q:
 sybilant_Sboolean_q_Dunchecked:
     mov esi, SYBILANT_BOOLEAN_TYPE
     jmp sybilant_Sinstance_q_Dunchecked
+
+;; Create an atom with an element type and a matching initial value.
+;; Arguments: rdi = element type (type); rsi = initial value (value).
+;; Return type: atom.
+sybilant_Satom_Dnew:
+    sub rsp, 24
+    mov [rsp], rdi
+    mov [rsp + 8], rsi
+
+    mov rdi, rsi
+    mov rsi, [rsp]
+    call sybilant_Sinstance_q
+
+    cmp rax, SYBILANT_TRUE
+    jne sybilant_Satom_Dinvalid_argument
+
+    mov rdi, [rsp]
+    mov rsi, [rsp + 8]
+    add rsp, 24
+    jmp sybilant_Satom_Dnew_Dunchecked
+
+;; Create an atom with a proven element type and matching initial value.
+;; Arguments: rdi = element type (type); rsi = initial value (value).
+;; Return type: atom.
+sybilant_Satom_Dnew_Dunchecked:
+    sub rsp, 24
+    mov [rsp], rdi
+    mov [rsp + 8], rsi
+
+    mov edi, SYBILANT_ATOM_TYPE_SIZE + SYBILANT_ATOM_SIZE + SYBILANT_TAG_MASK
+    call sybilant_Smalloc_Dunchecked
+
+    mov rdx, [rsp]
+    mov rcx, [rsp + 8]
+    add rsp, 24
+
+    add rax, SYBILANT_TAG_MASK
+    and rax, -8
+    mov qword [rax + SYBILANT_ATOM_TYPE_TYPE_OFFSET], SYBILANT_TYPE_TYPE
+    mov qword [rax + SYBILANT_ATOM_TYPE_CONSTRUCTOR_OFFSET], SYBILANT_ATOM_TYPE_CONSTRUCTOR
+    mov [rax + SYBILANT_ATOM_TYPE_ELEMENT_TYPE_OFFSET], rdx
+
+    lea rdx, [rax + SYBILANT_ATOM_TYPE_SIZE]
+    mov [rdx + SYBILANT_ATOM_TYPE_OFFSET], rax
+    mov [rdx + SYBILANT_ATOM_VALUE_OFFSET], rcx
+    mov rax, rdx
+    ret
+
+;; Atomically replace an atom's identical old value with a new value.
+;; Arguments: rdi = atom (value); rsi = old value (matching value);
+;;            rdx = new value (matching value). Return type: boolean.
+sybilant_Satom_Dcompare_Dand_Dset:
+    sub rsp, 40
+    mov [rsp], rdi
+    mov [rsp + 8], rsi
+    mov [rsp + 16], rdx
+
+    call sybilant_Satom_Dguard
+    mov rax, [rdi + SYBILANT_ATOM_TYPE_OFFSET]
+    mov rax, [rax + SYBILANT_ATOM_TYPE_ELEMENT_TYPE_OFFSET]
+    mov [rsp + 24], rax
+
+    mov rdi, [rsp + 8]
+    mov rsi, rax
+    call sybilant_Sinstance_q
+    cmp rax, SYBILANT_TRUE
+    jne sybilant_Satom_Dinvalid_argument
+
+    mov rdi, [rsp + 16]
+    mov rsi, [rsp + 24]
+    call sybilant_Sinstance_q
+    cmp rax, SYBILANT_TRUE
+    jne sybilant_Satom_Dinvalid_argument
+
+    mov rdi, [rsp]
+    mov rsi, [rsp + 8]
+    mov rdx, [rsp + 16]
+    add rsp, 40
+    jmp sybilant_Satom_Dcompare_Dand_Dset_Dunchecked
+
+;; Atomically replace a proven atom's identical old value with a new value.
+;; Arguments: rdi = atom (atom); rsi = old value (matching value);
+;;            rdx = new value (matching value). Return type: boolean.
+sybilant_Satom_Dcompare_Dand_Dset_Dunchecked:
+    mov rax, rsi
+    lock cmpxchg [rdi + SYBILANT_ATOM_VALUE_OFFSET], rdx
+    jne .false
+
+    mov eax, SYBILANT_TRUE
+    ret
+
+.false:
+    mov eax, SYBILANT_FALSE
+    ret
+
+;; Return an atom's current value with acquire ordering.
+;; Arguments: rdi = atom (value). Return type: value.
+sybilant_Satom_Dderef:
+    sub rsp, 8
+    call sybilant_Satom_Dguard
+    add rsp, 8
+    jmp sybilant_Satom_Dderef_Dunchecked
+
+;; Return a proven atom's current value with acquire ordering.
+;; Arguments: rdi = atom (atom). Return type: value.
+sybilant_Satom_Dderef_Dunchecked:
+    mov rax, [rdi + SYBILANT_ATOM_VALUE_OFFSET]
+    ret
+
+;; Validate that a value is an atom.
+;; Arguments: rdi = value (value). Return type: none.
+sybilant_Satom_Dguard:
+    cmp rdi, SYBILANT_NIL
+    je sybilant_Satom_Dinvalid_argument
+
+    test rdi, SYBILANT_TAG_MASK
+    jnz sybilant_Satom_Dinvalid_argument
+
+    mov rax, [rdi + SYBILANT_ATOM_TYPE_OFFSET]
+    cmp rax, SYBILANT_NIL
+    je sybilant_Satom_Dinvalid_argument
+
+    test rax, SYBILANT_TAG_MASK
+    jnz sybilant_Satom_Dinvalid_argument
+
+    cmp qword [rax + SYBILANT_ATOM_TYPE_TYPE_OFFSET], SYBILANT_TYPE_TYPE
+    jne sybilant_Satom_Dinvalid_argument
+
+    cmp qword [rax + SYBILANT_ATOM_TYPE_CONSTRUCTOR_OFFSET], SYBILANT_ATOM_TYPE_CONSTRUCTOR
+    jne sybilant_Satom_Dinvalid_argument
+    ret
+
+sybilant_Satom_Dinvalid_argument:
+    mov edi, SYBILANT_ERROR_INVALID_ARGUMENT
+    jmp sybilant_Sexit_Dunchecked
 
 ;; Check two values and return whether they are equal.
 ;; Arguments: rdi = left (value); rsi = right (value). Return type: boolean.
@@ -307,6 +468,9 @@ sybilant_S_e:
 
 .dispatch:
 ;; Dispatch equality for type rdx with values rdi and rsi.
+    cmp rdx, SYBILANT_TYPE_TYPE
+    je .type
+
     cmp rdx, SYBILANT_UINT64_TYPE
     je .integer64
 
@@ -324,6 +488,22 @@ sybilant_S_e:
     cmp rax, [rsi + SYBILANT_BOXED_INTEGER_PAYLOAD_OFFSET]
     je .true
     jmp .false
+
+.type:
+    mov rax, [rdi + SYBILANT_ATOM_TYPE_CONSTRUCTOR_OFFSET]
+    cmp rax, [rsi + SYBILANT_ATOM_TYPE_CONSTRUCTOR_OFFSET]
+    jne .false
+
+    cmp rax, SYBILANT_ATOM_TYPE_CONSTRUCTOR
+    jne .unsupported_heap_type
+
+    mov rdi, [rdi + SYBILANT_ATOM_TYPE_ELEMENT_TYPE_OFFSET]
+    mov rsi, [rsi + SYBILANT_ATOM_TYPE_ELEMENT_TYPE_OFFSET]
+    jmp sybilant_S_e
+
+.unsupported_heap_type:
+    mov edi, SYBILANT_ERROR_INVALID_STATE
+    jmp sybilant_Sexit_Dunchecked
 
 .compare_immediates:
     cmp rdi, rsi
