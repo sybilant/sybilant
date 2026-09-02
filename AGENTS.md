@@ -75,14 +75,14 @@ directly.
   `lib/<module>.asm`, organized according to runtime function or
   representation.
 - `test/support.asm`: minimal test assertions and the shared
-  `sybilant-main` function.
+  `sybilant/main` function.
 - `Makefile`: assembles and links test executables under `build/test/`.
 - `bin/format-assembly`: formats assembly with Emacs `nasm-mode`.
 - `bin/test`: builds and runs all tests.
 
 Each runtime test file defines one self-contained `testcase` function.
 The function can contain multiple assertions. The shared
-`sybilant-main` calls `testcase` and returns status 0 when the function
+`sybilant/main` calls `testcase` and returns status 0 when the function
 returns normally. The test runner fails any test executable that runs
 for more than five seconds.
 
@@ -91,9 +91,9 @@ variants when their assertion diagnostics identify the failing case. Put
 runtime symbol-shape tests under the module's `abi/` directory.
 
 The name of a runtime module is also its namespace. Functions in
-`lib/example.asm` use names such as `sybilant_Dexample_Dsomething`.
+`lib/example.asm` use names such as `sybilant_Sexample_Dsomething`.
 Functions in the root `lib/sybilant.asm` module use names such as
-`sybilant_Dsomething`.
+`sybilant_Ssomething`.
 
 Indent assembly with four spaces, never tabs. Use left-aligned `;;`
 for block comments. Use `;` for inline comments and align them with the

@@ -16,25 +16,25 @@ nat64_object:
     dq 0x7fffffffffffffff
 
 section .text
-extern sybilant_Dunbox_Duint64_Dunchecked
-extern sybilant_Dunbox_Dint64_Dunchecked
-extern sybilant_Dunbox_Dnat64_Dunchecked
+extern sybilant_Sunbox_Duint64_Dunchecked
+extern sybilant_Sunbox_Dint64_Dunchecked
+extern sybilant_Sunbox_Dnat64_Dunchecked
 
 testcase:
     sub rsp, 8
 
     lea rdi, [rel uint64_object]
-    call sybilant_Dunbox_Duint64_Dunchecked
+    call sybilant_Sunbox_Duint64_Dunchecked
     mov rdx, -1
     ASSERT_EQ rax, rdx, "unbox-uint64-unchecked should ignore an invalid type header"
 
     lea rdi, [rel int64_object]
-    call sybilant_Dunbox_Dint64_Dunchecked
+    call sybilant_Sunbox_Dint64_Dunchecked
     mov rdx, 0x8000000000000000
     ASSERT_EQ rax, rdx, "unbox-int64-unchecked should ignore a mismatched type header"
 
     lea rdi, [rel nat64_object]
-    call sybilant_Dunbox_Dnat64_Dunchecked
+    call sybilant_Sunbox_Dnat64_Dunchecked
     mov rdx, 0x7fffffffffffffff
     ASSERT_EQ rax, rdx, "unbox-nat64-unchecked should ignore a mismatched type header"
 

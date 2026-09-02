@@ -5,86 +5,86 @@ default rel
 
 section .text
 global _start
-global sybilant_Dbox_Duint8
-global sybilant_Dbox_Duint16
-global sybilant_Dbox_Duint32
-global sybilant_Dbox_Duint64
-global sybilant_Dbox_Dint8
-global sybilant_Dbox_Dint16
-global sybilant_Dbox_Dint32
-global sybilant_Dbox_Dint64
-global sybilant_Dbox_Dnat8
-global sybilant_Dbox_Dnat16
-global sybilant_Dbox_Dnat32
-global sybilant_Dbox_Dnat64
-global sybilant_Dboolean_q
-global sybilant_Dboolean_q_Dunchecked
-global sybilant_D_e
-global sybilant_Dexit
-global sybilant_Dexit_Dunchecked
-global sybilant_Dinstance_q
-global sybilant_Dinstance_q_Dunchecked
-global sybilant_Dmalloc
-global sybilant_Dmalloc_Dunchecked
-global sybilant_Dtype
-global sybilant_Dtype_Dunchecked
-global sybilant_Dunbox_Duint8
-global sybilant_Dunbox_Duint8_Dunchecked
-global sybilant_Dunbox_Duint16
-global sybilant_Dunbox_Duint16_Dunchecked
-global sybilant_Dunbox_Duint32
-global sybilant_Dunbox_Duint32_Dunchecked
-global sybilant_Dunbox_Duint64
-global sybilant_Dunbox_Duint64_Dunchecked
-global sybilant_Dunbox_Dint8
-global sybilant_Dunbox_Dint8_Dunchecked
-global sybilant_Dunbox_Dint16
-global sybilant_Dunbox_Dint16_Dunchecked
-global sybilant_Dunbox_Dint32
-global sybilant_Dunbox_Dint32_Dunchecked
-global sybilant_Dunbox_Dint64
-global sybilant_Dunbox_Dint64_Dunchecked
-global sybilant_Dunbox_Dnat8
-global sybilant_Dunbox_Dnat8_Dunchecked
-global sybilant_Dunbox_Dnat16
-global sybilant_Dunbox_Dnat16_Dunchecked
-global sybilant_Dunbox_Dnat32
-global sybilant_Dunbox_Dnat32_Dunchecked
-global sybilant_Dunbox_Dnat64
-global sybilant_Dunbox_Dnat64_Dunchecked
-extern sybilant_Dmain
+global sybilant_Sbox_Duint8
+global sybilant_Sbox_Duint16
+global sybilant_Sbox_Duint32
+global sybilant_Sbox_Duint64
+global sybilant_Sbox_Dint8
+global sybilant_Sbox_Dint16
+global sybilant_Sbox_Dint32
+global sybilant_Sbox_Dint64
+global sybilant_Sbox_Dnat8
+global sybilant_Sbox_Dnat16
+global sybilant_Sbox_Dnat32
+global sybilant_Sbox_Dnat64
+global sybilant_Sboolean_q
+global sybilant_Sboolean_q_Dunchecked
+global sybilant_S_e
+global sybilant_Sexit
+global sybilant_Sexit_Dunchecked
+global sybilant_Sinstance_q
+global sybilant_Sinstance_q_Dunchecked
+global sybilant_Smalloc
+global sybilant_Smalloc_Dunchecked
+global sybilant_Stype
+global sybilant_Stype_Dunchecked
+global sybilant_Sunbox_Duint8
+global sybilant_Sunbox_Duint8_Dunchecked
+global sybilant_Sunbox_Duint16
+global sybilant_Sunbox_Duint16_Dunchecked
+global sybilant_Sunbox_Duint32
+global sybilant_Sunbox_Duint32_Dunchecked
+global sybilant_Sunbox_Duint64
+global sybilant_Sunbox_Duint64_Dunchecked
+global sybilant_Sunbox_Dint8
+global sybilant_Sunbox_Dint8_Dunchecked
+global sybilant_Sunbox_Dint16
+global sybilant_Sunbox_Dint16_Dunchecked
+global sybilant_Sunbox_Dint32
+global sybilant_Sunbox_Dint32_Dunchecked
+global sybilant_Sunbox_Dint64
+global sybilant_Sunbox_Dint64_Dunchecked
+global sybilant_Sunbox_Dnat8
+global sybilant_Sunbox_Dnat8_Dunchecked
+global sybilant_Sunbox_Dnat16
+global sybilant_Sunbox_Dnat16_Dunchecked
+global sybilant_Sunbox_Dnat32
+global sybilant_Sunbox_Dnat32_Dunchecked
+global sybilant_Sunbox_Dnat64
+global sybilant_Sunbox_Dnat64_Dunchecked
+extern sybilant_Smain
 
 _start:
     mov rax, SYBILANT_MALLOC_START
     mov [rel sybilant_Dmalloc_Dstart], rax
     mov [rel sybilant_Dmalloc_Dmaximum], rax
 
-    call sybilant_Dmain
+    call sybilant_Smain
 
     mov edi, eax
-    call sybilant_Dexit
+    call sybilant_Sexit
     ud2
 
 ;; Check the status and exit the process.
 ;; Arguments: rdi = status (uint8). Return type: never.
-sybilant_Dexit:
+sybilant_Sexit:
     cmp rdi, 0xff
-    jbe sybilant_Dexit_Dunchecked
+    jbe sybilant_Sexit_Dunchecked
 
     mov edi, SYBILANT_ERROR_INVALID_ARGUMENT
 
 ;; Exit the process with a proven status.
 ;; Arguments: rdi = status (uint8). Return type: never.
-sybilant_Dexit_Dunchecked:
+sybilant_Sexit_Dunchecked:
     mov eax, SYS_EXIT
     syscall
     ud2
 
 ;; Return a value's runtime type, checking the result, or nil for nil.
 ;; Arguments: rdi = value (value). Return type: type or nil.
-sybilant_Dtype:
+sybilant_Stype:
     sub rsp, 8
-    call sybilant_Dtype_Dunchecked
+    call sybilant_Stype_Dunchecked
     add rsp, 8
 
     cmp rax, SYBILANT_NIL
@@ -100,11 +100,11 @@ sybilant_Dtype:
 
 .invalid_state:
     mov edi, SYBILANT_ERROR_INVALID_STATE
-    jmp sybilant_Dexit_Dunchecked
+    jmp sybilant_Sexit_Dunchecked
 
 ;; Return the runtime type of a proven value, or nil for nil.
 ;; Arguments: rdi = value (value). Return type: type or nil.
-sybilant_Dtype_Dunchecked:
+sybilant_Stype_Dunchecked:
     cmp rdi, SYBILANT_NIL
     je .nil
 
@@ -200,46 +200,46 @@ sybilant_Dtype_Dunchecked:
 
 ;; Check the arguments and return whether a value is an instance of a type.
 ;; Arguments: rdi = value (value); rsi = type (type). Return type: boolean.
-sybilant_Dinstance_q:
+sybilant_Sinstance_q:
     mov rax, rsi
     and eax, SYBILANT_EXTENDED_TAG_MASK
     cmp eax, SYBILANT_EXTENDED_TAG_TYPE
     jne .invalid_argument
 
     push rsi
-    call sybilant_Dtype
+    call sybilant_Stype
     pop rsi
     mov rdi, rax
-    jmp sybilant_D_e
+    jmp sybilant_S_e
 
 .invalid_argument:
     mov edi, SYBILANT_ERROR_INVALID_ARGUMENT
-    jmp sybilant_Dexit_Dunchecked
+    jmp sybilant_Sexit_Dunchecked
 
 ;; Return whether a proven value is an instance of a proven type.
 ;; Arguments: rdi = value (value); rsi = type (type). Return type: boolean.
-sybilant_Dinstance_q_Dunchecked:
+sybilant_Sinstance_q_Dunchecked:
     push rsi
-    call sybilant_Dtype_Dunchecked
+    call sybilant_Stype_Dunchecked
     pop rsi
     mov rdi, rax
-    jmp sybilant_D_e
+    jmp sybilant_S_e
 
 ;; Check a value and return whether it is a boolean.
 ;; Arguments: rdi = value (value). Return type: boolean.
-sybilant_Dboolean_q:
+sybilant_Sboolean_q:
     mov esi, SYBILANT_BOOLEAN_TYPE
-    jmp sybilant_Dinstance_q
+    jmp sybilant_Sinstance_q
 
 ;; Return whether a proven value is a boolean.
 ;; Arguments: rdi = value (value). Return type: boolean.
-sybilant_Dboolean_q_Dunchecked:
+sybilant_Sboolean_q_Dunchecked:
     mov esi, SYBILANT_BOOLEAN_TYPE
-    jmp sybilant_Dinstance_q_Dunchecked
+    jmp sybilant_Sinstance_q_Dunchecked
 
 ;; Check two values and return whether they are equal.
 ;; Arguments: rdi = left (value); rsi = right (value). Return type: boolean.
-sybilant_D_e:
+sybilant_S_e:
     cmp rdi, SYBILANT_NIL
     je .left_immediate
 
@@ -258,15 +258,15 @@ sybilant_D_e:
 
     mov r12, rdi
     mov r13, rsi
-    call sybilant_Dtype
+    call sybilant_Stype
     mov r14, rax
 
     mov rdi, r13
-    call sybilant_Dtype
+    call sybilant_Stype
 
     mov rdi, r14
     mov rsi, rax
-    call sybilant_D_e
+    call sybilant_S_e
 
     cmp rax, SYBILANT_TRUE
     jne .different_heap_types
@@ -295,13 +295,13 @@ sybilant_D_e:
 
     sub rsp, 8
     mov rdi, rsi
-    call sybilant_Dtype
+    call sybilant_Stype
     add rsp, 8
     jmp .false
 
 .right_immediate:
     sub rsp, 8
-    call sybilant_Dtype
+    call sybilant_Stype
     add rsp, 8
     jmp .false
 
@@ -317,7 +317,7 @@ sybilant_D_e:
     je .integer64
 
     mov edi, SYBILANT_ERROR_INVALID_STATE
-    jmp sybilant_Dexit_Dunchecked
+    jmp sybilant_Sexit_Dunchecked
 
 .integer64:
     mov rax, [rdi + SYBILANT_BOXED_INTEGER_PAYLOAD_OFFSET]
@@ -339,7 +339,7 @@ sybilant_D_e:
 
 ;; Box a uint8 value for dynamic storage.
 ;; Arguments: rdi = value (uint8). Return type: value.
-sybilant_Dbox_Duint8:
+sybilant_Sbox_Duint8:
     movzx eax, dil
     shl rax, SYBILANT_INTEGER_PAYLOAD_SHIFT
     or rax, SYBILANT_EXTENDED_TAG_UINT8
@@ -347,7 +347,7 @@ sybilant_Dbox_Duint8:
 
 ;; Box a uint16 value for dynamic storage.
 ;; Arguments: rdi = value (uint16). Return type: value.
-sybilant_Dbox_Duint16:
+sybilant_Sbox_Duint16:
     movzx eax, di
     shl rax, SYBILANT_INTEGER_PAYLOAD_SHIFT
     or rax, SYBILANT_EXTENDED_TAG_UINT16
@@ -355,7 +355,7 @@ sybilant_Dbox_Duint16:
 
 ;; Box a uint32 value for dynamic storage.
 ;; Arguments: rdi = value (uint32). Return type: value.
-sybilant_Dbox_Duint32:
+sybilant_Sbox_Duint32:
     mov eax, edi
     shl rax, SYBILANT_INTEGER_PAYLOAD_SHIFT
     or rax, SYBILANT_EXTENDED_TAG_UINT32
@@ -363,13 +363,13 @@ sybilant_Dbox_Duint32:
 
 ;; Box a uint64 value for dynamic storage.
 ;; Arguments: rdi = value (uint64). Return type: value.
-sybilant_Dbox_Duint64:
+sybilant_Sbox_Duint64:
     mov esi, SYBILANT_UINT64_TYPE
-    jmp sybilant_Dbox_Dinteger64
+    jmp sybilant_Sbox_Dinteger64
 
 ;; Box an int8 value for dynamic storage.
 ;; Arguments: rdi = value (int8). Return type: value.
-sybilant_Dbox_Dint8:
+sybilant_Sbox_Dint8:
     movzx eax, dil
     shl rax, SYBILANT_INTEGER_PAYLOAD_SHIFT
     or rax, SYBILANT_EXTENDED_TAG_INT8
@@ -377,7 +377,7 @@ sybilant_Dbox_Dint8:
 
 ;; Box an int16 value for dynamic storage.
 ;; Arguments: rdi = value (int16). Return type: value.
-sybilant_Dbox_Dint16:
+sybilant_Sbox_Dint16:
     movzx eax, di
     shl rax, SYBILANT_INTEGER_PAYLOAD_SHIFT
     or rax, SYBILANT_EXTENDED_TAG_INT16
@@ -385,7 +385,7 @@ sybilant_Dbox_Dint16:
 
 ;; Box an int32 value for dynamic storage.
 ;; Arguments: rdi = value (int32). Return type: value.
-sybilant_Dbox_Dint32:
+sybilant_Sbox_Dint32:
     mov eax, edi
     shl rax, SYBILANT_INTEGER_PAYLOAD_SHIFT
     or rax, SYBILANT_EXTENDED_TAG_INT32
@@ -393,13 +393,13 @@ sybilant_Dbox_Dint32:
 
 ;; Box an int64 value for dynamic storage.
 ;; Arguments: rdi = value (int64). Return type: value.
-sybilant_Dbox_Dint64:
+sybilant_Sbox_Dint64:
     mov esi, SYBILANT_INT64_TYPE
-    jmp sybilant_Dbox_Dinteger64
+    jmp sybilant_Sbox_Dinteger64
 
 ;; Box a nat8 value for dynamic storage.
 ;; Arguments: rdi = value (nat8). Return type: value.
-sybilant_Dbox_Dnat8:
+sybilant_Sbox_Dnat8:
     movzx eax, dil
     shl rax, SYBILANT_INTEGER_PAYLOAD_SHIFT
     or rax, SYBILANT_EXTENDED_TAG_NAT8
@@ -407,7 +407,7 @@ sybilant_Dbox_Dnat8:
 
 ;; Box a nat16 value for dynamic storage.
 ;; Arguments: rdi = value (nat16). Return type: value.
-sybilant_Dbox_Dnat16:
+sybilant_Sbox_Dnat16:
     movzx eax, di
     shl rax, SYBILANT_INTEGER_PAYLOAD_SHIFT
     or rax, SYBILANT_EXTENDED_TAG_NAT16
@@ -415,7 +415,7 @@ sybilant_Dbox_Dnat16:
 
 ;; Box a nat32 value for dynamic storage.
 ;; Arguments: rdi = value (nat32). Return type: value.
-sybilant_Dbox_Dnat32:
+sybilant_Sbox_Dnat32:
     mov eax, edi
     shl rax, SYBILANT_INTEGER_PAYLOAD_SHIFT
     or rax, SYBILANT_EXTENDED_TAG_NAT32
@@ -423,19 +423,19 @@ sybilant_Dbox_Dnat32:
 
 ;; Box a nat64 value for dynamic storage.
 ;; Arguments: rdi = value (nat64). Return type: value.
-sybilant_Dbox_Dnat64:
+sybilant_Sbox_Dnat64:
     mov esi, SYBILANT_NAT64_TYPE
-    jmp sybilant_Dbox_Dinteger64
+    jmp sybilant_Sbox_Dinteger64
 
 ;; Box a 64-bit integer with a supplied runtime type.
 ;; Arguments: rdi = payload (uint64); rsi = type (type). Return type: value.
-sybilant_Dbox_Dinteger64:
+sybilant_Sbox_Dinteger64:
     sub rsp, 24
     mov [rsp], rdi
     mov [rsp + 8], rsi
 
     mov edi, SYBILANT_BOXED_INTEGER_SIZE + SYBILANT_TAG_MASK
-    call sybilant_Dmalloc_Dunchecked
+    call sybilant_Smalloc_Dunchecked
 
     mov rdx, [rsp]
     mov rcx, [rsp + 8]
@@ -449,185 +449,185 @@ sybilant_Dbox_Dinteger64:
 
 ;; Check and unbox a uint8 value.
 ;; Arguments: rdi = value (value). Return type: uint8.
-sybilant_Dunbox_Duint8:
+sybilant_Sunbox_Duint8:
     cmp dil, SYBILANT_EXTENDED_TAG_UINT8
-    jne sybilant_Dunbox_Dinteger_Dinvalid_argument
-    jmp sybilant_Dunbox_Duint8_Dunchecked
+    jne sybilant_Sunbox_Dinteger_Dinvalid_argument
+    jmp sybilant_Sunbox_Duint8_Dunchecked
 
 ;; Unbox a proven uint8 value.
 ;; Arguments: rdi = value (uint8). Return type: uint8.
-sybilant_Dunbox_Duint8_Dunchecked:
+sybilant_Sunbox_Duint8_Dunchecked:
     shr rdi, SYBILANT_INTEGER_PAYLOAD_SHIFT
     movzx eax, dil
     ret
 
 ;; Check and unbox a uint16 value.
 ;; Arguments: rdi = value (value). Return type: uint16.
-sybilant_Dunbox_Duint16:
+sybilant_Sunbox_Duint16:
     cmp dil, SYBILANT_EXTENDED_TAG_UINT16
-    jne sybilant_Dunbox_Dinteger_Dinvalid_argument
-    jmp sybilant_Dunbox_Duint16_Dunchecked
+    jne sybilant_Sunbox_Dinteger_Dinvalid_argument
+    jmp sybilant_Sunbox_Duint16_Dunchecked
 
 ;; Unbox a proven uint16 value.
 ;; Arguments: rdi = value (uint16). Return type: uint16.
-sybilant_Dunbox_Duint16_Dunchecked:
+sybilant_Sunbox_Duint16_Dunchecked:
     shr rdi, SYBILANT_INTEGER_PAYLOAD_SHIFT
     movzx eax, di
     ret
 
 ;; Check and unbox a uint32 value.
 ;; Arguments: rdi = value (value). Return type: uint32.
-sybilant_Dunbox_Duint32:
+sybilant_Sunbox_Duint32:
     cmp dil, SYBILANT_EXTENDED_TAG_UINT32
-    jne sybilant_Dunbox_Dinteger_Dinvalid_argument
-    jmp sybilant_Dunbox_Duint32_Dunchecked
+    jne sybilant_Sunbox_Dinteger_Dinvalid_argument
+    jmp sybilant_Sunbox_Duint32_Dunchecked
 
 ;; Unbox a proven uint32 value.
 ;; Arguments: rdi = value (uint32). Return type: uint32.
-sybilant_Dunbox_Duint32_Dunchecked:
+sybilant_Sunbox_Duint32_Dunchecked:
     shr rdi, SYBILANT_INTEGER_PAYLOAD_SHIFT
     mov eax, edi
     ret
 
 ;; Check and unbox a uint64 value.
 ;; Arguments: rdi = value (value). Return type: uint64.
-sybilant_Dunbox_Duint64:
+sybilant_Sunbox_Duint64:
     mov esi, SYBILANT_UINT64_TYPE
-    jmp sybilant_Dunbox_Dinteger64
+    jmp sybilant_Sunbox_Dinteger64
 
 ;; Check and unbox an int8 value.
 ;; Arguments: rdi = value (value). Return type: int8.
-sybilant_Dunbox_Dint8:
+sybilant_Sunbox_Dint8:
     cmp dil, SYBILANT_EXTENDED_TAG_INT8
-    jne sybilant_Dunbox_Dinteger_Dinvalid_argument
-    jmp sybilant_Dunbox_Dint8_Dunchecked
+    jne sybilant_Sunbox_Dinteger_Dinvalid_argument
+    jmp sybilant_Sunbox_Dint8_Dunchecked
 
 ;; Unbox a proven int8 value.
 ;; Arguments: rdi = value (int8). Return type: int8.
-sybilant_Dunbox_Dint8_Dunchecked:
+sybilant_Sunbox_Dint8_Dunchecked:
     shr rdi, SYBILANT_INTEGER_PAYLOAD_SHIFT
     movsx rax, dil
     ret
 
 ;; Check and unbox an int16 value.
 ;; Arguments: rdi = value (value). Return type: int16.
-sybilant_Dunbox_Dint16:
+sybilant_Sunbox_Dint16:
     cmp dil, SYBILANT_EXTENDED_TAG_INT16
-    jne sybilant_Dunbox_Dinteger_Dinvalid_argument
-    jmp sybilant_Dunbox_Dint16_Dunchecked
+    jne sybilant_Sunbox_Dinteger_Dinvalid_argument
+    jmp sybilant_Sunbox_Dint16_Dunchecked
 
 ;; Unbox a proven int16 value.
 ;; Arguments: rdi = value (int16). Return type: int16.
-sybilant_Dunbox_Dint16_Dunchecked:
+sybilant_Sunbox_Dint16_Dunchecked:
     shr rdi, SYBILANT_INTEGER_PAYLOAD_SHIFT
     movsx rax, di
     ret
 
 ;; Check and unbox an int32 value.
 ;; Arguments: rdi = value (value). Return type: int32.
-sybilant_Dunbox_Dint32:
+sybilant_Sunbox_Dint32:
     cmp dil, SYBILANT_EXTENDED_TAG_INT32
-    jne sybilant_Dunbox_Dinteger_Dinvalid_argument
-    jmp sybilant_Dunbox_Dint32_Dunchecked
+    jne sybilant_Sunbox_Dinteger_Dinvalid_argument
+    jmp sybilant_Sunbox_Dint32_Dunchecked
 
 ;; Unbox a proven int32 value.
 ;; Arguments: rdi = value (int32). Return type: int32.
-sybilant_Dunbox_Dint32_Dunchecked:
+sybilant_Sunbox_Dint32_Dunchecked:
     shr rdi, SYBILANT_INTEGER_PAYLOAD_SHIFT
     movsxd rax, edi
     ret
 
 ;; Check and unbox an int64 value.
 ;; Arguments: rdi = value (value). Return type: int64.
-sybilant_Dunbox_Dint64:
+sybilant_Sunbox_Dint64:
     mov esi, SYBILANT_INT64_TYPE
-    jmp sybilant_Dunbox_Dinteger64
+    jmp sybilant_Sunbox_Dinteger64
 
 ;; Check and unbox a nat8 value.
 ;; Arguments: rdi = value (value). Return type: nat8.
-sybilant_Dunbox_Dnat8:
+sybilant_Sunbox_Dnat8:
     cmp dil, SYBILANT_EXTENDED_TAG_NAT8
-    jne sybilant_Dunbox_Dinteger_Dinvalid_argument
-    jmp sybilant_Dunbox_Dnat8_Dunchecked
+    jne sybilant_Sunbox_Dinteger_Dinvalid_argument
+    jmp sybilant_Sunbox_Dnat8_Dunchecked
 
 ;; Unbox a proven nat8 value.
 ;; Arguments: rdi = value (nat8). Return type: nat8.
-sybilant_Dunbox_Dnat8_Dunchecked:
+sybilant_Sunbox_Dnat8_Dunchecked:
     shr rdi, SYBILANT_INTEGER_PAYLOAD_SHIFT
     movzx eax, dil
     ret
 
 ;; Check and unbox a nat16 value.
 ;; Arguments: rdi = value (value). Return type: nat16.
-sybilant_Dunbox_Dnat16:
+sybilant_Sunbox_Dnat16:
     cmp dil, SYBILANT_EXTENDED_TAG_NAT16
-    jne sybilant_Dunbox_Dinteger_Dinvalid_argument
-    jmp sybilant_Dunbox_Dnat16_Dunchecked
+    jne sybilant_Sunbox_Dinteger_Dinvalid_argument
+    jmp sybilant_Sunbox_Dnat16_Dunchecked
 
 ;; Unbox a proven nat16 value.
 ;; Arguments: rdi = value (nat16). Return type: nat16.
-sybilant_Dunbox_Dnat16_Dunchecked:
+sybilant_Sunbox_Dnat16_Dunchecked:
     shr rdi, SYBILANT_INTEGER_PAYLOAD_SHIFT
     movzx eax, di
     ret
 
 ;; Check and unbox a nat32 value.
 ;; Arguments: rdi = value (value). Return type: nat32.
-sybilant_Dunbox_Dnat32:
+sybilant_Sunbox_Dnat32:
     cmp dil, SYBILANT_EXTENDED_TAG_NAT32
-    jne sybilant_Dunbox_Dinteger_Dinvalid_argument
-    jmp sybilant_Dunbox_Dnat32_Dunchecked
+    jne sybilant_Sunbox_Dinteger_Dinvalid_argument
+    jmp sybilant_Sunbox_Dnat32_Dunchecked
 
 ;; Unbox a proven nat32 value.
 ;; Arguments: rdi = value (nat32). Return type: nat32.
-sybilant_Dunbox_Dnat32_Dunchecked:
+sybilant_Sunbox_Dnat32_Dunchecked:
     shr rdi, SYBILANT_INTEGER_PAYLOAD_SHIFT
     mov eax, edi
     ret
 
 ;; Check and unbox a nat64 value.
 ;; Arguments: rdi = value (value). Return type: nat64.
-sybilant_Dunbox_Dnat64:
+sybilant_Sunbox_Dnat64:
     mov esi, SYBILANT_NAT64_TYPE
-    jmp sybilant_Dunbox_Dinteger64
+    jmp sybilant_Sunbox_Dinteger64
 
 ;; Check and unbox a 64-bit integer with a supplied runtime type.
 ;; Arguments: rdi = value (value); rsi = type (type). Return type: integer.
-sybilant_Dunbox_Dinteger64:
+sybilant_Sunbox_Dinteger64:
     test rdi, rdi
-    jz sybilant_Dunbox_Dinteger_Dinvalid_argument
+    jz sybilant_Sunbox_Dinteger_Dinvalid_argument
 
     test rdi, SYBILANT_TAG_MASK
-    jnz sybilant_Dunbox_Dinteger_Dinvalid_argument
+    jnz sybilant_Sunbox_Dinteger_Dinvalid_argument
 
     cmp [rdi + SYBILANT_BOXED_INTEGER_TYPE_OFFSET], rsi
-    jne sybilant_Dunbox_Dinteger_Dinvalid_argument
+    jne sybilant_Sunbox_Dinteger_Dinvalid_argument
 
-    jmp sybilant_Dunbox_Duint64_Dunchecked
+    jmp sybilant_Sunbox_Duint64_Dunchecked
 
 ;; Unbox a proven uint64 value.
 ;; Arguments: rdi = value (uint64). Return type: uint64.
-sybilant_Dunbox_Duint64_Dunchecked:
+sybilant_Sunbox_Duint64_Dunchecked:
 ;; Unbox a proven int64 value.
 ;; Arguments: rdi = value (int64). Return type: int64.
-sybilant_Dunbox_Dint64_Dunchecked:
+sybilant_Sunbox_Dint64_Dunchecked:
 ;; Unbox a proven nat64 value.
 ;; Arguments: rdi = value (nat64). Return type: nat64.
-sybilant_Dunbox_Dnat64_Dunchecked:
+sybilant_Sunbox_Dnat64_Dunchecked:
     mov rax, [rdi + SYBILANT_BOXED_INTEGER_PAYLOAD_OFFSET]
     ret
 
-sybilant_Dunbox_Dinteger_Dinvalid_argument:
+sybilant_Sunbox_Dinteger_Dinvalid_argument:
     mov edi, SYBILANT_ERROR_INVALID_ARGUMENT
-    jmp sybilant_Dexit_Dunchecked
+    jmp sybilant_Sexit_Dunchecked
 
 ;; Allocate a contiguous region with a dynamically supplied byte count.
 ;; Arguments: rdi = byte count (uint64). Return type: Pointer.
-sybilant_Dmalloc:
+sybilant_Smalloc:
 
 ;; Allocate a contiguous region with a proven byte count.
 ;; Arguments: rdi = byte count (uint64). Return type: Pointer.
-sybilant_Dmalloc_Dunchecked:
+sybilant_Smalloc_Dunchecked:
     test rdi, rdi
     jz .invalid_argument
 
@@ -672,11 +672,11 @@ sybilant_Dmalloc_Dunchecked:
 
 .invalid_argument:
     mov edi, SYBILANT_ERROR_INVALID_ARGUMENT
-    jmp sybilant_Dexit_Dunchecked
+    jmp sybilant_Sexit_Dunchecked
 
 .out_of_memory:
     mov edi, SYBILANT_ERROR_OUT_OF_MEMORY
-    jmp sybilant_Dexit_Dunchecked
+    jmp sybilant_Sexit_Dunchecked
 
 section .bss
 align 8

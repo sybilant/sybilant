@@ -11,14 +11,14 @@ right:
     dq SYBILANT_TYPE_TYPE
 
 section .text
-extern sybilant_D_e
+extern sybilant_S_e
 
 testcase:
     sub rsp, 8
     lea rdi, [rel left]
     lea rsi, [rel right]
-    call sybilant_D_e
+    call sybilant_S_e
     add rsp, 8
 
-    ASSERT_EQ rax, SYBILANT_FALSE, "sybilant-= should return false for different heap types"
+    ASSERT_EQ rax, SYBILANT_FALSE, "sybilant/= should return false for different heap types"
     ret

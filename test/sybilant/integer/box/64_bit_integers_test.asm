@@ -4,10 +4,10 @@ default rel
 %include "test/support.asm"
 
 section .text
-extern sybilant_Dmalloc
-extern sybilant_Dbox_Duint64
-extern sybilant_Dbox_Dint64
-extern sybilant_Dbox_Dnat64
+extern sybilant_Smalloc
+extern sybilant_Sbox_Duint64
+extern sybilant_Sbox_Dint64
+extern sybilant_Sbox_Dnat64
 
 testcase:
     push r12
@@ -15,10 +15,10 @@ testcase:
     push r14
 
     mov edi, 1
-    call sybilant_Dmalloc
+    call sybilant_Smalloc
 
     mov rdi, -1
-    call sybilant_Dbox_Duint64
+    call sybilant_Sbox_Duint64
     mov r12, rax
 
     mov rdx, SYBILANT_MALLOC_START + 1
@@ -30,7 +30,7 @@ testcase:
     ASSERT_EQ qword [r12 + SYBILANT_BOXED_INTEGER_PAYLOAD_OFFSET], -1, "box-uint64 should store the complete payload"
 
     mov rdi, 0x8000000000000000
-    call sybilant_Dbox_Dint64
+    call sybilant_Sbox_Dint64
     mov r13, rax
 
     lea rdx, [r12 + SYBILANT_BOXED_INTEGER_SIZE]
@@ -43,7 +43,7 @@ testcase:
     ASSERT_EQ qword [r13 + SYBILANT_BOXED_INTEGER_PAYLOAD_OFFSET], rdx, "box-int64 should store the complete payload"
 
     mov rdi, 0x7fffffffffffffff
-    call sybilant_Dbox_Dnat64
+    call sybilant_Sbox_Dnat64
     mov r14, rax
 
     lea rdx, [r13 + SYBILANT_BOXED_INTEGER_SIZE]

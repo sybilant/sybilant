@@ -105,11 +105,11 @@ section .text
 %endmacro
 
 section .text
-global sybilant_Dmain
+global sybilant_Smain
 
 ;; Run the test case and return a successful process status.
 ;; Arguments: none. Return type: integer.
-sybilant_Dmain:
+sybilant_Smain:
     sub rsp, 8
     call testcase
     add rsp, 8

@@ -6,14 +6,14 @@ default rel
 %macro ASSERT_INTEGER_EQUAL 3
     lea rdi, [rel %1]
     lea rsi, [rel %2]
-    call sybilant_D_e
+    call sybilant_S_e
     ASSERT_EQ rax, SYBILANT_TRUE, %3
 %endmacro
 
 %macro ASSERT_INTEGER_UNEQUAL 3
     lea rdi, [rel %1]
     lea rsi, [rel %2]
-    call sybilant_D_e
+    call sybilant_S_e
     ASSERT_EQ rax, SYBILANT_FALSE, %3
 %endmacro
 
@@ -50,19 +50,19 @@ nat64_other:
     dq 0x7ffffffffffffffe
 
 section .text
-extern sybilant_D_e
+extern sybilant_S_e
 
 testcase:
     sub rsp, 8
 
-    ASSERT_INTEGER_EQUAL uint64_a, uint64_b, "sybilant-= should compare boxed uint64 values"
-    ASSERT_INTEGER_UNEQUAL uint64_a, uint64_other, "sybilant-= should distinguish boxed uint64 values"
+    ASSERT_INTEGER_EQUAL uint64_a, uint64_b, "sybilant/= should compare boxed uint64 values"
+    ASSERT_INTEGER_UNEQUAL uint64_a, uint64_other, "sybilant/= should distinguish boxed uint64 values"
 
-    ASSERT_INTEGER_EQUAL int64_a, int64_b, "sybilant-= should compare boxed int64 values"
-    ASSERT_INTEGER_UNEQUAL int64_a, int64_other, "sybilant-= should distinguish boxed int64 values"
+    ASSERT_INTEGER_EQUAL int64_a, int64_b, "sybilant/= should compare boxed int64 values"
+    ASSERT_INTEGER_UNEQUAL int64_a, int64_other, "sybilant/= should distinguish boxed int64 values"
 
-    ASSERT_INTEGER_EQUAL nat64_a, nat64_b, "sybilant-= should compare boxed nat64 values"
-    ASSERT_INTEGER_UNEQUAL nat64_a, nat64_other, "sybilant-= should distinguish boxed nat64 values"
+    ASSERT_INTEGER_EQUAL nat64_a, nat64_b, "sybilant/= should compare boxed nat64 values"
+    ASSERT_INTEGER_UNEQUAL nat64_a, nat64_other, "sybilant/= should distinguish boxed nat64 values"
 
     add rsp, 8
     ret

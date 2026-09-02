@@ -9,13 +9,13 @@ object:
     dq SYBILANT_TYPE_TYPE
 
 section .text
-extern sybilant_Dboolean_q
+extern sybilant_Sboolean_q
 
 testcase:
     sub rsp, 8
     lea rdi, [rel object]
-    call sybilant_Dboolean_q
+    call sybilant_Sboolean_q
     add rsp, 8
 
-    ASSERT_EQ rax, SYBILANT_FALSE, "sybilant-boolean? should reject a non-boolean value"
+    ASSERT_EQ rax, SYBILANT_FALSE, "sybilant/boolean? should reject a non-boolean value"
     ret

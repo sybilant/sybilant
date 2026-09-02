@@ -18,6 +18,14 @@ None.
 
 ## Completed
 
+### Slash-delimited runtime procedure names
+
+Every runtime procedure uses the `sybilant/` namespace. Munged symbols encode
+the namespace separator as `_S`, while hyphens within procedure names remain
+`_D`. Nonprocedure runtime state keeps its existing names.
+
+Integrate into: manual.
+
 ### Unchecked integer unboxing
 
 Every integer unboxing function has an `-unchecked` counterpart that
@@ -35,17 +43,17 @@ immediates. The 64-bit types box into aligned heap objects with a type
 header and payload. Unboxing validates the dynamic type, zero-extends
 unsigned and natural values, and sign-extends signed values. Distinct
 boxed 64-bit integers of the same type compare by payload through
-`sybilant-=`.
+`sybilant/=`.
 
 Integrate into: manual.
 
 ### Value equality
 
-`sybilant-=` compares immediate values directly. For two heap values, it
-validates their types and compares them recursively with `sybilant-=` before
+`sybilant/=` compares immediate values directly. For two heap values, it
+validates their types and compares them recursively with `sybilant/=` before
 using a fixed type-specific equality dispatch. Heap types without equality
 support report `SYBILANT_ERROR_INVALID_STATE`. Value equality has one runtime
-entry and implementation. `sybilant-instance?` uses it to compare type values.
+entry and implementation. `sybilant/instance?` uses it to compare type values.
 
 Integrate into: manual.
 
@@ -61,11 +69,11 @@ Integrate into: manual.
 ### Tagged immediate value introspection
 
 The low three bits distinguish aligned pointers, false, true, and extended
-immediates. Type values use the type extended tag. `sybilant-type` delegates
+immediates. Type values use the type extended tag. `sybilant/type` delegates
 type computation to its unchecked entry and validates only the resulting type
 or nil value. It recognizes booleans, type values, integers, and aligned
-pointer values, with nil as a special case. `sybilant-instance?` compares a
-value's type with a validated type argument, and `sybilant-boolean?`
+pointer values, with nil as a special case. `sybilant/instance?` compares a
+value's type with a validated type argument, and `sybilant/boolean?`
 specializes that predicate for booleans. Invalid object headers exit with
 `SYBILANT_ERROR_INVALID_STATE`, and invalid type arguments exit with
 `SYBILANT_ERROR_INVALID_ARGUMENT`.
@@ -74,21 +82,21 @@ Integrate into: manual.
 
 ### Allocator state initialization
 
-Before calling `sybilant-main`, `_start` sets `sybilant-malloc-start`
+Before calling `sybilant/main`, `_start` sets `sybilant-malloc-start`
 and `sybilant-malloc-maximum` to `SYBILANT_MALLOC_START`.
 
 Integrate into: manual.
 
 ### Root runtime entry and exit
 
-`_start` calls `sybilant-main`, then passes its return status to the
-Linux exit system call through `sybilant-exit`.
+`_start` calls `sybilant/main`, then passes its return status to the
+Linux exit system call through `sybilant/exit`.
 
 Integrate into: manual.
 
 ### Frontier allocation
 
-`sybilant-malloc` returns storage from a byte-granular frontier that
+`sybilant/malloc` returns storage from a byte-granular frontier that
 only moves upward. It maps newly crossed pages at fixed addresses
 without replacing existing mappings. A zero byte count exits with
 `SYBILANT_ERROR_INVALID_ARGUMENT`, and allocation failure exits with

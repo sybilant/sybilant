@@ -4,12 +4,12 @@ default rel
 %include "test/support.asm"
 
 section .text
-extern sybilant_Dmalloc
+extern sybilant_Smalloc
 
 testcase:
     sub rsp, 8
     mov edi, 1
-    call sybilant_Dmalloc
+    call sybilant_Smalloc
     add rsp, 8
 
     mov rdx, SYBILANT_MALLOC_START
