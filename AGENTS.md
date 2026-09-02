@@ -71,8 +71,9 @@ directly.
 - `lib/sybilant.asm`: root runtime functions and the process entry
   point.
 - `lib/**/*.asm`: runtime modules.
-- `test/<module>/*_test.asm`: independent test cases for
-  `lib/<module>.asm`.
+- `test/<module>/**/*_test.asm`: independent test scenarios for
+  `lib/<module>.asm`, organized according to runtime function or
+  representation.
 - `test/support.asm`: minimal test assertions and the shared
   `sybilant-main` function.
 - `Makefile`: assembles and links test executables under `build/test/`.
@@ -84,6 +85,10 @@ The function can contain multiple assertions. The shared
 `sybilant-main` calls `testcase` and returns status 0 when the function
 returns normally. The test runner fails any test executable that runs
 for more than five seconds.
+
+Keep each test file focused on one behavior. Combine closely related input
+variants when their assertion diagnostics identify the failing case. Put
+runtime symbol-shape tests under the module's `abi/` directory.
 
 The name of a runtime module is also its namespace. Functions in
 `lib/example.asm` use names such as `sybilant_Dexample_Dsomething`.

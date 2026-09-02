@@ -14,6 +14,7 @@ int64_object:
 
 section .text
 extern sybilant_Dunbox_Duint8
+extern sybilant_Dunbox_Duint64
 extern sybilant_Dunbox_Dnat8
 extern sybilant_Dunbox_Dnat64
 
@@ -23,6 +24,8 @@ testcase:
     ASSERT_EXIT .unbox_nat8_from_int8, SYBILANT_ERROR_INVALID_ARGUMENT, "unbox-nat8 should reject a signed integer"
     ASSERT_EXIT .unbox_nat64_from_uint64, SYBILANT_ERROR_INVALID_ARGUMENT, "unbox-nat64 should reject an unsigned integer"
     ASSERT_EXIT .unbox_nat64_from_int64, SYBILANT_ERROR_INVALID_ARGUMENT, "unbox-nat64 should reject a signed integer"
+    ASSERT_EXIT .unbox_uint64_from_nil, SYBILANT_ERROR_INVALID_ARGUMENT, "unbox-uint64 should reject nil"
+    ASSERT_EXIT .unbox_uint64_from_immediate, SYBILANT_ERROR_INVALID_ARGUMENT, "unbox-uint64 should reject an immediate value"
     ret
 
 .unbox_uint8_from_uint16:
@@ -44,3 +47,11 @@ testcase:
 .unbox_nat64_from_int64:
     lea rdi, [rel int64_object]
     jmp sybilant_Dunbox_Dnat64
+
+.unbox_uint64_from_nil:
+    mov edi, SYBILANT_NIL
+    jmp sybilant_Dunbox_Duint64
+
+.unbox_uint64_from_immediate:
+    mov edi, SYBILANT_EXTENDED_TAG_UINT8
+    jmp sybilant_Dunbox_Duint64

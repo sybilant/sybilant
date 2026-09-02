@@ -16,7 +16,12 @@ testcase:
     mov edi, SYBILANT_FALSE
     lea rsi, [rel object]
     call sybilant_D_e
-    add rsp, 8
-
     ASSERT_EQ rax, SYBILANT_FALSE, "sybilant-= should return false for immediate and heap values"
+
+    lea rdi, [rel object]
+    mov esi, SYBILANT_FALSE
+    call sybilant_D_e
+    ASSERT_EQ rax, SYBILANT_FALSE, "sybilant-= should return false for heap and immediate values"
+
+    add rsp, 8
     ret

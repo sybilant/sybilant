@@ -5,10 +5,12 @@ default rel
 
 section .text
 extern sybilant_Dexit
+extern sybilant_Dexit_Dunchecked
 
 testcase:
     ASSERT_EXIT .exit_255, 255, "sybilant-exit should accept the maximum uint8"
     ASSERT_EXIT .exit_256, SYBILANT_ERROR_INVALID_ARGUMENT, "sybilant-exit should reject a status larger than a uint8"
+    ASSERT_EXIT .exit_42_unchecked, 42, "unchecked sybilant-exit should preserve a proven status"
     ret
 
 .exit_255:
@@ -18,3 +20,7 @@ testcase:
 .exit_256:
     mov edi, 256
     jmp sybilant_Dexit
+
+.exit_42_unchecked:
+    mov edi, 42
+    jmp sybilant_Dexit_Dunchecked

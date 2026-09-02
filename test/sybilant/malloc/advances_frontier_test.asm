@@ -5,6 +5,7 @@ default rel
 
 section .text
 extern sybilant_Dmalloc
+extern sybilant_Dmalloc_Dunchecked
 
 testcase:
     push r12
@@ -14,10 +15,10 @@ testcase:
     mov r12, rax
 
     mov edi, 17
-    call sybilant_Dmalloc
+    call sybilant_Dmalloc_Dunchecked
 
     lea rdx, [r12 + 4097]
-    ASSERT_ABE rax, rdx, "a later allocation should be above the earlier allocation"
+    ASSERT_EQ rax, rdx, "a later allocation should begin at the byte-granular frontier"
 
     pop r12
     ret
