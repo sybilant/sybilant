@@ -80,52 +80,9 @@ sybilant_Dexit_Dunchecked:
     syscall
     ud2
 
-;; Check a value and return its runtime type, or nil for nil.
+;; Return a value's runtime type, checking the result, or nil for nil.
 ;; Arguments: rdi = value (value). Return type: type or nil.
 sybilant_Dtype:
-    cmp rdi, SYBILANT_NIL
-    je .valid_argument
-
-    cmp rdi, SYBILANT_FALSE
-    je .valid_argument
-
-    cmp rdi, SYBILANT_TRUE
-    je .valid_argument
-
-    mov eax, edi
-    and eax, SYBILANT_EXTENDED_TAG_MASK
-
-    cmp eax, SYBILANT_EXTENDED_TAG_UINT8
-    je .valid_argument
-
-    cmp eax, SYBILANT_EXTENDED_TAG_UINT16
-    je .valid_argument
-
-    cmp eax, SYBILANT_EXTENDED_TAG_UINT32
-    je .valid_argument
-
-    cmp eax, SYBILANT_EXTENDED_TAG_INT8
-    je .valid_argument
-
-    cmp eax, SYBILANT_EXTENDED_TAG_INT16
-    je .valid_argument
-
-    cmp eax, SYBILANT_EXTENDED_TAG_INT32
-    je .valid_argument
-
-    cmp eax, SYBILANT_EXTENDED_TAG_NAT8
-    je .valid_argument
-
-    cmp eax, SYBILANT_EXTENDED_TAG_NAT16
-    je .valid_argument
-
-    cmp eax, SYBILANT_EXTENDED_TAG_NAT32
-    je .valid_argument
-
-    test rdi, SYBILANT_TAG_MASK
-    jnz .invalid_state
-
-.valid_argument:
     sub rsp, 8
     call sybilant_Dtype_Dunchecked
     add rsp, 8
@@ -159,6 +116,9 @@ sybilant_Dtype_Dunchecked:
 
     mov eax, edi
     and eax, SYBILANT_EXTENDED_TAG_MASK
+
+    cmp eax, SYBILANT_EXTENDED_TAG_TYPE
+    je .type
 
     cmp eax, SYBILANT_EXTENDED_TAG_UINT8
     je .uint8
@@ -196,6 +156,10 @@ sybilant_Dtype_Dunchecked:
 
 .boolean:
     mov eax, SYBILANT_BOOLEAN_TYPE
+    ret
+
+.type:
+    mov eax, SYBILANT_TYPE_TYPE
     ret
 
 .uint8:
