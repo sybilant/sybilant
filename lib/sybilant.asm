@@ -7,6 +7,8 @@ section .text
 global _start
 global sybilant_Dboolean_q
 global sybilant_Dboolean_q_Dunchecked
+global sybilant_D_e
+global sybilant_D_e_Dunchecked
 global sybilant_Dexit
 global sybilant_Dexit_Dunchecked
 global sybilant_Dinstance_q
@@ -112,7 +114,8 @@ sybilant_Dinstance_q:
     push rsi
     call sybilant_Dtype
     pop rsi
-    jmp sybilant_Dinstance_q_Dunchecked.compare
+    mov rdi, rax
+    jmp sybilant_D_e_Dunchecked
 
 .invalid_argument:
     mov edi, SYBILANT_ERROR_INVALID_ARGUMENT
@@ -124,17 +127,8 @@ sybilant_Dinstance_q_Dunchecked:
     push rsi
     call sybilant_Dtype_Dunchecked
     pop rsi
-
-.compare:
-    cmp rax, rsi
-    je .true
-
-    mov eax, SYBILANT_FALSE
-    ret
-
-.true:
-    mov eax, SYBILANT_TRUE
-    ret
+    mov rdi, rax
+    jmp sybilant_D_e_Dunchecked
 
 ;; Check a value and return whether it is a boolean.
 ;; Arguments: rdi = value (value). Return type: boolean.
@@ -147,6 +141,136 @@ sybilant_Dboolean_q:
 sybilant_Dboolean_q_Dunchecked:
     mov esi, SYBILANT_BOOLEAN_TYPE
     jmp sybilant_Dinstance_q_Dunchecked
+
+;; Check two values and return whether they are equal.
+;; Arguments: rdi = left (value); rsi = right (value). Return type: boolean.
+sybilant_D_e:
+    cmp rdi, SYBILANT_NIL
+    je .left_immediate
+
+    test rdi, SYBILANT_TAG_MASK
+    jnz .left_immediate
+
+    cmp rsi, SYBILANT_NIL
+    je .right_immediate
+
+    test rsi, SYBILANT_TAG_MASK
+    jnz .right_immediate
+
+    push r12
+    push r13
+    push r14
+
+    mov r12, rdi
+    mov r13, rsi
+    call sybilant_Dtype
+    mov r14, rax
+
+    mov rdi, r13
+    call sybilant_Dtype
+
+    mov rdi, r14
+    mov rsi, rax
+    call sybilant_D_e_Dunchecked
+
+    cmp rax, SYBILANT_TRUE
+    jne .different_heap_types
+
+    mov rdx, r14
+    mov rdi, r12
+    mov rsi, r13
+
+    pop r14
+    pop r13
+    pop r12
+    jmp sybilant_D_e_Dunchecked.dispatch
+
+.different_heap_types:
+    pop r14
+    pop r13
+    pop r12
+    jmp sybilant_D_e_Dunchecked.false
+
+.left_immediate:
+    cmp rsi, SYBILANT_NIL
+    je sybilant_D_e_Dunchecked
+
+    test rsi, SYBILANT_TAG_MASK
+    jnz sybilant_D_e_Dunchecked
+
+    sub rsp, 8
+    mov rdi, rsi
+    call sybilant_Dtype
+    add rsp, 8
+    jmp sybilant_D_e_Dunchecked.false
+
+.right_immediate:
+    sub rsp, 8
+    call sybilant_Dtype
+    add rsp, 8
+    jmp sybilant_D_e_Dunchecked.false
+
+;; Return whether two proven values are equal.
+;; Arguments: rdi = left (value); rsi = right (value). Return type: boolean.
+sybilant_D_e_Dunchecked:
+    cmp rdi, SYBILANT_NIL
+    je .compare_immediates
+
+    test rdi, SYBILANT_TAG_MASK
+    jnz .compare_immediates
+
+    cmp rsi, SYBILANT_NIL
+    je .false
+
+    test rsi, SYBILANT_TAG_MASK
+    jnz .false
+
+    push r12
+    push r13
+    push r14
+
+    mov r12, rdi
+    mov r13, rsi
+    mov r14, [rdi]
+
+    mov rdi, r14
+    mov rsi, [rsi]
+    call sybilant_D_e_Dunchecked
+
+    cmp rax, SYBILANT_TRUE
+    jne .different_heap_types
+
+    mov rdx, r14
+    mov rdi, r12
+    mov rsi, r13
+
+    pop r14
+    pop r13
+    pop r12
+    jmp .dispatch
+
+.different_heap_types:
+    pop r14
+    pop r13
+    pop r12
+    jmp .false
+
+.dispatch:
+;; Dispatch equality for type rdx with values rdi and rsi.
+    mov edi, SYBILANT_ERROR_INVALID_STATE
+    jmp sybilant_Dexit_Dunchecked
+
+.compare_immediates:
+    cmp rdi, rsi
+    je .true
+
+.false:
+    mov eax, SYBILANT_FALSE
+    ret
+
+.true:
+    mov eax, SYBILANT_TRUE
+    ret
 
 ;; Allocate a contiguous region with a dynamically supplied byte count.
 ;; Arguments: rdi = byte count (uint64). Return type: Pointer.

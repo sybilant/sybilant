@@ -18,6 +18,18 @@ None.
 
 ## Completed
 
+### Value equality
+
+`sybilant-=` compares immediate values directly. For two heap values, it
+validates their types and compares them recursively with `sybilant-=` before
+using a fixed type-specific equality dispatch. Heap types without equality
+support report
+`SYBILANT_ERROR_INVALID_STATE`. The unchecked entry skips heap-header
+validation. `sybilant-instance?` uses the unchecked entry to compare proven
+type values.
+
+Integrate into: manual.
+
 ### Guarded runtime entry points
 
 Public runtime symbols guard values that arrive from dynamic code. Matching
