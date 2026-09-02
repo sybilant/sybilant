@@ -18,6 +18,27 @@ None.
 
 ## Completed
 
+### Unchecked integer unboxing
+
+Every integer unboxing function has an `-unchecked` counterpart that
+extracts and extends the payload without validating its tag, type
+header, alignment, or pointer value. Checked unboxing validates its
+input and then uses the same unchecked extraction path.
+
+Integrate into: manual.
+
+### Integer types and boxing
+
+Unsigned, signed, and natural integers have 8-, 16-, 32-, and 64-bit
+types. The narrower types box their raw payloads into distinct extended
+immediates. The 64-bit types box into aligned heap objects with a type
+header and payload. Unboxing validates the dynamic type, zero-extends
+unsigned and natural values, and sign-extends signed values. Distinct
+boxed 64-bit integers of the same type compare by payload through
+`sybilant-=`.
+
+Integrate into: manual.
+
 ### Value equality
 
 `sybilant-=` compares immediate values directly. For two heap values, it
