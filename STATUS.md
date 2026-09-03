@@ -18,6 +18,21 @@ None.
 
 ## Completed
 
+### Main thread identity
+
+`sybilant.thread/self` is a zero-argument function that returns the current
+thread value from a hidden eight-byte variable in `.tbss`. Before calling
+`sybilant/main`, `_start` uses statically allocated backing storage for a
+thread-local storage block followed by a minimal thread control block, stores
+its thread pointer in FS, and initializes the variable to a thread value
+containing its unboxed Linux thread ID and immutable string name `main`. The
+accessor keeps the FS-relative storage representation out of the public runtime
+interface. A future dynamic loader can preserve that interface while taking
+over thread-pointer initialization and extending the private per-thread state
+with dynamic binding data.
+
+Integrate into: manual.
+
 ### String value equality
 
 `sybilant/=` validates both string values and compares their exact codepoint

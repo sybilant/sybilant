@@ -56,10 +56,13 @@ global sybilant_Sunbox_Dnat32_Dunchecked
 global sybilant_Sunbox_Dnat64
 global sybilant_Sunbox_Dnat64_Dunchecked
 extern sybilant_darray_Sget_Dunchecked
+extern sybilant_dthread_Sinitialize_Dmain
 extern sybilant_Smain
 extern sybilant_dstring_Slength_Dunchecked
 
 _start:
+    call sybilant_dthread_Sinitialize_Dmain
+
     mov rax, SYBILANT_MALLOC_START
     mov [rel sybilant_Dmalloc_Dstart], rax
     mov [rel sybilant_Dmalloc_Dmaximum], rax
