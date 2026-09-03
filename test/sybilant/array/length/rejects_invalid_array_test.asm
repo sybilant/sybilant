@@ -38,44 +38,44 @@ reserved_flags_array:
     dq 47
 
 section .text
-extern sybilant_Sarray_Dlength
-extern sybilant_Sarray_Dlength_Dunchecked
+extern sybilant_darray_Slength
+extern sybilant_darray_Slength_Dunchecked
 
 testcase:
-    ASSERT_EXIT .nil, SYBILANT_ERROR_INVALID_ARGUMENT, "array-length should reject nil"
-    ASSERT_EXIT .immediate, SYBILANT_ERROR_INVALID_ARGUMENT, "array-length should reject an immediate value"
-    ASSERT_EXIT .other_heap, SYBILANT_ERROR_INVALID_ARGUMENT, "array-length should reject another heap type"
-    ASSERT_EXIT .other_parameterized, SYBILANT_ERROR_INVALID_ARGUMENT, "array-length should reject another parameterized type"
-    ASSERT_EXIT .invalid_type, SYBILANT_ERROR_INVALID_ARGUMENT, "array-length should reject an invalid array type"
-    ASSERT_EXIT .reserved_layout_flags, SYBILANT_ERROR_INVALID_ARGUMENT, "array-length should reject reserved layout flags"
+    ASSERT_EXIT .nil, SYBILANT_ERROR_INVALID_ARGUMENT, "array/length should reject nil"
+    ASSERT_EXIT .immediate, SYBILANT_ERROR_INVALID_ARGUMENT, "array/length should reject an immediate value"
+    ASSERT_EXIT .other_heap, SYBILANT_ERROR_INVALID_ARGUMENT, "array/length should reject another heap type"
+    ASSERT_EXIT .other_parameterized, SYBILANT_ERROR_INVALID_ARGUMENT, "array/length should reject another parameterized type"
+    ASSERT_EXIT .invalid_type, SYBILANT_ERROR_INVALID_ARGUMENT, "array/length should reject an invalid array type"
+    ASSERT_EXIT .reserved_layout_flags, SYBILANT_ERROR_INVALID_ARGUMENT, "array/length should reject reserved layout flags"
 
     sub rsp, 8
     lea rdi, [rel invalid_array]
-    call sybilant_Sarray_Dlength_Dunchecked
+    call sybilant_darray_Slength_Dunchecked
     add rsp, 8
-    ASSERT_EQ rax, 43, "array-length-unchecked should skip the array type guard"
+    ASSERT_EQ rax, 43, "array/length-unchecked should skip the array type guard"
     ret
 
 .nil:
     mov edi, SYBILANT_NIL
-    jmp sybilant_Sarray_Dlength
+    jmp sybilant_darray_Slength
 
 .immediate:
     mov edi, SYBILANT_TRUE
-    jmp sybilant_Sarray_Dlength
+    jmp sybilant_darray_Slength
 
 .other_heap:
     lea rdi, [rel other_heap_value]
-    jmp sybilant_Sarray_Dlength
+    jmp sybilant_darray_Slength
 
 .other_parameterized:
     lea rdi, [rel atom]
-    jmp sybilant_Sarray_Dlength
+    jmp sybilant_darray_Slength
 
 .invalid_type:
     lea rdi, [rel invalid_array]
-    jmp sybilant_Sarray_Dlength
+    jmp sybilant_darray_Slength
 
 .reserved_layout_flags:
     lea rdi, [rel reserved_flags_array]
-    jmp sybilant_Sarray_Dlength
+    jmp sybilant_darray_Slength

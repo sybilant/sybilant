@@ -4,10 +4,10 @@ default rel
 %include "lib/constants.asm"
 
 section .text
-global sybilant_Sarray_Dget
-global sybilant_Sarray_Dget_Dunchecked
-global sybilant_Sarray_Dlength
-global sybilant_Sarray_Dlength_Dunchecked
+global sybilant_darray_Sget
+global sybilant_darray_Sget_Dunchecked
+global sybilant_darray_Slength
+global sybilant_darray_Slength_Dunchecked
 extern sybilant_Sbox_Dint8
 extern sybilant_Sbox_Dint16
 extern sybilant_Sbox_Dint32
@@ -24,17 +24,17 @@ extern sybilant_Sexit_Dunchecked
 
 ;; Return an array element as a dynamic value.
 ;; Arguments: rdi = array (value); rsi = index (uint64). Return type: value.
-sybilant_Sarray_Dget:
+sybilant_darray_Sget:
     sub rsp, 24
     mov [rsp], rdi
     mov [rsp + 8], rsi
 
-    call sybilant_Sarray_Dguard
+    call sybilant_darray_Sguard
     mov [rsp + 16], rax
 
     mov rdi, [rsp]
     mov rsi, [rsp + 8]
-    call sybilant_Sarray_Dget_Dunchecked
+    call sybilant_darray_Sget_Dunchecked
 
     mov rdx, [rsp + 16]
     add rsp, 24
@@ -83,9 +83,9 @@ sybilant_Sarray_Dget:
 ;; Return a proven array's element without boxing it.
 ;; Arguments: rdi = array (array); rsi = index (uint64).
 ;; Return type: element type.
-sybilant_Sarray_Dget_Dunchecked:
+sybilant_darray_Sget_Dunchecked:
     cmp rsi, [rdi + SYBILANT_ARRAY_LENGTH_OFFSET]
-    jae sybilant_Sarray_Dout_of_bounds
+    jae sybilant_darray_Sout_of_bounds
 
     mov rdx, [rdi + SYBILANT_ARRAY_TYPE_OFFSET]
     mov edx, [rdx + SYBILANT_ARRAY_TYPE_ELEMENT_STRIDE_OFFSET]
@@ -100,7 +100,7 @@ sybilant_Sarray_Dget_Dunchecked:
     je .doubleword
 
     cmp rdx, 8
-    jne sybilant_Sarray_Dinvalid_state
+    jne sybilant_darray_Sinvalid_state
 
     mov rax, [rdi + rsi * 8 + SYBILANT_ARRAY_DATA_OFFSET]
     ret
@@ -119,46 +119,46 @@ sybilant_Sarray_Dget_Dunchecked:
 
 ;; Return an array's length.
 ;; Arguments: rdi = array (value). Return type: uint64.
-sybilant_Sarray_Dlength:
+sybilant_darray_Slength:
     sub rsp, 8
-    call sybilant_Sarray_Dguard
+    call sybilant_darray_Sguard
     add rsp, 8
-    jmp sybilant_Sarray_Dlength_Dunchecked
+    jmp sybilant_darray_Slength_Dunchecked
 
 ;; Return a proven array's length.
 ;; Arguments: rdi = array (array). Return type: uint64.
-sybilant_Sarray_Dlength_Dunchecked:
+sybilant_darray_Slength_Dunchecked:
     mov rax, [rdi + SYBILANT_ARRAY_LENGTH_OFFSET]
     ret
 
 ;; Validate an array and return its element type.
 ;; Arguments: rdi = array (value). Return type: type.
-sybilant_Sarray_Dguard:
+sybilant_darray_Sguard:
     cmp rdi, SYBILANT_NIL
-    je sybilant_Sarray_Dinvalid_argument
+    je sybilant_darray_Sinvalid_argument
 
     test rdi, SYBILANT_TAG_MASK
-    jnz sybilant_Sarray_Dinvalid_argument
+    jnz sybilant_darray_Sinvalid_argument
 
     mov rax, [rdi + SYBILANT_ARRAY_TYPE_OFFSET]
     cmp rax, SYBILANT_NIL
-    je sybilant_Sarray_Dinvalid_argument
+    je sybilant_darray_Sinvalid_argument
 
     test rax, SYBILANT_TAG_MASK
-    jnz sybilant_Sarray_Dinvalid_argument
+    jnz sybilant_darray_Sinvalid_argument
 
     cmp qword [rax + SYBILANT_ARRAY_TYPE_TYPE_OFFSET], SYBILANT_TYPE_TYPE
-    jne sybilant_Sarray_Dinvalid_argument
+    jne sybilant_darray_Sinvalid_argument
 
     cmp qword [rax + SYBILANT_ARRAY_TYPE_CONSTRUCTOR_OFFSET], SYBILANT_ARRAY_TYPE_CONSTRUCTOR
-    jne sybilant_Sarray_Dinvalid_argument
+    jne sybilant_darray_Sinvalid_argument
 
     cmp dword [rax + SYBILANT_ARRAY_TYPE_LAYOUT_FLAGS_OFFSET], 0
-    jne sybilant_Sarray_Dinvalid_argument
+    jne sybilant_darray_Sinvalid_argument
 
     mov rax, [rax + SYBILANT_ARRAY_TYPE_ELEMENT_TYPE_OFFSET]
     cmp rax, SYBILANT_NIL
-    je sybilant_Sarray_Dinvalid_argument
+    je sybilant_darray_Sinvalid_argument
 
     test rax, SYBILANT_TAG_MASK
     jz .pointer_element_type
@@ -166,22 +166,22 @@ sybilant_Sarray_Dguard:
     mov rdx, rax
     and edx, SYBILANT_EXTENDED_TAG_MASK
     cmp edx, SYBILANT_EXTENDED_TAG_TYPE
-    jne sybilant_Sarray_Dinvalid_argument
+    jne sybilant_darray_Sinvalid_argument
     ret
 
 .pointer_element_type:
     cmp qword [rax], SYBILANT_TYPE_TYPE
-    jne sybilant_Sarray_Dinvalid_argument
+    jne sybilant_darray_Sinvalid_argument
     ret
 
-sybilant_Sarray_Dinvalid_argument:
+sybilant_darray_Sinvalid_argument:
     mov edi, SYBILANT_ERROR_INVALID_ARGUMENT
     jmp sybilant_Sexit_Dunchecked
 
-sybilant_Sarray_Dinvalid_state:
+sybilant_darray_Sinvalid_state:
     mov edi, SYBILANT_ERROR_INVALID_STATE
     jmp sybilant_Sexit_Dunchecked
 
-sybilant_Sarray_Dout_of_bounds:
+sybilant_darray_Sout_of_bounds:
     mov edi, SYBILANT_ERROR_OUT_OF_BOUNDS
     jmp sybilant_Sexit_Dunchecked

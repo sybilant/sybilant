@@ -36,21 +36,21 @@ atom_array:
     dq atom
 
 section .text
-extern sybilant_Sarray_Dget
+extern sybilant_darray_Sget
 
 testcase:
     sub rsp, 8
 
     lea rdi, [rel boolean_array]
     mov esi, 1
-    call sybilant_Sarray_Dget
-    ASSERT_EQ rax, SYBILANT_TRUE, "array-get should return an already boxed immediate value"
+    call sybilant_darray_Sget
+    ASSERT_EQ rax, SYBILANT_TRUE, "array/get should return an already boxed immediate value"
 
     lea rdi, [rel atom_array]
     xor esi, esi
-    call sybilant_Sarray_Dget
+    call sybilant_darray_Sget
     lea rdx, [rel atom]
-    ASSERT_EQ rax, rdx, "array-get should return an already boxed heap value"
+    ASSERT_EQ rax, rdx, "array/get should return an already boxed heap value"
 
     add rsp, 8
     ret

@@ -6,7 +6,7 @@ default rel
 %macro ASSERT_ARRAY_GET 5
     lea rdi, [rel %1]
     mov esi, 1
-    call sybilant_Sarray_Dget
+    call sybilant_darray_Sget
     mov rdx, %2
     shl rdx, SYBILANT_INTEGER_PAYLOAD_SHIFT
     or rdx, %3
@@ -127,20 +127,20 @@ nat32_array:
     dd 0x12345678, 0x7fffffff
 
 section .text
-extern sybilant_Sarray_Dget
+extern sybilant_darray_Sget
 
 testcase:
     sub rsp, 8
 
-    ASSERT_ARRAY_GET uint8_array, 0xfe, SYBILANT_EXTENDED_TAG_UINT8, "array-get should box a packed uint8", "array-get should not overwrite a uint8 array"
-    ASSERT_ARRAY_GET int8_array, 0x80, SYBILANT_EXTENDED_TAG_INT8, "array-get should box a packed int8", "array-get should not overwrite an int8 array"
-    ASSERT_ARRAY_GET nat8_array, 0x7f, SYBILANT_EXTENDED_TAG_NAT8, "array-get should box a packed nat8", "array-get should not overwrite a nat8 array"
-    ASSERT_ARRAY_GET uint16_array, 0xfedc, SYBILANT_EXTENDED_TAG_UINT16, "array-get should box a packed uint16", "array-get should not overwrite a uint16 array"
-    ASSERT_ARRAY_GET int16_array, 0x8001, SYBILANT_EXTENDED_TAG_INT16, "array-get should box a packed int16", "array-get should not overwrite an int16 array"
-    ASSERT_ARRAY_GET nat16_array, 0x7fff, SYBILANT_EXTENDED_TAG_NAT16, "array-get should box a packed nat16", "array-get should not overwrite a nat16 array"
-    ASSERT_ARRAY_GET uint32_array, 0xfedcba98, SYBILANT_EXTENDED_TAG_UINT32, "array-get should box a packed uint32", "array-get should not overwrite a uint32 array"
-    ASSERT_ARRAY_GET int32_array, 0x80000001, SYBILANT_EXTENDED_TAG_INT32, "array-get should box a packed int32", "array-get should not overwrite an int32 array"
-    ASSERT_ARRAY_GET nat32_array, 0x7fffffff, SYBILANT_EXTENDED_TAG_NAT32, "array-get should box a packed nat32", "array-get should not overwrite a nat32 array"
+    ASSERT_ARRAY_GET uint8_array, 0xfe, SYBILANT_EXTENDED_TAG_UINT8, "array/get should box a packed uint8", "array/get should not overwrite a uint8 array"
+    ASSERT_ARRAY_GET int8_array, 0x80, SYBILANT_EXTENDED_TAG_INT8, "array/get should box a packed int8", "array/get should not overwrite an int8 array"
+    ASSERT_ARRAY_GET nat8_array, 0x7f, SYBILANT_EXTENDED_TAG_NAT8, "array/get should box a packed nat8", "array/get should not overwrite a nat8 array"
+    ASSERT_ARRAY_GET uint16_array, 0xfedc, SYBILANT_EXTENDED_TAG_UINT16, "array/get should box a packed uint16", "array/get should not overwrite a uint16 array"
+    ASSERT_ARRAY_GET int16_array, 0x8001, SYBILANT_EXTENDED_TAG_INT16, "array/get should box a packed int16", "array/get should not overwrite an int16 array"
+    ASSERT_ARRAY_GET nat16_array, 0x7fff, SYBILANT_EXTENDED_TAG_NAT16, "array/get should box a packed nat16", "array/get should not overwrite a nat16 array"
+    ASSERT_ARRAY_GET uint32_array, 0xfedcba98, SYBILANT_EXTENDED_TAG_UINT32, "array/get should box a packed uint32", "array/get should not overwrite a uint32 array"
+    ASSERT_ARRAY_GET int32_array, 0x80000001, SYBILANT_EXTENDED_TAG_INT32, "array/get should box a packed int32", "array/get should not overwrite an int32 array"
+    ASSERT_ARRAY_GET nat32_array, 0x7fffffff, SYBILANT_EXTENDED_TAG_NAT32, "array/get should box a packed nat32", "array/get should not overwrite a nat32 array"
 
     add rsp, 8
     ret

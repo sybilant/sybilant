@@ -51,57 +51,57 @@ reserved_flags_array:
     db 0x7a
 
 section .text
-extern sybilant_Sarray_Dget
-extern sybilant_Sarray_Dget_Dunchecked
+extern sybilant_darray_Sget
+extern sybilant_darray_Sget_Dunchecked
 
 testcase:
-    ASSERT_EXIT .nil, SYBILANT_ERROR_INVALID_ARGUMENT, "array-get should reject nil"
-    ASSERT_EXIT .immediate, SYBILANT_ERROR_INVALID_ARGUMENT, "array-get should reject an immediate value"
-    ASSERT_EXIT .other_heap, SYBILANT_ERROR_INVALID_ARGUMENT, "array-get should reject another heap type"
-    ASSERT_EXIT .other_parameterized, SYBILANT_ERROR_INVALID_ARGUMENT, "array-get should reject another parameterized type"
-    ASSERT_EXIT .invalid_type, SYBILANT_ERROR_INVALID_ARGUMENT, "array-get should reject an invalid array type"
-    ASSERT_EXIT .invalid_element_type, SYBILANT_ERROR_INVALID_ARGUMENT, "array-get should reject a non-type element type"
-    ASSERT_EXIT .reserved_layout_flags, SYBILANT_ERROR_INVALID_ARGUMENT, "array-get should reject reserved layout flags"
+    ASSERT_EXIT .nil, SYBILANT_ERROR_INVALID_ARGUMENT, "array/get should reject nil"
+    ASSERT_EXIT .immediate, SYBILANT_ERROR_INVALID_ARGUMENT, "array/get should reject an immediate value"
+    ASSERT_EXIT .other_heap, SYBILANT_ERROR_INVALID_ARGUMENT, "array/get should reject another heap type"
+    ASSERT_EXIT .other_parameterized, SYBILANT_ERROR_INVALID_ARGUMENT, "array/get should reject another parameterized type"
+    ASSERT_EXIT .invalid_type, SYBILANT_ERROR_INVALID_ARGUMENT, "array/get should reject an invalid array type"
+    ASSERT_EXIT .invalid_element_type, SYBILANT_ERROR_INVALID_ARGUMENT, "array/get should reject a non-type element type"
+    ASSERT_EXIT .reserved_layout_flags, SYBILANT_ERROR_INVALID_ARGUMENT, "array/get should reject reserved layout flags"
 
     sub rsp, 8
     lea rdi, [rel invalid_array]
     xor esi, esi
-    call sybilant_Sarray_Dget_Dunchecked
+    call sybilant_darray_Sget_Dunchecked
     add rsp, 8
-    ASSERT_EQ al, 0x7a, "array-get-unchecked should skip the array type guard"
+    ASSERT_EQ al, 0x7a, "array/get-unchecked should skip the array type guard"
     ret
 
 .nil:
     mov edi, SYBILANT_NIL
     xor esi, esi
-    jmp sybilant_Sarray_Dget
+    jmp sybilant_darray_Sget
 
 .immediate:
     mov edi, SYBILANT_TRUE
     xor esi, esi
-    jmp sybilant_Sarray_Dget
+    jmp sybilant_darray_Sget
 
 .other_heap:
     lea rdi, [rel other_heap_value]
     xor esi, esi
-    jmp sybilant_Sarray_Dget
+    jmp sybilant_darray_Sget
 
 .other_parameterized:
     lea rdi, [rel atom]
     xor esi, esi
-    jmp sybilant_Sarray_Dget
+    jmp sybilant_darray_Sget
 
 .invalid_type:
     lea rdi, [rel invalid_array]
     xor esi, esi
-    jmp sybilant_Sarray_Dget
+    jmp sybilant_darray_Sget
 
 .invalid_element_type:
     lea rdi, [rel invalid_element_array]
     xor esi, esi
-    jmp sybilant_Sarray_Dget
+    jmp sybilant_darray_Sget
 
 .reserved_layout_flags:
     lea rdi, [rel reserved_flags_array]
     xor esi, esi
-    jmp sybilant_Sarray_Dget
+    jmp sybilant_darray_Sget

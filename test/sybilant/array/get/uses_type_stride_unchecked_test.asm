@@ -59,7 +59,7 @@ dword_array:
     dq 0x3333333333333333
 
 section .text
-extern sybilant_Sarray_Dget_Dunchecked
+extern sybilant_darray_Sget_Dunchecked
 
 testcase:
     sub rsp, 8
@@ -67,21 +67,21 @@ testcase:
     mov rax, 0x0123456789abcdef
     lea rdi, [rel byte_array]
     mov esi, 1
-    call sybilant_Sarray_Dget_Dunchecked
+    call sybilant_darray_Sget_Dunchecked
     mov rdx, 0x0123456789abcdfe
-    ASSERT_EQ rax, rdx, "array-get-unchecked should use a one-byte stride from an array type"
+    ASSERT_EQ rax, rdx, "array/get-unchecked should use a one-byte stride from an array type"
 
     mov rax, 0x0123456789abcdef
     lea rdi, [rel word_array]
     mov esi, 1
-    call sybilant_Sarray_Dget_Dunchecked
+    call sybilant_darray_Sget_Dunchecked
     mov rdx, 0x0123456789abfedc
-    ASSERT_EQ rax, rdx, "array-get-unchecked should use a two-byte stride from an array type"
+    ASSERT_EQ rax, rdx, "array/get-unchecked should use a two-byte stride from an array type"
 
     lea rdi, [rel dword_array]
     mov esi, 1
-    call sybilant_Sarray_Dget_Dunchecked
-    ASSERT_EQ eax, 0xfedcba98, "array-get-unchecked should use a four-byte stride from an array type"
+    call sybilant_darray_Sget_Dunchecked
+    ASSERT_EQ eax, 0xfedcba98, "array/get-unchecked should use a four-byte stride from an array type"
 
     add rsp, 8
     ret

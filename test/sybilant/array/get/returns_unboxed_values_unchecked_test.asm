@@ -54,7 +54,7 @@ uint64_array:
     dq 0x0123456789abcdef, 0xfedcba9876543210
 
 section .text
-extern sybilant_Sarray_Dget_Dunchecked
+extern sybilant_darray_Sget_Dunchecked
 
 testcase:
     sub rsp, 8
@@ -62,29 +62,29 @@ testcase:
     mov rax, 0x0123456789abcdef
     lea rdi, [rel uint8_array]
     mov esi, 1
-    call sybilant_Sarray_Dget_Dunchecked
-    ASSERT_EQ al, 0xfe, "array-get-unchecked should return a one-byte element in al"
+    call sybilant_darray_Sget_Dunchecked
+    ASSERT_EQ al, 0xfe, "array/get-unchecked should return a one-byte element in al"
     mov rdx, 0x0123456789abcdfe
     ASSERT_EQ rax, rdx, "a one-byte array get should not zero-extend rax"
 
     mov rax, 0x0123456789abcdef
     lea rdi, [rel uint16_array]
     mov esi, 1
-    call sybilant_Sarray_Dget_Dunchecked
-    ASSERT_EQ ax, 0xfedc, "array-get-unchecked should return a two-byte element in ax"
+    call sybilant_darray_Sget_Dunchecked
+    ASSERT_EQ ax, 0xfedc, "array/get-unchecked should return a two-byte element in ax"
     mov rdx, 0x0123456789abfedc
     ASSERT_EQ rax, rdx, "a two-byte array get should not zero-extend rax"
 
     lea rdi, [rel uint32_array]
     mov esi, 1
-    call sybilant_Sarray_Dget_Dunchecked
-    ASSERT_EQ eax, 0xfedcba98, "array-get-unchecked should return a four-byte element in eax"
+    call sybilant_darray_Sget_Dunchecked
+    ASSERT_EQ eax, 0xfedcba98, "array/get-unchecked should return a four-byte element in eax"
 
     lea rdi, [rel uint64_array]
     mov esi, 1
-    call sybilant_Sarray_Dget_Dunchecked
+    call sybilant_darray_Sget_Dunchecked
     mov rdx, 0xfedcba9876543210
-    ASSERT_EQ rax, rdx, "array-get-unchecked should return an eight-byte element in rax"
+    ASSERT_EQ rax, rdx, "array/get-unchecked should return an eight-byte element in rax"
 
     add rsp, 8
     ret

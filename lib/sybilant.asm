@@ -55,7 +55,7 @@ global sybilant_Sunbox_Dnat32
 global sybilant_Sunbox_Dnat32_Dunchecked
 global sybilant_Sunbox_Dnat64
 global sybilant_Sunbox_Dnat64_Dunchecked
-extern sybilant_Sarray_Dget_Dunchecked
+extern sybilant_darray_Sget_Dunchecked
 extern sybilant_Smain
 extern sybilant_Sstring_Dlength_Dunchecked
 
@@ -439,12 +439,12 @@ sybilant_S_e:
 
     mov rdi, r12
     mov rsi, r15
-    call sybilant_Sarray_Dget_Dunchecked
+    call sybilant_darray_Sget_Dunchecked
     mov rbx, rax
 
     mov rdi, r13
     mov rsi, r15
-    call sybilant_Sarray_Dget_Dunchecked
+    call sybilant_darray_Sget_Dunchecked
 
     cmp qword [rsp], 1
     je .compare_byte_array_element

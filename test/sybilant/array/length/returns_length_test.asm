@@ -18,19 +18,19 @@ array:
     db 0x12, 0x34, 0x56
 
 section .text
-extern sybilant_Sarray_Dlength
-extern sybilant_Sarray_Dlength_Dunchecked
+extern sybilant_darray_Slength
+extern sybilant_darray_Slength_Dunchecked
 
 testcase:
     sub rsp, 8
 
     lea rdi, [rel array]
-    call sybilant_Sarray_Dlength
-    ASSERT_EQ rax, 3, "array-length should return the unboxed length"
+    call sybilant_darray_Slength
+    ASSERT_EQ rax, 3, "array/length should return the unboxed length"
 
     lea rdi, [rel array]
-    call sybilant_Sarray_Dlength_Dunchecked
-    ASSERT_EQ rax, 3, "array-length-unchecked should return the unboxed length"
+    call sybilant_darray_Slength_Dunchecked
+    ASSERT_EQ rax, 3, "array/length-unchecked should return the unboxed length"
 
     add rsp, 8
     ret
