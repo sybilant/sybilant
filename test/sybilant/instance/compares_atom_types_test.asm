@@ -4,7 +4,7 @@ default rel
 %include "test/support.asm"
 
 section .text
-extern sybilant_Satom_Dnew
+extern sybilant_datom_Snew
 extern sybilant_Sinstance_q
 extern sybilant_Stype
 
@@ -15,19 +15,19 @@ testcase:
 
     mov edi, SYBILANT_BOOLEAN_TYPE
     mov esi, SYBILANT_TRUE
-    call sybilant_Satom_Dnew
+    call sybilant_datom_Snew
     mov r12, rax
 
     mov edi, SYBILANT_BOOLEAN_TYPE
     mov esi, SYBILANT_FALSE
-    call sybilant_Satom_Dnew
+    call sybilant_datom_Snew
     mov rdi, rax
     call sybilant_Stype
     mov r13, rax
 
     mov edi, SYBILANT_NAT32_TYPE
     mov esi, SYBILANT_EXTENDED_TAG_NAT32
-    call sybilant_Satom_Dnew
+    call sybilant_datom_Snew
     mov rdi, rax
     call sybilant_Stype
     mov r14, rax

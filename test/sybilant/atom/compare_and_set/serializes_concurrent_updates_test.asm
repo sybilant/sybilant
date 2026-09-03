@@ -16,8 +16,8 @@ wait_status:
     resd 1
 
 section .text
-extern sybilant_Satom_Dcompare_Dand_Dset
-extern sybilant_Satom_Dderef
+extern sybilant_datom_Scompare_Dand_Dset
+extern sybilant_datom_Sderef
 
 testcase:
     push r12
@@ -70,9 +70,9 @@ testcase:
     ASSERT_EQ dword [rel wait_status], 0, "the concurrent atom updater should succeed"
 
     mov rdi, r12
-    call sybilant_Satom_Dderef
+    call sybilant_datom_Sderef
     mov rdx, EXPECTED_VALUE
-    ASSERT_EQ rax, rdx, "atom-compare-and-set should serialize concurrent updates"
+    ASSERT_EQ rax, rdx, "atom/compare-and-set should serialize concurrent updates"
 
     pop r14
     pop r13
@@ -100,11 +100,11 @@ testcase:
 
 .retry:
     mov rdi, r12
-    call sybilant_Satom_Dderef
+    call sybilant_datom_Sderef
     mov rsi, rax
     lea rdx, [rax + VALUE_INCREMENT]
     mov rdi, r12
-    call sybilant_Satom_Dcompare_Dand_Dset
+    call sybilant_datom_Scompare_Dand_Dset
     cmp rax, SYBILANT_TRUE
     jne .retry
 

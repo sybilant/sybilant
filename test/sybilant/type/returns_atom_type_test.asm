@@ -4,7 +4,7 @@ default rel
 %include "test/support.asm"
 
 section .text
-extern sybilant_Satom_Dnew
+extern sybilant_datom_Snew
 extern sybilant_Stype
 
 testcase:
@@ -12,7 +12,7 @@ testcase:
 
     mov edi, SYBILANT_BOOLEAN_TYPE
     mov esi, SYBILANT_TRUE
-    call sybilant_Satom_Dnew
+    call sybilant_datom_Snew
     mov rdi, rax
     call sybilant_Stype
     mov r12, rax

@@ -105,9 +105,11 @@ Integrate into: manual.
 
 ### Slash-delimited runtime procedure names
 
-Every runtime procedure uses the `sybilant/` namespace. Munged symbols encode
-the namespace separator as `_S`, while hyphens within procedure names remain
-`_D`. Nonprocedure runtime state keeps its existing names.
+Every runtime procedure name separates its module namespace from its operation
+with `/`. All module namespaces start with `sybilant`. Dots identify nested
+modules, as in `sybilant.atom/new` for `lib/sybilant/atom.asm`. Munged symbols
+encode `/` as `_S`, `.` as `_d`, and `-` as `_D`. Nonprocedure runtime state
+keeps its existing names.
 
 Integrate into: manual.
 

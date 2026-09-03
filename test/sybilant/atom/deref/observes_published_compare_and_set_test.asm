@@ -14,8 +14,8 @@ wait_status:
     resd 1
 
 section .text
-extern sybilant_Satom_Dcompare_Dand_Dset
-extern sybilant_Satom_Dderef
+extern sybilant_datom_Scompare_Dand_Dset
+extern sybilant_datom_Sderef
 
 testcase:
     push r12
@@ -50,18 +50,18 @@ testcase:
     mov r13d, SPIN_LIMIT
 .await_publication:
     mov rdi, r12
-    call sybilant_Satom_Dderef
+    call sybilant_datom_Sderef
     cmp rax, SYBILANT_TRUE
     je .published
     pause
     dec r13d
     jnz .await_publication
 
-    ASSERT_EQ rax, SYBILANT_TRUE, "atom-deref should observe a completed compare-and-set"
+    ASSERT_EQ rax, SYBILANT_TRUE, "atom/deref should observe a completed compare-and-set"
 
 .published:
     mov rdx, PUBLISHED_VALUE
-    ASSERT_EQ qword [r12 + PUBLISHED_VALUE_OFFSET], rdx, "atom-deref should acquire writes published by compare-and-set"
+    ASSERT_EQ qword [r12 + PUBLISHED_VALUE_OFFSET], rdx, "atom/deref should acquire writes published by compare-and-set"
 
     mov dword [rel wait_status], -1
     mov edi, r14d
@@ -84,7 +84,7 @@ testcase:
     mov rdi, r12
     mov esi, SYBILANT_FALSE
     mov edx, SYBILANT_TRUE
-    call sybilant_Satom_Dcompare_Dand_Dset
+    call sybilant_datom_Scompare_Dand_Dset
     cmp rax, SYBILANT_TRUE
     jne .publisher_failed
 
