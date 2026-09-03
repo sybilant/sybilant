@@ -18,6 +18,17 @@ None.
 
 ## Completed
 
+### Boxed codepoint values
+
+The `codepoint` type represents Unicode code points from U+0000 through
+U+10FFFF as 21-bit values. Dynamic codepoints use a distinct extended
+immediate tag and have no separate packed representation. Boxing masks the
+payload to 21 bits. Checked unboxing rejects other tags, unchecked unboxing
+extracts the payload directly, and `sybilant/type` recognizes boxed
+codepoints.
+
+Integrate into: manual.
+
 ### Packed array layout metadata
 
 Array type descriptors store the element stride as a 32-bit byte count and

@@ -11,6 +11,7 @@ global sybilant_Satom_Dderef
 global sybilant_Satom_Dderef_Dunchecked
 global sybilant_Satom_Dnew
 global sybilant_Satom_Dnew_Dunchecked
+global sybilant_Sbox_Dcodepoint
 global sybilant_Sbox_Duint8
 global sybilant_Sbox_Duint16
 global sybilant_Sbox_Duint32
@@ -34,6 +35,8 @@ global sybilant_Smalloc
 global sybilant_Smalloc_Dunchecked
 global sybilant_Stype
 global sybilant_Stype_Dunchecked
+global sybilant_Sunbox_Dcodepoint
+global sybilant_Sunbox_Dcodepoint_Dunchecked
 global sybilant_Sunbox_Duint8
 global sybilant_Sunbox_Duint8_Dunchecked
 global sybilant_Sunbox_Duint16
@@ -162,6 +165,9 @@ sybilant_Stype_Dunchecked:
     cmp eax, SYBILANT_EXTENDED_TAG_NAT32
     je .nat32
 
+    cmp eax, SYBILANT_EXTENDED_TAG_CODEPOINT
+    je .codepoint
+
     mov rax, [rdi]
     ret
 
@@ -211,6 +217,10 @@ sybilant_Stype_Dunchecked:
 
 .nat32:
     mov eax, SYBILANT_NAT32_TYPE
+    ret
+
+.codepoint:
+    mov eax, SYBILANT_CODEPOINT_TYPE
     ret
 
 ;; Check the arguments and return whether a value is an instance of a type.
@@ -633,6 +643,34 @@ sybilant_S_e:
 
 .true:
     mov eax, SYBILANT_TRUE
+    ret
+
+;; Box a codepoint value for dynamic storage.
+;; Arguments: rdi = value (codepoint). Return type: value.
+sybilant_Sbox_Dcodepoint:
+    mov eax, edi
+    and eax, SYBILANT_CODEPOINT_PAYLOAD_MASK
+    shl rax, SYBILANT_CODEPOINT_PAYLOAD_SHIFT
+    or rax, SYBILANT_EXTENDED_TAG_CODEPOINT
+    ret
+
+;; Check and unbox a codepoint value.
+;; Arguments: rdi = value (value). Return type: codepoint.
+sybilant_Sunbox_Dcodepoint:
+    cmp dil, SYBILANT_EXTENDED_TAG_CODEPOINT
+    jne .invalid_argument
+    jmp sybilant_Sunbox_Dcodepoint_Dunchecked
+
+.invalid_argument:
+    mov edi, SYBILANT_ERROR_INVALID_ARGUMENT
+    jmp sybilant_Sexit_Dunchecked
+
+;; Unbox a proven codepoint value.
+;; Arguments: rdi = value (codepoint). Return type: codepoint.
+sybilant_Sunbox_Dcodepoint_Dunchecked:
+    shr rdi, SYBILANT_CODEPOINT_PAYLOAD_SHIFT
+    mov eax, edi
+    and eax, SYBILANT_CODEPOINT_PAYLOAD_MASK
     ret
 
 ;; Box a uint8 value for dynamic storage.
