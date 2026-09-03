@@ -63,6 +63,7 @@ global sybilant_Sunbox_Dnat64
 global sybilant_Sunbox_Dnat64_Dunchecked
 extern sybilant_Sarray_Dget_Dunchecked
 extern sybilant_Smain
+extern sybilant_Sstring_Dlength_Dunchecked
 
 _start:
     mov rax, SYBILANT_MALLOC_START
@@ -491,6 +492,9 @@ sybilant_S_e:
     cmp rdx, SYBILANT_NAT64_TYPE
     je .integer64
 
+    cmp rdx, SYBILANT_STRING_TYPE
+    je .string
+
     test rdx, SYBILANT_TAG_MASK
     jnz .unsupported_heap_type
 
@@ -503,6 +507,52 @@ sybilant_S_e:
     cmp rax, [rsi + SYBILANT_BOXED_INTEGER_PAYLOAD_OFFSET]
     je .true
     jmp .false
+
+.string:
+    push r12
+    push r13
+    push r14
+
+    mov r12, rdi
+    mov r13, rsi
+
+    call sybilant_Sstring_Dlength_Dunchecked
+    mov r14, rax
+
+    mov rdi, r13
+    call sybilant_Sstring_Dlength_Dunchecked
+
+    cmp r14, rax
+    jne .different_string
+
+    mov rcx, [r12 + SYBILANT_STRING_BYTE_LENGTH_OFFSET]
+    cmp rcx, [r13 + SYBILANT_STRING_BYTE_LENGTH_OFFSET]
+    jne .different_string
+
+    xor eax, eax
+
+.compare_string_byte:
+    cmp rax, rcx
+    jae .equal_string
+
+    mov dl, [r12 + rax + SYBILANT_STRING_DATA_OFFSET]
+    cmp dl, [r13 + rax + SYBILANT_STRING_DATA_OFFSET]
+    jne .different_string
+
+    inc rax
+    jmp .compare_string_byte
+
+.different_string:
+    pop r14
+    pop r13
+    pop r12
+    jmp .false
+
+.equal_string:
+    pop r14
+    pop r13
+    pop r12
+    jmp .true
 
 .array:
     push rbx

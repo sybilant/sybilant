@@ -18,6 +18,30 @@ None.
 
 ## Completed
 
+### String value equality
+
+`sybilant/=` validates both string values and compares their exact codepoint
+sequences. Strict UTF-8 has one encoding for each codepoint sequence, so the
+runtime can compare the validated bytes. Equality doesn't normalize strings.
+Canonically equivalent composed and decomposed sequences remain unequal.
+Invalid encoding reports `SYBILANT_ERROR_INVALID_STATE`.
+
+Integrate into: manual.
+
+### Immutable strings
+
+Immutable strings have a built-in type, a null editor, a byte length, and
+UTF-8 data. They don't cache their codepoint count or an indexing structure.
+`sybilant/string-length` validates and counts the encoded codepoints in linear
+time. String indexing scans from the start and checks the codepoint index
+against the encoded data. Guarded operations validate the string type, while
+unchecked operations skip only that type guard. Both retain bounds checks and
+strict UTF-8 validation. Invalid encoding reports
+`SYBILANT_ERROR_INVALID_STATE`. Dynamic gets return boxed codepoints, while
+unchecked gets return decoded codepoints in `eax`.
+
+Integrate into: manual.
+
 ### Boxed codepoint values
 
 The `codepoint` type represents Unicode code points from U+0000 through
