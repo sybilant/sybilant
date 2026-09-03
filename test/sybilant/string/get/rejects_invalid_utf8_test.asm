@@ -42,50 +42,50 @@ codepoint_above_maximum:
     db 0xf4, 0x90, 0x80, 0x80
 
 section .text
-extern sybilant_Sstring_Dget
-extern sybilant_Sstring_Dget_Dunchecked
+extern sybilant_dstring_Sget
+extern sybilant_dstring_Sget_Dunchecked
 
 testcase:
-    ASSERT_EXIT .dynamic_unexpected_continuation, SYBILANT_ERROR_INVALID_STATE, "string-get should reject an unexpected UTF-8 continuation byte"
-    ASSERT_EXIT .dynamic_truncated_sequence, SYBILANT_ERROR_INVALID_STATE, "string-get should reject a UTF-8 sequence truncated at the byte length"
-    ASSERT_EXIT .dynamic_invalid_continuation, SYBILANT_ERROR_INVALID_STATE, "string-get should reject an invalid UTF-8 continuation byte"
-    ASSERT_EXIT .dynamic_overlong_encoding, SYBILANT_ERROR_INVALID_STATE, "string-get should reject an overlong UTF-8 encoding"
-    ASSERT_EXIT .dynamic_surrogate_encoding, SYBILANT_ERROR_INVALID_STATE, "string-get should reject a UTF-8 encoding of a surrogate"
-    ASSERT_EXIT .dynamic_codepoint_above_maximum, SYBILANT_ERROR_INVALID_STATE, "string-get should reject a codepoint above U+10FFFF"
-    ASSERT_EXIT .unchecked_invalid_encoding, SYBILANT_ERROR_INVALID_STATE, "string-get-unchecked should retain UTF-8 validation"
+    ASSERT_EXIT .dynamic_unexpected_continuation, SYBILANT_ERROR_INVALID_STATE, "string/get should reject an unexpected UTF-8 continuation byte"
+    ASSERT_EXIT .dynamic_truncated_sequence, SYBILANT_ERROR_INVALID_STATE, "string/get should reject a UTF-8 sequence truncated at the byte length"
+    ASSERT_EXIT .dynamic_invalid_continuation, SYBILANT_ERROR_INVALID_STATE, "string/get should reject an invalid UTF-8 continuation byte"
+    ASSERT_EXIT .dynamic_overlong_encoding, SYBILANT_ERROR_INVALID_STATE, "string/get should reject an overlong UTF-8 encoding"
+    ASSERT_EXIT .dynamic_surrogate_encoding, SYBILANT_ERROR_INVALID_STATE, "string/get should reject a UTF-8 encoding of a surrogate"
+    ASSERT_EXIT .dynamic_codepoint_above_maximum, SYBILANT_ERROR_INVALID_STATE, "string/get should reject a codepoint above U+10FFFF"
+    ASSERT_EXIT .unchecked_invalid_encoding, SYBILANT_ERROR_INVALID_STATE, "string/get-unchecked should retain UTF-8 validation"
     ret
 
 .dynamic_unexpected_continuation:
     lea rdi, [rel unexpected_continuation]
     xor esi, esi
-    jmp sybilant_Sstring_Dget
+    jmp sybilant_dstring_Sget
 
 .dynamic_truncated_sequence:
     lea rdi, [rel truncated_sequence]
     xor esi, esi
-    jmp sybilant_Sstring_Dget
+    jmp sybilant_dstring_Sget
 
 .dynamic_invalid_continuation:
     lea rdi, [rel invalid_continuation]
     xor esi, esi
-    jmp sybilant_Sstring_Dget
+    jmp sybilant_dstring_Sget
 
 .dynamic_overlong_encoding:
     lea rdi, [rel overlong_encoding]
     xor esi, esi
-    jmp sybilant_Sstring_Dget
+    jmp sybilant_dstring_Sget
 
 .dynamic_surrogate_encoding:
     lea rdi, [rel surrogate_encoding]
     xor esi, esi
-    jmp sybilant_Sstring_Dget
+    jmp sybilant_dstring_Sget
 
 .dynamic_codepoint_above_maximum:
     lea rdi, [rel codepoint_above_maximum]
     xor esi, esi
-    jmp sybilant_Sstring_Dget
+    jmp sybilant_dstring_Sget
 
 .unchecked_invalid_encoding:
     lea rdi, [rel invalid_continuation]
     xor esi, esi
-    jmp sybilant_Sstring_Dget_Dunchecked
+    jmp sybilant_dstring_Sget_Dunchecked

@@ -20,23 +20,23 @@ empty_string:
     dq 0
 
 section .text
-extern sybilant_Sstring_Dlength
-extern sybilant_Sstring_Dlength_Dunchecked
+extern sybilant_dstring_Slength
+extern sybilant_dstring_Slength_Dunchecked
 
 testcase:
     sub rsp, 8
 
     lea rdi, [rel string]
-    call sybilant_Sstring_Dlength
-    ASSERT_EQ rax, 4, "string-length should return the codepoint count instead of the byte count"
+    call sybilant_dstring_Slength
+    ASSERT_EQ rax, 4, "string/length should return the codepoint count instead of the byte count"
 
     lea rdi, [rel string]
-    call sybilant_Sstring_Dlength_Dunchecked
-    ASSERT_EQ rax, 4, "string-length-unchecked should return the codepoint count"
+    call sybilant_dstring_Slength_Dunchecked
+    ASSERT_EQ rax, 4, "string/length-unchecked should return the codepoint count"
 
     lea rdi, [rel empty_string]
-    call sybilant_Sstring_Dlength
-    ASSERT_EQ rax, 0, "string-length should return zero for an empty string"
+    call sybilant_dstring_Slength
+    ASSERT_EQ rax, 0, "string/length should return zero for an empty string"
 
     add rsp, 8
     ret

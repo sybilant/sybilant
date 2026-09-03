@@ -32,7 +32,7 @@ Integrate into: manual.
 
 Immutable strings have a built-in type, a null editor, a byte length, and
 UTF-8 data. They don't cache their codepoint count or an indexing structure.
-`sybilant/string-length` validates and counts the encoded codepoints in linear
+`sybilant.string/length` validates and counts the encoded codepoints in linear
 time. String indexing scans from the start and checks the codepoint index
 against the encoded data. Guarded operations validate the string type, while
 unchecked operations skip only that type guard. Both retain bounds checks and

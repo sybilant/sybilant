@@ -4,25 +4,25 @@ default rel
 %include "lib/constants.asm"
 
 section .text
-global sybilant_Sstring_Dget
-global sybilant_Sstring_Dget_Dunchecked
-global sybilant_Sstring_Dlength
-global sybilant_Sstring_Dlength_Dunchecked
+global sybilant_dstring_Sget
+global sybilant_dstring_Sget_Dunchecked
+global sybilant_dstring_Slength
+global sybilant_dstring_Slength_Dunchecked
 extern sybilant_Sbox_Dcodepoint
 extern sybilant_Sexit_Dunchecked
 
 ;; Return a string's indexed codepoint as a dynamic value.
 ;; Arguments: rdi = string (value); rsi = index (uint64). Return type: value.
-sybilant_Sstring_Dget:
+sybilant_dstring_Sget:
     sub rsp, 24
     mov [rsp], rdi
     mov [rsp + 8], rsi
 
-    call sybilant_Sstring_Dguard
+    call sybilant_dstring_Sguard
 
     mov rdi, [rsp]
     mov rsi, [rsp + 8]
-    call sybilant_Sstring_Dget_Dunchecked
+    call sybilant_dstring_Sget_Dunchecked
 
     add rsp, 24
     mov edi, eax
@@ -31,7 +31,7 @@ sybilant_Sstring_Dget:
 ;; Return a proven string's indexed codepoint without boxing it.
 ;; Arguments: rdi = string (string); rsi = index (uint64).
 ;; Return type: codepoint.
-sybilant_Sstring_Dget_Dunchecked:
+sybilant_dstring_Sget_Dunchecked:
     push r12
     push r13
     push r14
@@ -42,13 +42,13 @@ sybilant_Sstring_Dget_Dunchecked:
     mov rsi, [rdi + SYBILANT_STRING_BYTE_LENGTH_OFFSET]
     add rdi, SYBILANT_STRING_DATA_OFFSET
     add rsi, rdi
-    jc sybilant_Sstring_Dinvalid_state
+    jc sybilant_dstring_Sinvalid_state
 
 .next_codepoint:
     cmp rdi, rsi
     jae .finished
 
-    call sybilant_Sstring_Ddecode
+    call sybilant_dstring_Sdecode
     cmp r13, r12
     jne .advance
 
@@ -60,7 +60,7 @@ sybilant_Sstring_Dget_Dunchecked:
 
 .finished:
     cmp r12, r13
-    jae sybilant_Sstring_Dout_of_bounds
+    jae sybilant_dstring_Sout_of_bounds
 
     mov eax, r14d
     pop r14
@@ -70,21 +70,21 @@ sybilant_Sstring_Dget_Dunchecked:
 
 ;; Return a string's number of codepoints.
 ;; Arguments: rdi = string (value). Return type: uint64.
-sybilant_Sstring_Dlength:
+sybilant_dstring_Slength:
     sub rsp, 8
-    call sybilant_Sstring_Dguard
+    call sybilant_dstring_Sguard
     add rsp, 8
-    jmp sybilant_Sstring_Dlength_Dunchecked
+    jmp sybilant_dstring_Slength_Dunchecked
 
 ;; Return a proven string's number of codepoints.
 ;; Arguments: rdi = string (string). Return type: uint64.
-sybilant_Sstring_Dlength_Dunchecked:
+sybilant_dstring_Slength_Dunchecked:
     push r12
 
     mov rsi, [rdi + SYBILANT_STRING_BYTE_LENGTH_OFFSET]
     add rdi, SYBILANT_STRING_DATA_OFFSET
     add rsi, rdi
-    jc sybilant_Sstring_Dinvalid_state
+    jc sybilant_dstring_Sinvalid_state
 
     xor r12d, r12d
 
@@ -92,7 +92,7 @@ sybilant_Sstring_Dlength_Dunchecked:
     cmp rdi, rsi
     jae .return
 
-    call sybilant_Sstring_Ddecode
+    call sybilant_dstring_Sdecode
     inc r12
     jmp .next_codepoint
 
@@ -103,21 +103,21 @@ sybilant_Sstring_Dlength_Dunchecked:
 
 ;; Validate that a value is a string.
 ;; Arguments: rdi = value (value). Return type: none.
-sybilant_Sstring_Dguard:
+sybilant_dstring_Sguard:
     cmp rdi, SYBILANT_NIL
-    je sybilant_Sstring_Dinvalid_argument
+    je sybilant_dstring_Sinvalid_argument
 
     test rdi, SYBILANT_TAG_MASK
-    jnz sybilant_Sstring_Dinvalid_argument
+    jnz sybilant_dstring_Sinvalid_argument
 
     cmp qword [rdi + SYBILANT_STRING_TYPE_OFFSET], SYBILANT_STRING_TYPE
-    jne sybilant_Sstring_Dinvalid_argument
+    jne sybilant_dstring_Sinvalid_argument
     ret
 
 ;; Decode one strictly encoded UTF-8 codepoint within a proven byte range.
 ;; Arguments: rdi = current byte; rsi = one past the final byte.
 ;; Return type: eax = codepoint; rdi = byte after the codepoint.
-sybilant_Sstring_Ddecode:
+sybilant_dstring_Sdecode:
     movzx eax, byte [rdi]
     inc rdi
 
@@ -125,7 +125,7 @@ sybilant_Sstring_Ddecode:
     jb .return
 
     cmp eax, 0xc2
-    jb sybilant_Sstring_Dinvalid_state
+    jb sybilant_dstring_Sinvalid_state
 
     cmp eax, 0xe0
     jb .two_bytes
@@ -136,11 +136,11 @@ sybilant_Sstring_Ddecode:
     cmp eax, 0xf5
     jb .four_bytes
 
-    jmp sybilant_Sstring_Dinvalid_state
+    jmp sybilant_dstring_Sinvalid_state
 
 .two_bytes:
     cmp rdi, rsi
-    jae sybilant_Sstring_Dinvalid_state
+    jae sybilant_dstring_Sinvalid_state
 
     movzx edx, byte [rdi]
     inc rdi
@@ -148,7 +148,7 @@ sybilant_Sstring_Ddecode:
     mov ecx, edx
     and ecx, 0xc0
     cmp ecx, 0x80
-    jne sybilant_Sstring_Dinvalid_state
+    jne sybilant_dstring_Sinvalid_state
 
     and eax, 0x1f
     shl eax, 6
@@ -160,7 +160,7 @@ sybilant_Sstring_Ddecode:
     mov rcx, rsi
     sub rcx, rdi
     cmp rcx, 2
-    jb sybilant_Sstring_Dinvalid_state
+    jb sybilant_dstring_Sinvalid_state
 
     movzx edx, byte [rdi]
     movzx ecx, byte [rdi + 1]
@@ -169,25 +169,25 @@ sybilant_Sstring_Ddecode:
     mov r8d, edx
     and r8d, 0xc0
     cmp r8d, 0x80
-    jne sybilant_Sstring_Dinvalid_state
+    jne sybilant_dstring_Sinvalid_state
 
     mov r8d, ecx
     and r8d, 0xc0
     cmp r8d, 0x80
-    jne sybilant_Sstring_Dinvalid_state
+    jne sybilant_dstring_Sinvalid_state
 
     cmp eax, 0xe0
     jne .three_not_overlong
 
     cmp edx, 0xa0
-    jb sybilant_Sstring_Dinvalid_state
+    jb sybilant_dstring_Sinvalid_state
 
 .three_not_overlong:
     cmp eax, 0xed
     jne .decode_three_bytes
 
     cmp edx, 0xa0
-    jae sybilant_Sstring_Dinvalid_state
+    jae sybilant_dstring_Sinvalid_state
 
 .decode_three_bytes:
     and eax, 0x0f
@@ -203,7 +203,7 @@ sybilant_Sstring_Ddecode:
     mov rcx, rsi
     sub rcx, rdi
     cmp rcx, 3
-    jb sybilant_Sstring_Dinvalid_state
+    jb sybilant_dstring_Sinvalid_state
 
     movzx edx, byte [rdi]
     movzx ecx, byte [rdi + 1]
@@ -213,30 +213,30 @@ sybilant_Sstring_Ddecode:
     mov r9d, edx
     and r9d, 0xc0
     cmp r9d, 0x80
-    jne sybilant_Sstring_Dinvalid_state
+    jne sybilant_dstring_Sinvalid_state
 
     mov r9d, ecx
     and r9d, 0xc0
     cmp r9d, 0x80
-    jne sybilant_Sstring_Dinvalid_state
+    jne sybilant_dstring_Sinvalid_state
 
     mov r9d, r8d
     and r9d, 0xc0
     cmp r9d, 0x80
-    jne sybilant_Sstring_Dinvalid_state
+    jne sybilant_dstring_Sinvalid_state
 
     cmp eax, 0xf0
     jne .four_not_overlong
 
     cmp edx, 0x90
-    jb sybilant_Sstring_Dinvalid_state
+    jb sybilant_dstring_Sinvalid_state
 
 .four_not_overlong:
     cmp eax, 0xf4
     jne .decode_four_bytes
 
     cmp edx, 0x90
-    jae sybilant_Sstring_Dinvalid_state
+    jae sybilant_dstring_Sinvalid_state
 
 .decode_four_bytes:
     and eax, 0x07
@@ -253,14 +253,14 @@ sybilant_Sstring_Ddecode:
 .return:
     ret
 
-sybilant_Sstring_Dinvalid_argument:
+sybilant_dstring_Sinvalid_argument:
     mov edi, SYBILANT_ERROR_INVALID_ARGUMENT
     jmp sybilant_Sexit_Dunchecked
 
-sybilant_Sstring_Dinvalid_state:
+sybilant_dstring_Sinvalid_state:
     mov edi, SYBILANT_ERROR_INVALID_STATE
     jmp sybilant_Sexit_Dunchecked
 
-sybilant_Sstring_Dout_of_bounds:
+sybilant_dstring_Sout_of_bounds:
     mov edi, SYBILANT_ERROR_OUT_OF_BOUNDS
     jmp sybilant_Sexit_Dunchecked

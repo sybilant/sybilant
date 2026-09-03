@@ -57,7 +57,7 @@ global sybilant_Sunbox_Dnat64
 global sybilant_Sunbox_Dnat64_Dunchecked
 extern sybilant_darray_Sget_Dunchecked
 extern sybilant_Smain
-extern sybilant_Sstring_Dlength_Dunchecked
+extern sybilant_dstring_Slength_Dunchecked
 
 _start:
     mov rax, SYBILANT_MALLOC_START
@@ -375,11 +375,11 @@ sybilant_S_e:
     mov r12, rdi
     mov r13, rsi
 
-    call sybilant_Sstring_Dlength_Dunchecked
+    call sybilant_dstring_Slength_Dunchecked
     mov r14, rax
 
     mov rdi, r13
-    call sybilant_Sstring_Dlength_Dunchecked
+    call sybilant_dstring_Slength_Dunchecked
 
     cmp r14, rax
     jne .different_string
