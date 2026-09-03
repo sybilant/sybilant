@@ -58,6 +58,7 @@ global sybilant_Sunbox_Dnat32
 global sybilant_Sunbox_Dnat32_Dunchecked
 global sybilant_Sunbox_Dnat64
 global sybilant_Sunbox_Dnat64_Dunchecked
+extern sybilant_Sarray_Dget_Dunchecked
 extern sybilant_Smain
 
 _start:
@@ -480,8 +481,12 @@ sybilant_S_e:
     cmp rdx, SYBILANT_NAT64_TYPE
     je .integer64
 
-    mov edi, SYBILANT_ERROR_INVALID_STATE
-    jmp sybilant_Sexit_Dunchecked
+    test rdx, SYBILANT_TAG_MASK
+    jnz .unsupported_heap_type
+
+    cmp qword [rdx + SYBILANT_ARRAY_TYPE_CONSTRUCTOR_OFFSET], SYBILANT_ARRAY_TYPE_CONSTRUCTOR
+    je .array
+    jmp .unsupported_heap_type
 
 .integer64:
     mov rax, [rdi + SYBILANT_BOXED_INTEGER_PAYLOAD_OFFSET]
@@ -489,14 +494,127 @@ sybilant_S_e:
     je .true
     jmp .false
 
+.array:
+    push rbx
+    push rbp
+    push r12
+    push r13
+    push r14
+    push r15
+    sub rsp, 8
+
+    mov r12, rdi
+    mov r13, rsi
+    mov r14, [rdx + SYBILANT_ARRAY_TYPE_ELEMENT_TYPE_OFFSET]
+    mov eax, [rdx + SYBILANT_ARRAY_TYPE_ELEMENT_STRIDE_OFFSET]
+    mov [rsp], rax
+    mov rbp, [r12 + SYBILANT_ARRAY_LENGTH_OFFSET]
+    cmp rbp, [r13 + SYBILANT_ARRAY_LENGTH_OFFSET]
+    jne .different_array
+
+    xor r15d, r15d
+
+.compare_array_element:
+    cmp r15, rbp
+    jae .equal_array
+
+    mov rdi, r12
+    mov rsi, r15
+    call sybilant_Sarray_Dget_Dunchecked
+    mov rbx, rax
+
+    mov rdi, r13
+    mov rsi, r15
+    call sybilant_Sarray_Dget_Dunchecked
+
+    cmp qword [rsp], 1
+    je .compare_byte_array_element
+
+    cmp qword [rsp], 2
+    je .compare_word_array_element
+
+    cmp qword [rsp], 4
+    je .compare_doubleword_array_element
+
+    cmp qword [rsp], 8
+    jne .unsupported_heap_type
+
+    cmp r14, SYBILANT_UINT8_TYPE
+    jb .compare_dynamic_array_element
+
+    cmp r14, SYBILANT_NAT64_TYPE
+    ja .compare_dynamic_array_element
+
+    cmp rbx, rax
+    jne .different_array
+    jmp .next_array_element
+
+.compare_byte_array_element:
+    cmp bl, al
+    jne .different_array
+    jmp .next_array_element
+
+.compare_word_array_element:
+    cmp bx, ax
+    jne .different_array
+    jmp .next_array_element
+
+.compare_doubleword_array_element:
+    cmp ebx, eax
+    jne .different_array
+    jmp .next_array_element
+
+.compare_dynamic_array_element:
+    mov rdi, rbx
+    mov rsi, rax
+    call sybilant_S_e
+    cmp rax, SYBILANT_TRUE
+    jne .different_array
+
+.next_array_element:
+    inc r15
+    jmp .compare_array_element
+
+.different_array:
+    add rsp, 8
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop rbp
+    pop rbx
+    jmp .false
+
+.equal_array:
+    add rsp, 8
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop rbp
+    pop rbx
+    jmp .true
+
 .type:
     mov rax, [rdi + SYBILANT_ATOM_TYPE_CONSTRUCTOR_OFFSET]
     cmp rax, [rsi + SYBILANT_ATOM_TYPE_CONSTRUCTOR_OFFSET]
     jne .false
 
     cmp rax, SYBILANT_ATOM_TYPE_CONSTRUCTOR
+    je .atom_type
+
+    cmp rax, SYBILANT_ARRAY_TYPE_CONSTRUCTOR
     jne .unsupported_heap_type
 
+    mov eax, [rdi + SYBILANT_ARRAY_TYPE_ELEMENT_STRIDE_OFFSET]
+    cmp eax, [rsi + SYBILANT_ARRAY_TYPE_ELEMENT_STRIDE_OFFSET]
+    jne .false
+
+    mov rdi, [rdi + SYBILANT_ARRAY_TYPE_ELEMENT_TYPE_OFFSET]
+    mov rsi, [rsi + SYBILANT_ARRAY_TYPE_ELEMENT_TYPE_OFFSET]
+    jmp sybilant_S_e
+
+.atom_type:
     mov rdi, [rdi + SYBILANT_ATOM_TYPE_ELEMENT_TYPE_OFFSET]
     mov rsi, [rsi + SYBILANT_ATOM_TYPE_ELEMENT_TYPE_OFFSET]
     jmp sybilant_S_e

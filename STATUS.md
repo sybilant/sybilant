@@ -18,6 +18,45 @@ None.
 
 ## Completed
 
+### Packed array layout metadata
+
+Array type descriptors store the element stride as a 32-bit byte count and
+reserve the remaining 32 bits of the aligned layout slot for future flags.
+Guarded array operations reject nonzero reserved flags. Unchecked gets read
+only the stride field, so reserved metadata doesn't affect element addressing.
+
+Integrate into: manual.
+
+### Array element strides
+
+Parameterized array types cache their element stride in bytes. Unchecked gets
+use that stride to select 1-, 2-, 4-, or 8-byte indexing and loads without
+inspecting the element type. Array type equality includes the stride, and
+array value equality compares only the register width defined by that stride.
+Unsupported strides report `SYBILANT_ERROR_INVALID_STATE` until wider value
+return conventions exist.
+
+Integrate into: manual.
+
+### Array bounds and native-width returns
+
+Guarded and unchecked array gets report `SYBILANT_ERROR_OUT_OF_BOUNDS` for an
+index outside the array. Unchecked 1- and 2-byte gets write only `al` and `ax`,
+respectively, preserving the rest of `rax`. Four-byte gets use `eax` directly.
+
+Integrate into: manual.
+
+### Immutable typed arrays
+
+Immutable `Array<T>` values reference first-class element types and contain a
+null editor, an unboxed length, and packed element data. Guarded length and get
+operations validate the array type. Dynamic get operations box integer values,
+while unchecked gets return unboxed 1-, 2-, 4-, or 8-byte elements. Both get
+paths check index bounds. Immutable arrays and their types compare
+structurally through `sybilant/=`.
+
+Integrate into: manual.
+
 ### Typed atomic reference cells
 
 Atom values point to first-class `Atom<T>` heap type descriptors and contain
