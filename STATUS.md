@@ -114,7 +114,9 @@ only their current values. Atom types compare structurally, and an atom type
 can use another atom type as its element type. Guarded allocation and
 compare-and-set operations enforce the element type. Unchecked entries trust
 static proof. Compare-and-set uses identity and an atomic update. Dereference
-acquires values published through compare-and-set.
+acquires values published through compare-and-set. Atoms compare by identity,
+so `sybilant/=` treats distinct atoms as unequal even when their current
+values match.
 
 Integrate into: manual.
 
@@ -157,11 +159,14 @@ support or an invalid header. Otherwise, an immediate on either side settles
 the comparison as unequal without inspecting the other, heap, side. For two
 heap values, it validates their types, compares them recursively with
 `sybilant/=`, and dispatches to a type-specific equality implementation.
-String and array equality live in their own modules as `sybilant.string/=`
-and `sybilant.array/=`. Integer and type-descriptor equality stay in the root
-module. Heap types without equality support report
-`SYBILANT_ERROR_INVALID_STATE`. Value equality has one public runtime entry.
-`sybilant/instance?` uses it to compare type values.
+Parameterized type descriptors share a heap type header whose first slot names
+the type and whose second slot holds a constructor tag. Dispatch reads that
+constructor tag to route atom and array values to `sybilant.atom/=` and
+`sybilant.array/=`. String, array, and atom equality live in their own
+modules. Integer and type-descriptor equality stay in the root module. Heap
+types without equality support report `SYBILANT_ERROR_INVALID_STATE`.
+`sybilant/=` is the single public entry point for value equality and has no
+unchecked variant. `sybilant/instance?` uses it to compare type values.
 
 Integrate into: manual.
 

@@ -4,6 +4,7 @@ default rel
 %include "lib/constants.asm"
 
 section .text
+global sybilant_datom_S_e
 global sybilant_datom_Scompare_Dand_Dset
 global sybilant_datom_Scompare_Dand_Dset_Dunchecked
 global sybilant_datom_Sderef
@@ -13,6 +14,14 @@ global sybilant_datom_Snew_Dunchecked
 extern sybilant_Sexit_Dunchecked
 extern sybilant_Sinstance_q
 extern sybilant_Smalloc_Dunchecked
+
+;; Return whether two distinct atoms are equal. Atoms are mutable reference
+;; cells with identity semantics, so distinct atoms are never equal. Identical
+;; atoms return true through the identity check in sybilant/=.
+;; Arguments: rdi = left (atom); rsi = right (atom). Return type: boolean.
+sybilant_datom_S_e:
+    mov eax, SYBILANT_FALSE
+    ret
 
 ;; Create an atom with an element type and a matching initial value.
 ;; Arguments: rdi = element type (type); rsi = initial value (value).
@@ -51,8 +60,8 @@ sybilant_datom_Snew_Dunchecked:
 
     add rax, SYBILANT_TAG_MASK
     and rax, -8
-    mov qword [rax + SYBILANT_ATOM_TYPE_TYPE_OFFSET], SYBILANT_TYPE_TYPE
-    mov qword [rax + SYBILANT_ATOM_TYPE_CONSTRUCTOR_OFFSET], SYBILANT_ATOM_TYPE_CONSTRUCTOR
+    mov qword [rax + SYBILANT_HEAP_TYPE_TYPE_OFFSET], SYBILANT_TYPE_TYPE
+    mov qword [rax + SYBILANT_HEAP_TYPE_CONSTRUCTOR_OFFSET], SYBILANT_ATOM_TYPE_CONSTRUCTOR
     mov [rax + SYBILANT_ATOM_TYPE_ELEMENT_TYPE_OFFSET], rdx
 
     lea rdx, [rax + SYBILANT_ATOM_TYPE_SIZE]
@@ -138,10 +147,10 @@ sybilant_datom_Sguard:
     test rax, SYBILANT_TAG_MASK
     jnz sybilant_datom_Sinvalid_argument
 
-    cmp qword [rax + SYBILANT_ATOM_TYPE_TYPE_OFFSET], SYBILANT_TYPE_TYPE
+    cmp qword [rax + SYBILANT_HEAP_TYPE_TYPE_OFFSET], SYBILANT_TYPE_TYPE
     jne sybilant_datom_Sinvalid_argument
 
-    cmp qword [rax + SYBILANT_ATOM_TYPE_CONSTRUCTOR_OFFSET], SYBILANT_ATOM_TYPE_CONSTRUCTOR
+    cmp qword [rax + SYBILANT_HEAP_TYPE_CONSTRUCTOR_OFFSET], SYBILANT_ATOM_TYPE_CONSTRUCTOR
     jne sybilant_datom_Sinvalid_argument
     ret
 

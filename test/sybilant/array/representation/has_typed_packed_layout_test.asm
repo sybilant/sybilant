@@ -28,8 +28,8 @@ testcase:
     ASSERT_EQ byte [rel array + SYBILANT_ARRAY_DATA_OFFSET + 1], 0x34, "uint8 array elements should use one byte each"
     ASSERT_EQ byte [rel array + SYBILANT_ARRAY_DATA_OFFSET + 2], 0x56, "packed array data should preserve adjacent elements"
 
-    ASSERT_EQ qword [rel array_type + SYBILANT_ARRAY_TYPE_TYPE_OFFSET], SYBILANT_TYPE_TYPE, "an array type should itself be a type"
-    ASSERT_EQ qword [rel array_type + SYBILANT_ARRAY_TYPE_CONSTRUCTOR_OFFSET], SYBILANT_ARRAY_TYPE_CONSTRUCTOR, "an array type should identify the array constructor"
+    ASSERT_EQ qword [rel array_type + SYBILANT_HEAP_TYPE_TYPE_OFFSET], SYBILANT_TYPE_TYPE, "an array type should itself be a type"
+    ASSERT_EQ qword [rel array_type + SYBILANT_HEAP_TYPE_CONSTRUCTOR_OFFSET], SYBILANT_ARRAY_TYPE_CONSTRUCTOR, "an array type should identify the array constructor"
     ASSERT_EQ qword [rel array_type + SYBILANT_ARRAY_TYPE_ELEMENT_TYPE_OFFSET], SYBILANT_UINT8_TYPE, "an array type should contain its element type"
     ASSERT_EQ dword [rel array_type + SYBILANT_ARRAY_TYPE_ELEMENT_STRIDE_OFFSET], 1, "an array type should contain a 32-bit element stride"
     ASSERT_EQ dword [rel array_type + SYBILANT_ARRAY_TYPE_LAYOUT_FLAGS_OFFSET], 0, "an array type should reserve layout flags"

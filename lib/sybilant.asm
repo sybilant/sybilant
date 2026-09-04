@@ -57,8 +57,9 @@ global sybilant_Sunbox_Dnat32_Dunchecked
 global sybilant_Sunbox_Dnat64
 global sybilant_Sunbox_Dnat64_Dunchecked
 extern sybilant_darray_S_e
-extern sybilant_dthread_Sinitialize_Dmain
+extern sybilant_datom_S_e
 extern sybilant_dstring_S_e
+extern sybilant_dthread_Sinitialize_Dmain
 extern sybilant_Smain
 
 _start:
@@ -345,8 +346,13 @@ sybilant_S_e:
     test rdx, SYBILANT_TAG_MASK
     jnz .unsupported_heap_type
 
-    cmp qword [rdx + SYBILANT_ARRAY_TYPE_CONSTRUCTOR_OFFSET], SYBILANT_ARRAY_TYPE_CONSTRUCTOR
+    mov rax, [rdx + SYBILANT_HEAP_TYPE_CONSTRUCTOR_OFFSET]
+
+    cmp rax, SYBILANT_ARRAY_TYPE_CONSTRUCTOR
     je sybilant_darray_S_e
+
+    cmp rax, SYBILANT_ATOM_TYPE_CONSTRUCTOR
+    je sybilant_datom_S_e
     jmp .unsupported_heap_type
 
 .integer64:
@@ -370,8 +376,8 @@ sybilant_S_e:
 ;; Return whether two distinct type values describe the same type.
 ;; Arguments: rdi = left (type); rsi = right (type). Return type: boolean.
 sybilant_Stype_e:
-    mov rax, [rdi + SYBILANT_ATOM_TYPE_CONSTRUCTOR_OFFSET]
-    cmp rax, [rsi + SYBILANT_ATOM_TYPE_CONSTRUCTOR_OFFSET]
+    mov rax, [rdi + SYBILANT_HEAP_TYPE_CONSTRUCTOR_OFFSET]
+    cmp rax, [rsi + SYBILANT_HEAP_TYPE_CONSTRUCTOR_OFFSET]
     jne .false
 
     cmp rax, SYBILANT_ATOM_TYPE_CONSTRUCTOR

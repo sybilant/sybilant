@@ -260,10 +260,10 @@ sybilant_darray_Sguard:
     test rax, SYBILANT_TAG_MASK
     jnz sybilant_darray_Sinvalid_argument
 
-    cmp qword [rax + SYBILANT_ARRAY_TYPE_TYPE_OFFSET], SYBILANT_TYPE_TYPE
+    cmp qword [rax + SYBILANT_HEAP_TYPE_TYPE_OFFSET], SYBILANT_TYPE_TYPE
     jne sybilant_darray_Sinvalid_argument
 
-    cmp qword [rax + SYBILANT_ARRAY_TYPE_CONSTRUCTOR_OFFSET], SYBILANT_ARRAY_TYPE_CONSTRUCTOR
+    cmp qword [rax + SYBILANT_HEAP_TYPE_CONSTRUCTOR_OFFSET], SYBILANT_ARRAY_TYPE_CONSTRUCTOR
     jne sybilant_darray_Sinvalid_argument
 
     cmp dword [rax + SYBILANT_ARRAY_TYPE_LAYOUT_FLAGS_OFFSET], 0
