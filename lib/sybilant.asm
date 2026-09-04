@@ -29,6 +29,7 @@ global sybilant_Smalloc
 global sybilant_Smalloc_Dunchecked
 global sybilant_Stype
 global sybilant_Stype_Dunchecked
+global sybilant_Stype_e
 global sybilant_Sunbox_Dcodepoint
 global sybilant_Sunbox_Dcodepoint_Dunchecked
 global sybilant_Sunbox_Duint8
@@ -55,10 +56,10 @@ global sybilant_Sunbox_Dnat32
 global sybilant_Sunbox_Dnat32_Dunchecked
 global sybilant_Sunbox_Dnat64
 global sybilant_Sunbox_Dnat64_Dunchecked
-extern sybilant_darray_Sget_Dunchecked
+extern sybilant_darray_S_e
 extern sybilant_dthread_Sinitialize_Dmain
+extern sybilant_dstring_S_e
 extern sybilant_Smain
-extern sybilant_dstring_Slength_Dunchecked
 
 _start:
     call sybilant_dthread_Sinitialize_Dmain
@@ -275,17 +276,20 @@ sybilant_Sboolean_q_Dunchecked:
 ;; Check two values and return whether they are equal.
 ;; Arguments: rdi = left (value); rsi = right (value). Return type: boolean.
 sybilant_S_e:
+    cmp rdi, rsi
+    je .true
+
     cmp rdi, SYBILANT_NIL
-    je .left_immediate
+    je .false
 
     test rdi, SYBILANT_TAG_MASK
-    jnz .left_immediate
+    jnz .false
 
     cmp rsi, SYBILANT_NIL
-    je .right_immediate
+    je .false
 
     test rsi, SYBILANT_TAG_MASK
-    jnz .right_immediate
+    jnz .false
 
     push r12
     push r13
@@ -321,29 +325,10 @@ sybilant_S_e:
     pop r12
     jmp .false
 
-.left_immediate:
-    cmp rsi, SYBILANT_NIL
-    je .compare_immediates
-
-    test rsi, SYBILANT_TAG_MASK
-    jnz .compare_immediates
-
-    sub rsp, 8
-    mov rdi, rsi
-    call sybilant_Stype
-    add rsp, 8
-    jmp .false
-
-.right_immediate:
-    sub rsp, 8
-    call sybilant_Stype
-    add rsp, 8
-    jmp .false
-
 .dispatch:
-;; Dispatch equality for type rdx with values rdi and rsi.
+;; Dispatch equality for type rdx with distinct heap values rdi and rsi.
     cmp rdx, SYBILANT_TYPE_TYPE
-    je .type
+    je sybilant_Stype_e
 
     cmp rdx, SYBILANT_UINT64_TYPE
     je .integer64
@@ -355,13 +340,13 @@ sybilant_S_e:
     je .integer64
 
     cmp rdx, SYBILANT_STRING_TYPE
-    je .string
+    je sybilant_dstring_S_e
 
     test rdx, SYBILANT_TAG_MASK
     jnz .unsupported_heap_type
 
     cmp qword [rdx + SYBILANT_ARRAY_TYPE_CONSTRUCTOR_OFFSET], SYBILANT_ARRAY_TYPE_CONSTRUCTOR
-    je .array
+    je sybilant_darray_S_e
     jmp .unsupported_heap_type
 
 .integer64:
@@ -370,154 +355,21 @@ sybilant_S_e:
     je .true
     jmp .false
 
-.string:
-    push r12
-    push r13
-    push r14
+.unsupported_heap_type:
+    mov edi, SYBILANT_ERROR_INVALID_STATE
+    jmp sybilant_Sexit_Dunchecked
 
-    mov r12, rdi
-    mov r13, rsi
+.false:
+    mov eax, SYBILANT_FALSE
+    ret
 
-    call sybilant_dstring_Slength_Dunchecked
-    mov r14, rax
+.true:
+    mov eax, SYBILANT_TRUE
+    ret
 
-    mov rdi, r13
-    call sybilant_dstring_Slength_Dunchecked
-
-    cmp r14, rax
-    jne .different_string
-
-    mov rcx, [r12 + SYBILANT_STRING_BYTE_LENGTH_OFFSET]
-    cmp rcx, [r13 + SYBILANT_STRING_BYTE_LENGTH_OFFSET]
-    jne .different_string
-
-    xor eax, eax
-
-.compare_string_byte:
-    cmp rax, rcx
-    jae .equal_string
-
-    mov dl, [r12 + rax + SYBILANT_STRING_DATA_OFFSET]
-    cmp dl, [r13 + rax + SYBILANT_STRING_DATA_OFFSET]
-    jne .different_string
-
-    inc rax
-    jmp .compare_string_byte
-
-.different_string:
-    pop r14
-    pop r13
-    pop r12
-    jmp .false
-
-.equal_string:
-    pop r14
-    pop r13
-    pop r12
-    jmp .true
-
-.array:
-    push rbx
-    push rbp
-    push r12
-    push r13
-    push r14
-    push r15
-    sub rsp, 8
-
-    mov r12, rdi
-    mov r13, rsi
-    mov r14, [rdx + SYBILANT_ARRAY_TYPE_ELEMENT_TYPE_OFFSET]
-    mov eax, [rdx + SYBILANT_ARRAY_TYPE_ELEMENT_STRIDE_OFFSET]
-    mov [rsp], rax
-    mov rbp, [r12 + SYBILANT_ARRAY_LENGTH_OFFSET]
-    cmp rbp, [r13 + SYBILANT_ARRAY_LENGTH_OFFSET]
-    jne .different_array
-
-    xor r15d, r15d
-
-.compare_array_element:
-    cmp r15, rbp
-    jae .equal_array
-
-    mov rdi, r12
-    mov rsi, r15
-    call sybilant_darray_Sget_Dunchecked
-    mov rbx, rax
-
-    mov rdi, r13
-    mov rsi, r15
-    call sybilant_darray_Sget_Dunchecked
-
-    cmp qword [rsp], 1
-    je .compare_byte_array_element
-
-    cmp qword [rsp], 2
-    je .compare_word_array_element
-
-    cmp qword [rsp], 4
-    je .compare_doubleword_array_element
-
-    cmp qword [rsp], 8
-    jne .unsupported_heap_type
-
-    cmp r14, SYBILANT_UINT8_TYPE
-    jb .compare_dynamic_array_element
-
-    cmp r14, SYBILANT_NAT64_TYPE
-    ja .compare_dynamic_array_element
-
-    cmp rbx, rax
-    jne .different_array
-    jmp .next_array_element
-
-.compare_byte_array_element:
-    cmp bl, al
-    jne .different_array
-    jmp .next_array_element
-
-.compare_word_array_element:
-    cmp bx, ax
-    jne .different_array
-    jmp .next_array_element
-
-.compare_doubleword_array_element:
-    cmp ebx, eax
-    jne .different_array
-    jmp .next_array_element
-
-.compare_dynamic_array_element:
-    mov rdi, rbx
-    mov rsi, rax
-    call sybilant_S_e
-    cmp rax, SYBILANT_TRUE
-    jne .different_array
-
-.next_array_element:
-    inc r15
-    jmp .compare_array_element
-
-.different_array:
-    add rsp, 8
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rbp
-    pop rbx
-    jmp .false
-
-.equal_array:
-    add rsp, 8
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rbp
-    pop rbx
-    jmp .true
-
-.type:
+;; Return whether two distinct type values describe the same type.
+;; Arguments: rdi = left (type); rsi = right (type). Return type: boolean.
+sybilant_Stype_e:
     mov rax, [rdi + SYBILANT_ATOM_TYPE_CONSTRUCTOR_OFFSET]
     cmp rax, [rsi + SYBILANT_ATOM_TYPE_CONSTRUCTOR_OFFSET]
     jne .false
@@ -545,16 +397,8 @@ sybilant_S_e:
     mov edi, SYBILANT_ERROR_INVALID_STATE
     jmp sybilant_Sexit_Dunchecked
 
-.compare_immediates:
-    cmp rdi, rsi
-    je .true
-
 .false:
     mov eax, SYBILANT_FALSE
-    ret
-
-.true:
-    mov eax, SYBILANT_TRUE
     ret
 
 ;; Box a codepoint value for dynamic storage.

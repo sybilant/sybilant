@@ -4,10 +4,12 @@ default rel
 %include "lib/constants.asm"
 
 section .text
+global sybilant_darray_S_e
 global sybilant_darray_Sget
 global sybilant_darray_Sget_Dunchecked
 global sybilant_darray_Slength
 global sybilant_darray_Slength_Dunchecked
+extern sybilant_S_e
 extern sybilant_Sbox_Dint8
 extern sybilant_Sbox_Dint16
 extern sybilant_Sbox_Dint32
@@ -129,6 +131,117 @@ sybilant_darray_Slength:
 ;; Arguments: rdi = array (array). Return type: uint64.
 sybilant_darray_Slength_Dunchecked:
     mov rax, [rdi + SYBILANT_ARRAY_LENGTH_OFFSET]
+    ret
+
+;; Return whether two distinct array values of the given array type contain
+;; equal elements.
+;; Arguments: rdi = left (array); rsi = right (array); rdx = array type
+;; (type). Return type: boolean.
+sybilant_darray_S_e:
+    push rbx
+    push rbp
+    push r12
+    push r13
+    push r14
+    push r15
+    sub rsp, 8
+
+    mov r12, rdi
+    mov r13, rsi
+    mov r14, [rdx + SYBILANT_ARRAY_TYPE_ELEMENT_TYPE_OFFSET]
+    mov eax, [rdx + SYBILANT_ARRAY_TYPE_ELEMENT_STRIDE_OFFSET]
+    mov [rsp], rax
+    mov rbp, [r12 + SYBILANT_ARRAY_LENGTH_OFFSET]
+    cmp rbp, [r13 + SYBILANT_ARRAY_LENGTH_OFFSET]
+    jne .different
+
+    xor r15d, r15d
+
+.compare_element:
+    cmp r15, rbp
+    jae .equal
+
+    mov rdi, r12
+    mov rsi, r15
+    call sybilant_darray_Sget_Dunchecked
+    mov rbx, rax
+
+    mov rdi, r13
+    mov rsi, r15
+    call sybilant_darray_Sget_Dunchecked
+
+    cmp qword [rsp], 1
+    je .compare_byte_element
+
+    cmp qword [rsp], 2
+    je .compare_word_element
+
+    cmp qword [rsp], 4
+    je .compare_doubleword_element
+
+    cmp qword [rsp], 8
+    jne .unsupported_stride
+
+    cmp r14, SYBILANT_UINT8_TYPE
+    jb .compare_dynamic_element
+
+    cmp r14, SYBILANT_NAT64_TYPE
+    ja .compare_dynamic_element
+
+    cmp rbx, rax
+    jne .different
+    jmp .next_element
+
+.compare_byte_element:
+    cmp bl, al
+    jne .different
+    jmp .next_element
+
+.compare_word_element:
+    cmp bx, ax
+    jne .different
+    jmp .next_element
+
+.compare_doubleword_element:
+    cmp ebx, eax
+    jne .different
+    jmp .next_element
+
+.compare_dynamic_element:
+    mov rdi, rbx
+    mov rsi, rax
+    call sybilant_S_e
+    cmp rax, SYBILANT_TRUE
+    jne .different
+
+.next_element:
+    inc r15
+    jmp .compare_element
+
+.unsupported_stride:
+    mov edi, SYBILANT_ERROR_INVALID_STATE
+    jmp sybilant_Sexit_Dunchecked
+
+.different:
+    add rsp, 8
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop rbp
+    pop rbx
+    mov eax, SYBILANT_FALSE
+    ret
+
+.equal:
+    add rsp, 8
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop rbp
+    pop rbx
+    mov eax, SYBILANT_TRUE
     ret
 
 ;; Validate an array and return its element type.

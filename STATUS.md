@@ -151,11 +151,17 @@ Integrate into: manual.
 
 ### Value equality
 
-`sybilant/=` compares immediate values directly. For two heap values, it
-validates their types and compares them recursively with `sybilant/=` before
-using a fixed type-specific equality dispatch. Heap types without equality
-support report `SYBILANT_ERROR_INVALID_STATE`. Value equality has one runtime
-entry and implementation. `sybilant/instance?` uses it to compare type values.
+`sybilant/=` checks identity first: identical values, immediate or heap, are
+equal without further validation, even when the heap type has no equality
+support or an invalid header. Otherwise, an immediate on either side settles
+the comparison as unequal without inspecting the other, heap, side. For two
+heap values, it validates their types, compares them recursively with
+`sybilant/=`, and dispatches to a type-specific equality implementation.
+String and array equality live in their own modules as `sybilant.string/=`
+and `sybilant.array/=`. Integer and type-descriptor equality stay in the root
+module. Heap types without equality support report
+`SYBILANT_ERROR_INVALID_STATE`. Value equality has one public runtime entry.
+`sybilant/instance?` uses it to compare type values.
 
 Integrate into: manual.
 

@@ -5,17 +5,19 @@ default rel
 
 section .rodata
 align 8
-object:
+object_a:
+    dq SYBILANT_BOOLEAN_TYPE
+object_b:
     dq SYBILANT_BOOLEAN_TYPE
 
 section .text
 extern sybilant_S_e
 
 testcase:
-    ASSERT_EXIT .equal, SYBILANT_ERROR_INVALID_STATE, "sybilant/= should reject a heap type without equality support"
+    ASSERT_EXIT .distinct, SYBILANT_ERROR_INVALID_STATE, "sybilant/= should reject distinct values of a heap type without equality support"
     ret
 
-.equal:
-    lea rdi, [rel object]
-    mov rsi, rdi
+.distinct:
+    lea rdi, [rel object_a]
+    lea rsi, [rel object_b]
     jmp sybilant_S_e
