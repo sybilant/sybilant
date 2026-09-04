@@ -68,6 +68,7 @@
     SYBILANT_CODEPOINT_TYPE         equ 0b00011110_00001111
     SYBILANT_STRING_TYPE            equ 0b00011111_00001111
     SYBILANT_THREAD_TYPE            equ 0b00100000_00001111
+    SYBILANT_TRANSIENT_ARRAY_TYPE_CONSTRUCTOR equ 0b00100001_00001111
 
 ;; Sybilant heap type header, shared by parameterized type descriptors.
     SYBILANT_HEAP_TYPE_TYPE_OFFSET        equ 0

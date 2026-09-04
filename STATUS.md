@@ -18,6 +18,17 @@ None.
 
 ## Completed
 
+### Transient arrays
+
+Typed transient arrays use the immutable array representation with a
+thread-affine editor atom. Guarded operations verify the current thread.
+Unchecked operations are available for affine static contexts. Insert,
+delete, and resize allocate copied transients and invalidate the previous
+editor, while persistent conversion replaces the transient type descriptor
+and clears the editor.
+
+Integrate into: manual.
+
 ### Main thread identity
 
 `sybilant.thread/self` is a zero-argument function that returns the current
