@@ -14,10 +14,11 @@ section .text
 extern sybilant_S_e
 
 testcase:
-    ASSERT_EXIT .distinct, SYBILANT_ERROR_INVALID_STATE, "sybilant/= should reject distinct values of a heap type without equality support"
-    ret
-
-.distinct:
+    sub rsp, 8
     lea rdi, [rel object_a]
     lea rsi, [rel object_b]
-    jmp sybilant_S_e
+    call sybilant_S_e
+    add rsp, 8
+
+    ASSERT_EQ rax, SYBILANT_FALSE, "distinct values of a heap type without defined equality should compare unequal by identity"
+    ret

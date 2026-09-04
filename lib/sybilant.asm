@@ -343,8 +343,10 @@ sybilant_S_e:
     cmp rdx, SYBILANT_STRING_TYPE
     je sybilant_dstring_S_e
 
+;; A heap type without a defined equality compares by identity, which the
+;; entry check already handled, so distinct values are unequal.
     test rdx, SYBILANT_TAG_MASK
-    jnz .unsupported_heap_type
+    jnz .false
 
     mov rax, [rdx + SYBILANT_HEAP_TYPE_CONSTRUCTOR_OFFSET]
 
@@ -353,17 +355,13 @@ sybilant_S_e:
 
     cmp rax, SYBILANT_ATOM_TYPE_CONSTRUCTOR
     je sybilant_datom_S_e
-    jmp .unsupported_heap_type
+    jmp .false
 
 .integer64:
     mov rax, [rdi + SYBILANT_BOXED_INTEGER_PAYLOAD_OFFSET]
     cmp rax, [rsi + SYBILANT_BOXED_INTEGER_PAYLOAD_OFFSET]
     je .true
     jmp .false
-
-.unsupported_heap_type:
-    mov edi, SYBILANT_ERROR_INVALID_STATE
-    jmp sybilant_Sexit_Dunchecked
 
 .false:
     mov eax, SYBILANT_FALSE
@@ -383,8 +381,10 @@ sybilant_Stype_e:
     cmp rax, SYBILANT_ATOM_TYPE_CONSTRUCTOR
     je .atom_type
 
+;; A type descriptor with an unknown constructor compares by identity, which
+;; the entry check already handled, so distinct descriptors are unequal.
     cmp rax, SYBILANT_ARRAY_TYPE_CONSTRUCTOR
-    jne .unsupported_heap_type
+    jne .false
 
     mov eax, [rdi + SYBILANT_ARRAY_TYPE_ELEMENT_STRIDE_OFFSET]
     cmp eax, [rsi + SYBILANT_ARRAY_TYPE_ELEMENT_STRIDE_OFFSET]
@@ -398,10 +398,6 @@ sybilant_Stype_e:
     mov rdi, [rdi + SYBILANT_ATOM_TYPE_ELEMENT_TYPE_OFFSET]
     mov rsi, [rsi + SYBILANT_ATOM_TYPE_ELEMENT_TYPE_OFFSET]
     jmp sybilant_S_e
-
-.unsupported_heap_type:
-    mov edi, SYBILANT_ERROR_INVALID_STATE
-    jmp sybilant_Sexit_Dunchecked
 
 .false:
     mov eax, SYBILANT_FALSE

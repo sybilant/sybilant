@@ -163,8 +163,9 @@ Parameterized type descriptors share a heap type header whose first slot names
 the type and whose second slot holds a constructor tag. Dispatch reads that
 constructor tag to route atom and array values to `sybilant.atom/=` and
 `sybilant.array/=`. String, array, and atom equality live in their own
-modules. Integer and type-descriptor equality stay in the root module. Heap
-types without equality support report `SYBILANT_ERROR_INVALID_STATE`.
+modules. Integer and type-descriptor equality stay in the root module.
+Equality defaults to identity, so distinct values of a heap type without a
+defined structural equality compare unequal rather than reporting an error.
 `sybilant/=` is the single public entry point for value equality and has no
 unchecked variant. `sybilant/instance?` uses it to compare type values.
 
