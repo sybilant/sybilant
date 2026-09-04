@@ -5,6 +5,7 @@ default rel
 
 section .text
 global sybilant_datom_S_e
+global sybilant_datom_S_e_Dunchecked
 global sybilant_datom_Scompare_Dand_Dset
 global sybilant_datom_Scompare_Dand_Dset_Dunchecked
 global sybilant_datom_Sderef
@@ -15,12 +16,35 @@ extern sybilant_Sexit_Dunchecked
 extern sybilant_Sinstance_q
 extern sybilant_Smalloc_Dunchecked
 
-;; Return whether two distinct atoms are equal. Atoms are mutable reference
-;; cells with identity semantics, so distinct atoms are never equal. Identical
-;; atoms return true through the identity check in sybilant/=.
-;; Arguments: rdi = left (atom); rsi = right (atom). Return type: boolean.
+;; Check two values and return whether they are the same atom.
+;; Arguments: rdi = left (value); rsi = right (value). Return type: boolean.
 sybilant_datom_S_e:
+    sub rsp, 24
+    mov [rsp], rdi
+    mov [rsp + 8], rsi
+
+    call sybilant_datom_Sguard
+
+    mov rdi, [rsp + 8]
+    call sybilant_datom_Sguard
+
+    mov rdi, [rsp]
+    mov rsi, [rsp + 8]
+    add rsp, 24
+    jmp sybilant_datom_S_e_Dunchecked
+
+;; Return whether two proven atoms are equal. Atoms are mutable reference
+;; cells with identity semantics, so only the same atom is equal.
+;; Arguments: rdi = left (atom); rsi = right (atom). Return type: boolean.
+sybilant_datom_S_e_Dunchecked:
+    cmp rdi, rsi
+    je .equal
+
     mov eax, SYBILANT_FALSE
+    ret
+
+.equal:
+    mov eax, SYBILANT_TRUE
     ret
 
 ;; Create an atom with an element type and a matching initial value.

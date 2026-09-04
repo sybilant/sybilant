@@ -56,9 +56,8 @@ global sybilant_Sunbox_Dnat32
 global sybilant_Sunbox_Dnat32_Dunchecked
 global sybilant_Sunbox_Dnat64
 global sybilant_Sunbox_Dnat64_Dunchecked
-extern sybilant_darray_S_e
-extern sybilant_datom_S_e
-extern sybilant_dstring_S_e
+extern sybilant_darray_S_e_Dunchecked
+extern sybilant_dstring_S_e_Dunchecked
 extern sybilant_dthread_Sinitialize_Dmain
 extern sybilant_Smain
 
@@ -341,20 +340,16 @@ sybilant_S_e:
     je .integer64
 
     cmp rdx, SYBILANT_STRING_TYPE
-    je sybilant_dstring_S_e
+    je sybilant_dstring_S_e_Dunchecked
 
 ;; A heap type without a defined equality compares by identity, which the
-;; entry check already handled, so distinct values are unequal.
+;; entry check already handled, so distinct values are unequal. Atoms compare
+;; by identity, so they fall through here as well.
     test rdx, SYBILANT_TAG_MASK
     jnz .false
 
-    mov rax, [rdx + SYBILANT_HEAP_TYPE_CONSTRUCTOR_OFFSET]
-
-    cmp rax, SYBILANT_ARRAY_TYPE_CONSTRUCTOR
-    je sybilant_darray_S_e
-
-    cmp rax, SYBILANT_ATOM_TYPE_CONSTRUCTOR
-    je sybilant_datom_S_e
+    cmp qword [rdx + SYBILANT_HEAP_TYPE_CONSTRUCTOR_OFFSET], SYBILANT_ARRAY_TYPE_CONSTRUCTOR
+    je sybilant_darray_S_e_Dunchecked
     jmp .false
 
 .integer64:

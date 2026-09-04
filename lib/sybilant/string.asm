@@ -5,6 +5,7 @@ default rel
 
 section .text
 global sybilant_dstring_S_e
+global sybilant_dstring_S_e_Dunchecked
 global sybilant_dstring_Sget
 global sybilant_dstring_Sget_Dunchecked
 global sybilant_dstring_Slength
@@ -102,28 +103,31 @@ sybilant_dstring_Slength_Dunchecked:
     pop r12
     ret
 
-;; Return whether two distinct string values encode identical codepoint
-;; sequences.
-;; Arguments: rdi = left (string); rsi = right (string). Return type: boolean.
+;; Check two values and return whether they are equal strings.
+;; Arguments: rdi = left (value); rsi = right (value). Return type: boolean.
 sybilant_dstring_S_e:
-    push r12
-    push r13
-    push r14
+    sub rsp, 24
+    mov [rsp], rdi
+    mov [rsp + 8], rsi
 
-    mov r12, rdi
-    mov r13, rsi
+    call sybilant_dstring_Sguard
 
-    call sybilant_dstring_Slength_Dunchecked
-    mov r14, rax
+    mov rdi, [rsp + 8]
+    call sybilant_dstring_Sguard
 
-    mov rdi, r13
-    call sybilant_dstring_Slength_Dunchecked
+    mov rdi, [rsp]
+    mov rsi, [rsp + 8]
+    add rsp, 24
+    jmp sybilant_dstring_S_e_Dunchecked
 
-    cmp r14, rax
-    jne .different
-
-    mov rcx, [r12 + SYBILANT_STRING_BYTE_LENGTH_OFFSET]
-    cmp rcx, [r13 + SYBILANT_STRING_BYTE_LENGTH_OFFSET]
+;; Return whether two proven string values encode identical codepoint
+;; sequences. Strict UTF-8 encodes each codepoint sequence exactly once, so
+;; proven strings are equal exactly when their bytes match. The comparison
+;; trusts the encoding and does not revalidate it.
+;; Arguments: rdi = left (string); rsi = right (string). Return type: boolean.
+sybilant_dstring_S_e_Dunchecked:
+    mov rcx, [rdi + SYBILANT_STRING_BYTE_LENGTH_OFFSET]
+    cmp rcx, [rsi + SYBILANT_STRING_BYTE_LENGTH_OFFSET]
     jne .different
 
     xor eax, eax
@@ -132,24 +136,18 @@ sybilant_dstring_S_e:
     cmp rax, rcx
     jae .equal
 
-    mov dl, [r12 + rax + SYBILANT_STRING_DATA_OFFSET]
-    cmp dl, [r13 + rax + SYBILANT_STRING_DATA_OFFSET]
+    mov dl, [rdi + rax + SYBILANT_STRING_DATA_OFFSET]
+    cmp dl, [rsi + rax + SYBILANT_STRING_DATA_OFFSET]
     jne .different
 
     inc rax
     jmp .compare_byte
 
 .different:
-    pop r14
-    pop r13
-    pop r12
     mov eax, SYBILANT_FALSE
     ret
 
 .equal:
-    pop r14
-    pop r13
-    pop r12
     mov eax, SYBILANT_TRUE
     ret
 

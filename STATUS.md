@@ -35,11 +35,11 @@ Integrate into: manual.
 
 ### String value equality
 
-`sybilant/=` validates both string values and compares their exact codepoint
-sequences. Strict UTF-8 has one encoding for each codepoint sequence, so the
-runtime can compare the validated bytes. Equality doesn't normalize strings.
-Canonically equivalent composed and decomposed sequences remain unequal.
-Invalid encoding reports `SYBILANT_ERROR_INVALID_STATE`.
+`sybilant/=` compares two strings by byte length and then by bytes. Strict
+UTF-8 has one encoding for each codepoint sequence, so proven strings are equal
+exactly when their bytes match. The comparison trusts the encoding and doesn't
+revalidate it. Equality doesn't normalize strings, so canonically equivalent
+composed and decomposed sequences remain unequal.
 
 Integrate into: manual.
 
@@ -159,15 +159,25 @@ support or an invalid header. Otherwise, an immediate on either side settles
 the comparison as unequal without inspecting the other, heap, side. For two
 heap values, it validates their types, compares them recursively with
 `sybilant/=`, and dispatches to a type-specific equality implementation.
-Parameterized type descriptors share a heap type header whose first slot names
-the type and whose second slot holds a constructor tag. Dispatch reads that
-constructor tag to route atom and array values to `sybilant.atom/=` and
-`sybilant.array/=`. String, array, and atom equality live in their own
-modules. Integer and type-descriptor equality stay in the root module.
+Because that recursive check proves the operand types, dispatch calls the
+unchecked equality entries directly. Parameterized type descriptors share a
+heap type header whose first slot names the type and whose second slot holds a
+constructor tag. Dispatch routes strings on their type tag to
+`sybilant.string/=-unchecked` and reads that constructor tag to route array
+values to `sybilant.array/=-unchecked`. Integer equality stays inline, and
+type-descriptor equality is `sybilant/type=` in the root module.
+
+Each type-specific equality is a guarded entry that validates its arguments
+before calling an unchecked counterpart: `sybilant.string/=` validates two
+strings, `sybilant.array/=` validates two arrays and rejects unequal element
+types or strides, and `sybilant.atom/=` validates two atoms. The unchecked
+array comparison reads the shared stride once and runs a loop for that width.
 Equality defaults to identity, so distinct values of a heap type without a
 defined structural equality compare unequal rather than reporting an error.
-`sybilant/=` is the single public entry point for value equality and has no
-unchecked variant. `sybilant/instance?` uses it to compare type values.
+Atoms compare by identity, so `sybilant/=` needs no atom dispatch and lets
+them fall through to that identity default. `sybilant/=` is the single general
+entry point for value equality and has no unchecked variant.
+`sybilant/instance?` uses it to compare type values.
 
 Integrate into: manual.
 
